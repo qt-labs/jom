@@ -1,0 +1,17 @@
+bin
+tmp
+debug
+release
+Makefile
+Makefile.Debug
+Makefile.Release
+*.ncb
+*.sln
+*.suo
+*.vcproj*
+*.pdb
+*.idb
+*.ib_pdb_index
+*.bak
+*.swp
+*~
