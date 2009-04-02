@@ -46,6 +46,7 @@ private slots:
     void inferenceRules_data();
     void inferenceRules();
     void cycleInTargets();
+    void comments();
 
 private:
     QString m_oldCurrentPath;
@@ -215,6 +216,37 @@ void ParserTest::cycleInTargets()
         exceptionThrown = true;
     }
     QVERIFY(exceptionThrown);
+}
+
+void ParserTest::comments()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("comments.mk")) );
+
+    Makefile* mkfile = 0;
+    bool exceptionThrown = false;
+    try {
+        mkfile = parser.apply(&pp);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+    QCOMPARE(macroTable.macroValue("COMPILER"), QLatin1String("Ada95"));
+    QCOMPARE(macroTable.macroValue("DEF"), QLatin1String("#define"));
+
+    QVERIFY(mkfile);
+    DescriptionBlock* target = mkfile->target("first");
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.count(), 2);
+    QCOMPARE(target->m_commands.count(), 2);
+    
+    Command cmd1 = target->m_commands.at(0);
+    Command cmd2 = target->m_commands.at(1);
+    QCOMPARE(cmd1.m_commandLine, QLatin1String("echo I'm Winneone"));
+    QCOMPARE(cmd2.m_commandLine, QLatin1String("echo I'm Winnetou"));
 }
 
 QTEST_MAIN(ParserTest)
