@@ -83,6 +83,15 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
         if (!m_makefile.m_targets.value(targetName))
             throw Exception(QString("Target %1 doesn't exist.").arg(targetName));
 
+    // if no active target is defined, use the first one
+    if (m_activeTargets.isEmpty()) {
+        m_activeTargets.append(m_makefile.firstTarget()->m_target);
+    }
+
+    // check for cycles in active targets
+    foreach (const QString& targetName, m_activeTargets)
+        checkForCycles(m_makefile.target(targetName));
+
     updateTimeStamps();
     preselectInferenceRules();
     return &m_makefile;
@@ -348,6 +357,22 @@ void Parser::parseDotDirective()
     readLine();
 }
 
+void Parser::checkForCycles(DescriptionBlock* target)
+{
+    if (!target)
+        return;
+
+    if (target->m_bVisitedByCycleCheck) {
+        QString msg = QLatin1String("cycle in targets detected: %1");
+        throw Exception(msg.arg(target->m_target));
+    }
+
+    target->m_bVisitedByCycleCheck = true;
+    foreach (const QString& depname, target->m_dependents)
+        checkForCycles(m_makefile.target(depname));
+    target->m_bVisitedByCycleCheck = false;
+}
+
 void Parser::updateTimeStamps()
 {
     foreach (DescriptionBlock* db, m_makefile.m_targets)
@@ -414,10 +439,6 @@ void Parser::filterRulesByTargetName(QList<InferenceRule*>& rules, const QString
 
 void Parser::preselectInferenceRules()
 {
-    if (m_activeTargets.isEmpty()) {
-        m_activeTargets.append(m_makefile.firstTarget()->m_target);
-    }
-
     foreach (const QString targetName, m_activeTargets) {
         DescriptionBlock* target = m_makefile.target(targetName);
         if (target->m_commands.isEmpty())

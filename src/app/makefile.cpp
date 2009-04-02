@@ -68,7 +68,8 @@ Command::~Command()
 DescriptionBlock::DescriptionBlock()
 :   m_bFileExists(false),
     m_canAddCommands(ACSUnknown),
-    m_bExecuting(false)
+    m_bExecuting(false),
+    m_bVisitedByCycleCheck(false)
 {
     m_id = m_nextId++;
 }

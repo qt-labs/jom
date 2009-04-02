@@ -60,6 +60,7 @@ private:
     void parseDotDirective();
     bool parseCommand(QList<Command>& commands, bool inferenceRule);
     void parseInlineFile(Command& cmd);
+    void checkForCycles(DescriptionBlock* target);
     void updateTimeStamps();
     void updateTimeStamp(DescriptionBlock* db);
     QList<InferenceRule*> findRulesByTargetExtension(const QString& suffixes);

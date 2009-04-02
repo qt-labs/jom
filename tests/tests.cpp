@@ -45,6 +45,7 @@ private slots:
     // parser tests
     void inferenceRules_data();
     void inferenceRules();
+    void cycleInTargets();
 
 private:
     QString m_oldCurrentPath;
@@ -199,6 +200,22 @@ void ParserTest::inferenceRules()
     QCOMPARE(target->m_commands.first().m_commandLine, expectedCommandLine);
 }
 
+void ParserTest::cycleInTargets()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("cycle_in_targets.mk")) );
+
+    bool exceptionThrown = false;
+    try {
+        parser.apply(&pp);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(exceptionThrown);
+}
 
 QTEST_MAIN(ParserTest)
 #include "tests.moc"

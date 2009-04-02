@@ -83,6 +83,7 @@ public:
     QDateTime m_timeStamp;
     QSharedPointer<QStringList> m_suffixes;
     bool m_bFileExists;
+    bool m_bVisitedByCycleCheck;
     QList<InferenceRule*> m_inferenceRules;
 
     enum AddCommandsState { ACSUnknown, ACSEnabled, ACSDisabled };
