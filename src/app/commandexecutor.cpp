@@ -101,7 +101,7 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
 
 void CommandExecutor::processReadyReadStandardError()
 {
-    printf(m_process.readAllStandardError().data());
+    fprintf(stderr, m_process.readAllStandardError().data());
     //printf("\n");
 }
 
