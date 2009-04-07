@@ -172,6 +172,9 @@ bool CommandExecutor::executeNextCommand()
         return true;
     }
 
+    // transform quotes to a form that cmd.exe can understand
+    cmd.m_commandLine.replace("\\\"", "\"\"\"");
+
     if (spawnNMP) {
         if (cmd.m_commandLine.startsWith(g_options.nmpFullPath))
             m_process.start(cmd.m_commandLine);
