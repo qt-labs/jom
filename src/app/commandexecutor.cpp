@@ -156,7 +156,7 @@ bool CommandExecutor::executeNextCommand()
         int idx = cmd.m_commandLine.indexOf(g_options.nmpFullPath);
         if (idx > -1) {
             spawnNMP = true;
-            const QString arg = " -j " + QString().setNum(g_options.maxNumberOfJobs);
+            const QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
             cmd.m_commandLine.insert(idx + g_options.nmpFullPath.length(), arg);
         }
     }
