@@ -38,6 +38,7 @@ public:
 
     void start(DescriptionBlock* target);
     DescriptionBlock* target() { return m_pTarget; }
+    void waitForFinished();
 
 signals:
     void started(CommandExecutor*);

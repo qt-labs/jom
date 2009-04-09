@@ -106,6 +106,15 @@ void TargetExecutor::startProcesses()
     }
 }
 
+void TargetExecutor::waitForProcesses()
+{
+    foreach (QObject* child, children()) {
+        CommandExecutor* process = qobject_cast<CommandExecutor*>(child);
+        if (process)
+            process->waitForFinished();
+    }
+}
+
 void TargetExecutor::onChildStarted(CommandExecutor* executor)
 {
     Q_UNUSED(executor);
@@ -117,6 +126,7 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
     m_availableProcesses.append(executor);
 
     if (abortMakeProcess) {
+        waitForProcesses();
         qApp->exit(2);
     } else {
         qApp->postEvent(this, new StartEvent);

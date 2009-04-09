@@ -190,4 +190,9 @@ bool CommandExecutor::executeNextCommand()
     return true;
 }
 
+void CommandExecutor::waitForFinished()
+{
+    m_process.waitForFinished();
+}
+
 } // namespace NMakeFile

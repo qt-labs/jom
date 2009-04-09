@@ -57,6 +57,7 @@ private slots:
 
 private:
     void startProcesses();
+    void waitForProcesses();
 
 private:
     Makefile* m_makefile;
