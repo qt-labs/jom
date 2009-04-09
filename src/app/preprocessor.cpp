@@ -51,7 +51,7 @@ void Preprocessor::setMacroTable(MacroTable* macroTable)
 
 bool Preprocessor::openFile(const QString& fileName)
 {
-    m_conditionalDepth = 0;
+    m_conditionalStack.clear();
     m_lineNumber = 0;
     if (!m_fileStack.isEmpty())
         m_fileStack.clear();
@@ -225,64 +225,64 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
     } else if (directive == "INCLUDE") {
         internalOpenFile(value);
     } else if (directive == "IF") {
-        m_conditionalDepth++;
-        m_followElseBranch = evaluateExpression(value) == 0;
-        if (m_followElseBranch) {
+        bool followElseBranch = evaluateExpression(value) == 0;
+        enterConditional(followElseBranch);
+        if (followElseBranch) {
             skipUntilNextMatchingConditional();
             return true;
         }
     } else if (directive == "IFDEF") {
-        m_conditionalDepth++;
-        m_followElseBranch = !m_macroTable->isMacroDefined(value);
-        if (m_followElseBranch) {
+        bool followElseBranch = !m_macroTable->isMacroDefined(value);
+        enterConditional(followElseBranch);
+        if (followElseBranch) {
             skipUntilNextMatchingConditional();
             return true;
         }
     } else if (directive == "IFNDEF") {
-        m_conditionalDepth++;
-        m_followElseBranch = m_macroTable->isMacroDefined(value);
-        if (m_followElseBranch) {
+        bool followElseBranch = m_macroTable->isMacroDefined(value);
+        enterConditional(followElseBranch);
+        if (followElseBranch) {
             skipUntilNextMatchingConditional();
             return true;
         }
     } else if (directive == "ELSE") {
-        if (m_conditionalDepth == 0) {
+        if (conditionalDepth() == 0) {
             error("unexpected ELSE");
             return true;
         }
-        if (!m_followElseBranch) {
+        if (!m_conditionalStack.top()) {
             skipUntilNextMatchingConditional();
             return true;
         }
     } else if (directive == "ELSEIF") {
-        if (m_conditionalDepth == 0) {
+        if (conditionalDepth() == 0) {
             error("unexpected ELSE");
             return true;
         }
-        if (!m_followElseBranch || evaluateExpression(value) == 0) {
+        if (!m_conditionalStack.top() || evaluateExpression(value) == 0) {
             skipUntilNextMatchingConditional();
             return true;
         }
     } else if (directive == "ELSEIFDEF") {
-        if (m_conditionalDepth == 0) {
+        if (conditionalDepth() == 0) {
             error("unexpected ELSE");
             return true;
         }
-        if (!m_followElseBranch || !m_macroTable->isMacroDefined(value)) {
+        if (!m_conditionalStack.top() || !m_macroTable->isMacroDefined(value)) {
             skipUntilNextMatchingConditional();
             return true;
         }
     } else if (directive == "ELSEIFNDEF") {
-        if (m_conditionalDepth == 0) {
+        if (conditionalDepth() == 0) {
             error("unexpected ELSE");
             return true;
         }
-        if (!m_followElseBranch || m_macroTable->isMacroDefined(value)) {
+        if (!m_conditionalStack.top() || m_macroTable->isMacroDefined(value)) {
             skipUntilNextMatchingConditional();
             return true;
         }
     } else if (directive == "ENDIF") {
-        m_conditionalDepth--;
+        exitConditional();
     } else if (directive == "UNDEF") {
         m_macroTable->undefineMacro(value);
     }
@@ -323,6 +323,9 @@ void Preprocessor::skipUntilNextMatchingConditional()
 {
     uint depth = 0;
     QString line, directive, value;
+
+    enum DirectiveToken { TOK_IF, TOK_ENDIF, TOK_ELSE, TOK_UNINTERESTING };
+    DirectiveToken token;
     do {
         basicReadLine(line);
         if (line.isNull())
@@ -331,15 +334,43 @@ void Preprocessor::skipUntilNextMatchingConditional()
         if (!isPreprocessingDirective(line, directive, value))
             continue;
 
-        if (depth == 0 && (directive == "ENDIF" || directive.startsWith("ELSE")))
-            return;  // found the next matching conditional
-
         if (directive == "ENDIF")
-            --depth;
+            token = TOK_ENDIF;
         else if (directive.startsWith("IF"))
+            token = TOK_IF;
+        else if (directive.startsWith("ELSE"))
+            token = TOK_ELSE;
+        else
+            token = TOK_UNINTERESTING;
+
+        if (token == TOK_UNINTERESTING)
+            continue;
+
+        if (depth == 0) {
+            if (token == TOK_ELSE)
+                return;  // found the next matching ELSE
+            if (token == TOK_ENDIF) {
+                exitConditional();
+                return;  // found the next matching ENDIF
+            }
+        }
+
+        if (token == TOK_ENDIF)
+            --depth;
+        else if (token == TOK_IF)
             ++depth;
 
     } while (!line.isNull());
+}
+
+void Preprocessor::enterConditional(bool followElseBranch)
+{
+    m_conditionalStack.push(followElseBranch);
+}
+
+void Preprocessor::exitConditional()
+{
+    m_conditionalStack.pop();
 }
 
 int Preprocessor::evaluateExpression(const QString& expr)

@@ -62,6 +62,9 @@ private:
     void skipUntilNextMatchingConditional();
     int evaluateExpression(const QString& expr);
     void error(const QString& msg);
+    void enterConditional(bool followElseBranch);
+    void exitConditional();
+    int conditionalDepth() { return m_conditionalStack.count(); }
 
 private:
     struct TextFile
@@ -92,8 +95,7 @@ private:
     uint                m_lineNumber;
     QRegExp             m_rexMacro;
     QRegExp             m_rexPreprocessingDirective;
-    uint                m_conditionalDepth;
-    bool                m_followElseBranch;
+    QStack<bool>        m_conditionalStack;
     PPExpression*       m_expressionParser;
 };
 
