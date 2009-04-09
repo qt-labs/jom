@@ -47,6 +47,7 @@ private slots:
     void inferenceRules();
     void cycleInTargets();
     void comments();
+    void fileNameMacros();
 
 private:
     QString m_oldCurrentPath;
@@ -247,6 +248,100 @@ void ParserTest::comments()
     Command cmd2 = target->m_commands.at(1);
     QCOMPARE(cmd1.m_commandLine, QLatin1String("echo I'm Winneone"));
     QCOMPARE(cmd2.m_commandLine, QLatin1String("echo I'm Winnetou"));
+}
+
+void ParserTest::fileNameMacros()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("filenamemacros.mk")) );
+
+    Makefile* mkfile = 0;
+    bool exceptionThrown = false;
+    try {
+        mkfile = parser.apply(&pp);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+
+    DescriptionBlock* target;
+    Command command;
+    target = mkfile->target(QLatin1String("all"));
+    QVERIFY(target);
+    QVERIFY(target->m_dependents.contains("Football"));
+
+    target = mkfile->target(QLatin1String("Football"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.first();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo Football"));
+
+    target = mkfile->target(QLatin1String("LolCatExtractorManager.tar.gz"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.first();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo LolCatExtractorManager.tar"));
+
+    target = mkfile->target(QLatin1String("manyDependents"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo Timmy Jimmy Kenny Eric Kyle Stan"));
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.first();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo Timmy Jimmy Kenny Eric Kyle Stan"));
+
+    target = mkfile->target(QLatin1String("gen_init"));
+    QVERIFY(target);
+    QVERIFY(!target->m_commands.isEmpty());
+    foreach (const Command& cmd, target->m_commands)
+        system(qPrintable(cmd.m_commandLine));
+
+    target = mkfile->target(QLatin1String("generated.txt"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.first();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo gen2.txt gen3.txt"));
+
+    target = mkfile->target(QLatin1String("gen_cleanup"));
+    QVERIFY(target);
+    QVERIFY(!target->m_commands.isEmpty());
+    foreach (const Command& cmd, target->m_commands)
+        system(qPrintable(cmd.m_commandLine));
+
+    target = mkfile->target(QLatin1String("macros.mk"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.count(), 4);
+    command = target->m_commands.at(0);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo ."));
+    command = target->m_commands.at(1);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo macros"));
+    command = target->m_commands.at(2);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo macros.mk"));
+    command = target->m_commands.at(3);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo macros"));
+
+    const QString currentPath = QDir::currentPath().replace('/', '\\');
+    target = mkfile->target(currentPath + QLatin1String("\\infrules.mk"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.count(), 4);
+    command = target->m_commands.at(0);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo ") + currentPath);
+    command = target->m_commands.at(1);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo infrules"));
+    command = target->m_commands.at(2);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo infrules.mk"));
+    command = target->m_commands.at(3);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo ") + currentPath + QLatin1String("\\infrules"));
 }
 
 QTEST_MAIN(ParserTest)

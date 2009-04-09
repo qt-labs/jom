@@ -77,6 +77,7 @@ public:
     size_t id() const { return m_id; }
     bool isExecuting() const { return m_bExecuting; }
     void setExecuting() { m_bExecuting = true; }
+    void expandFileNameMacros();
 
     QString m_target;
     QStringList m_dependents;
@@ -88,6 +89,10 @@ public:
 
     enum AddCommandsState { ACSUnknown, ACSEnabled, ACSDisabled };
     AddCommandsState m_canAddCommands;
+
+private:
+    void expandFileNameMacros(Command& command);
+    QString getFileNameMacroValue(const char ch);
 
 private:
     static size_t m_nextId;

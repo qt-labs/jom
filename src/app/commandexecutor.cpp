@@ -64,6 +64,7 @@ void CommandExecutor::start(DescriptionBlock* target)
     m_nCommandIdx = 0;
     m_pLastCommand = 0;
     m_pTarget = target;
+    target->expandFileNameMacros();
     emit started(this);
     if (!executeNextCommand()) {
         emit finished(this, 0);

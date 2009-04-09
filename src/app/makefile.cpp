@@ -74,6 +74,50 @@ DescriptionBlock::DescriptionBlock()
     m_id = m_nextId++;
 }
 
+void DescriptionBlock::expandFileNameMacros()
+{
+    QList<Command>::iterator it = m_commands.begin();
+    QList<Command>::iterator itEnd = m_commands.end();
+    for (; it != itEnd; ++it)
+        expandFileNameMacros(*it);
+}
+
+void DescriptionBlock::expandFileNameMacros(Command& command)
+{
+    int idx = command.m_commandLine.indexOf(QLatin1Char('$'));
+    if (idx == -1 || ++idx >= command.m_commandLine.count())
+        return;
+
+    QChar ch = command.m_commandLine.at(idx);
+    if (ch == QLatin1Char('(')) {
+        // TODO...
+    } else {
+        QString macroValue = getFileNameMacroValue(ch.toLatin1());
+        if (!macroValue.isNull()) {
+            command.m_commandLine.replace(idx - 1, 2, macroValue);
+        }
+    }
+}
+
+QString DescriptionBlock::getFileNameMacroValue(const char ch)
+{
+    QString result;
+    switch (ch) {
+        case '@':
+            result = m_target;
+            break;
+        case '*':
+            {
+                result = m_target;
+                int idx = result.lastIndexOf(QLatin1Char('.'));
+                if (idx > -1)
+                    result.resize(idx);
+            }
+            break;
+    }
+    return result;
+}
+
 InferenceRule::InferenceRule()
 {
 }
