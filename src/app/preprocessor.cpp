@@ -357,8 +357,7 @@ int Preprocessor::evaluateExpression(const QString& expr)
 
 void Preprocessor::error(const QString& msg)
 {
-    Q_UNUSED(msg);
-    // TODO: implement
+    throw Exception("Preprocessor: " + msg, m_lineNumber);
 }
 
 } // namespace NMakeFile
