@@ -64,11 +64,11 @@ returns [int result] :
     ;
 
 term0 returns [int result] :
-    lhs=term1
+    lhs=term0_1
         {
             result = lhs;
         }
-    ( op=(BOOL_AND | BOOL_OR | BIT_AND | BIT_OR)  rhs=term1
+    ( op=(BOOL_AND | BOOL_OR | BIT_AND | BIT_OR)  rhs=term0_1
         {
             switch (op->getType(op))
             {
@@ -87,7 +87,15 @@ term0 returns [int result] :
             }
         }
     )*
-|	   lhs=STRING op=(EQUAL | NOT_EQUAL) rhs=STRING
+	;
+
+term0_1 returns [int result] :
+    v=term1    { result = v; }
+|   v=strterm1 { result = v; }
+	;
+
+strterm1 returns [int result] :
+    lhs=STRING op=(EQUAL | NOT_EQUAL) rhs=STRING
         {
             pANTLR3_STRING s1 = lhs->getText(lhs);
             pANTLR3_STRING s2 = rhs->getText(rhs);
@@ -103,7 +111,6 @@ term0 returns [int result] :
             }
         }
 	;
-
 
 term1 returns [int result] :
     lhs=term2

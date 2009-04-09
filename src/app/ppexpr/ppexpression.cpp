@@ -76,31 +76,31 @@ PPExpression::~PPExpression()
 
 int PPExpression::evaluate(const QString& expression)
 {
-        //const unsigned short* szExpression = reinterpret_cast<const unsigned short*>( expression.utf16() );
-        const pANTLR3_UINT16 szExpression = (pANTLR3_UINT16)( expression.utf16() );
-        pANTLR3_INPUT_STREAM inputStream = antlr3NewUCS2StringInPlaceStream(szExpression, expression.length(), 0);
-        if (!inputStream)
-            return 0;
+    //qDebug() << "PPExpression::evaluate" << expression;
+    const pANTLR3_UINT16 szExpression = (pANTLR3_UINT16)( expression.utf16() );
+    pANTLR3_INPUT_STREAM inputStream = antlr3NewUCS2StringInPlaceStream(szExpression, expression.length(), 0);
+    if (!inputStream)
+        return 0;
 
-        pNMakeExpressionLexer lxr = NMakeExpressionLexerNew(inputStream);
-        if (!lxr)
-            return 0;
-        
-        pANTLR3_COMMON_TOKEN_STREAM tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
-        if (!tstream)
-            return 0;
+    pNMakeExpressionLexer lxr = NMakeExpressionLexerNew(inputStream);
+    if (!lxr)
+        return 0;
 
-        pNMakeExpressionParser psr = NMakeExpressionParserNew(tstream);
-        if (!psr)
-            return 0;
+    pANTLR3_COMMON_TOKEN_STREAM tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
+    if (!tstream)
+        return 0;
 
-        int result = psr->expr(psr, m_preprocessor, &isMacroDefined_callback, &isFileExisting_callback);
-        psr->free(psr);
-        tstream->free(tstream);
-        lxr->free(lxr);
-        inputStream->free(inputStream);
+    pNMakeExpressionParser psr = NMakeExpressionParserNew(tstream);
+    if (!psr)
+        return 0;
 
-        return result;
+    int result = psr->expr(psr, m_preprocessor, &isMacroDefined_callback, &isFileExisting_callback);
+    psr->free(psr);
+    tstream->free(tstream);
+    lxr->free(lxr);
+    inputStream->free(inputStream);
+
+    return result;
 }
 
 } // namespace NMakeFile
