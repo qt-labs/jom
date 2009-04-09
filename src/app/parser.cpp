@@ -203,6 +203,13 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
         descblock->m_dependents = dependents;
         descblock->m_suffixes = m_suffixes;
 
+        {
+            QStringList::iterator it = descblock->m_dependents.begin();
+            QStringList::iterator itEnd = descblock->m_dependents.end();
+            for (; it != itEnd; ++it)
+                (*it).replace(QLatin1String("$@"), t);
+        }
+
         if (canAddCommands)
             descblock->m_commands = commands;
 
