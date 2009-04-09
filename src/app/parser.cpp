@@ -78,6 +78,10 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
         }
     }
 
+    // if the makefile doesn't contain target, we can stop here
+    if (m_makefile.targets().isEmpty())
+        return &m_makefile;
+
     // make sure that all active targets exist
     foreach (const QString& targetName, m_activeTargets)
         if (!m_makefile.m_targets.value(targetName))
