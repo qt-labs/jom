@@ -71,21 +71,21 @@ private:
     {
         QFile*  file;
         QTextStream* stream;
-        QString oldCurrentDir;
+        QString fileDirectory;
 
         TextFile()
             : file(0), stream(0)
         {}
 
         TextFile(const TextFile& rhs)
-            : file(rhs.file), stream(rhs.stream), oldCurrentDir(rhs.oldCurrentDir)
+            : file(rhs.file), stream(rhs.stream), fileDirectory(rhs.fileDirectory)
         {}
 
         TextFile& operator=(const TextFile& rhs)
         {
             file = rhs.file;
             stream = rhs.stream;
-            oldCurrentDir = rhs.oldCurrentDir;
+            fileDirectory = rhs.fileDirectory;
             return *this;
         }
     };

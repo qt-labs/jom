@@ -73,13 +73,21 @@ void ParserTest::includeFiles()
     Preprocessor pp;
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("include_test.mk")) );
-    while (!pp.readLine().isNull());
+    bool exceptionCaught = false;
+    try {
+        while (!pp.readLine().isNull());
+    } catch (...) {
+        exceptionCaught = true;
+    }
+    QVERIFY(!exceptionCaught);
     QVERIFY(macroTable.isMacroDefined("INCLUDE"));
     QCOMPARE(macroTable.macroValue("INCLUDE1"), QLatin1String("TRUE"));
     QCOMPARE(macroTable.macroValue("INCLUDE2"), QLatin1String("TRUE"));
     QCOMPARE(macroTable.macroValue("INCLUDE3"), QLatin1String("TRUE"));
     QCOMPARE(macroTable.macroValue("INCLUDE4"), QLatin1String("TRUE"));
     QCOMPARE(macroTable.macroValue("INCLUDE5"), QLatin1String("TRUE"));
+    QCOMPARE(macroTable.macroValue("INCLUDE6"), QLatin1String("TRUE"));
+    QCOMPARE(macroTable.macroValue("INCLUDE7"), QLatin1String("TRUE"));
 }
 
 void ParserTest::includeCycle()

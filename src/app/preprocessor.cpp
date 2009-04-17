@@ -85,7 +85,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
             }
             TextFile textFile = m_fileStack.pop();
             tmpStack.push(textFile);
-            fullFileName = textFile.oldCurrentDir + '\\' + fileName;
+            fullFileName = textFile.fileDirectory + '\\' + fileName;
         }
         while (!tmpStack.isEmpty())
             m_fileStack.push(tmpStack.pop());
@@ -114,8 +114,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
     TextFile& textFile = m_fileStack.top();
     textFile.file = file;
     textFile.stream = new QTextStream(file);
-    textFile.oldCurrentDir = QDir::currentPath();
-    QDir::setCurrent(QFileInfo(fileName).absolutePath());
+    textFile.fileDirectory = fileInfo.absolutePath();
     return true;
 }
 
@@ -142,7 +141,6 @@ void Preprocessor::basicReadLine(QString& line)
     while (line.isNull()) {
         delete m_fileStack.top().stream;
         delete m_fileStack.top().file;
-        QDir::setCurrent(m_fileStack.top().oldCurrentDir);
         m_fileStack.pop();
         if (m_fileStack.isEmpty())
             return;
