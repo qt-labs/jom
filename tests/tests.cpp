@@ -316,6 +316,7 @@ void ParserTest::fileNameMacros()
     MacroTable macroTable;
     Preprocessor pp;
     Parser parser;
+    macroTable.setMacroValue("MAKEDIR", QDir::currentPath());
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("filenamemacros.mk")) );
 
@@ -358,6 +359,7 @@ void ParserTest::fileNameMacros()
     command = target->m_commands.first();
     QCOMPARE(command.m_commandLine, QLatin1String("echo Timmy Jimmy Kenny Eric Kyle Stan"));
 
+    system("del generated.txt gen1.txt gen2.txt gen3.txt > NUL 2>&1");
     target = mkfile->target(QLatin1String("gen_init"));
     QVERIFY(target);
     QVERIFY(!target->m_commands.isEmpty());

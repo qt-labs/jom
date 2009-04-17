@@ -92,7 +92,7 @@ public:
 
 private:
     void expandFileNameMacros(Command& command);
-    QString getFileNameMacroValue(const char ch);
+    QString getFileNameMacroValue(const QStringRef& str, int& replacementLength);
 
 private:
     static size_t m_nextId;

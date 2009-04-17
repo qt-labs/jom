@@ -21,6 +21,7 @@
  **
  ****************************************************************************/
 #include "macrotable.h"
+#include "exception.h"
 
 #include <QRegExp>
 
@@ -49,10 +50,8 @@ void MacroTable::setMacroValue(const QString& name, const QString& value, bool s
 
     QString expandedName = expandMacros(name);
     if (!rexMacroIdentifier.exactMatch(expandedName)) {
-        if (!silentErrors) {
-            //TODO: yield error
-            qDebug("invalid macro name");
-        }
+        if (!silentErrors)
+            throw Exception(QString("macro name %1 is invalid").arg(name));
         return;
     }
     m_macros[expandedName] = expandMacros(value);
@@ -71,12 +70,19 @@ void MacroTable::undefineMacro(const QString& name)
 QString MacroTable::expandMacros(QString str) const
 {
     int i;
+    const int strLength = str.length();
     while ((i = str.indexOf("$(")) != -1) {
-        int j = str.indexOf(')', i);
-        if (j == -1) // maybe yield an error?
+        if (strLength <= i+2)
+            throw Exception("single $( at end of line found");
+
+        if (str.at(i+2) == QLatin1Char('@'))    // we don't handle filename macros here
             return str;
 
-        str = str.left(i) + macroValue(str.mid(i+2, j-i-2)) + str.right(str.length() - j - 1);
+        int j = str.indexOf(')', i);
+        if (j == -1)
+            throw Exception("found $( without matching )");
+
+        str = str.left(i) + macroValue(str.mid(i+2, j-i-2)) + str.right(strLength - j - 1);
     }
     return str;
 }

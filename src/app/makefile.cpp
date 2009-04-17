@@ -88,30 +88,94 @@ void DescriptionBlock::expandFileNameMacros(Command& command)
     if (idx == -1 || ++idx >= command.m_commandLine.count())
         return;
 
-    QChar ch = command.m_commandLine.at(idx);
-    if (ch == QLatin1Char('(')) {
-        // TODO...
-    } else {
-        QString macroValue = getFileNameMacroValue(ch.toLatin1());
+    int replacementLength = 0;
+    char ch = command.m_commandLine.at(idx).toLatin1();
+    if (ch == '(') {
+        QString macroValue = getFileNameMacroValue(command.m_commandLine.midRef(idx+1), replacementLength);
         if (!macroValue.isNull()) {
-            command.m_commandLine.replace(idx - 1, 2, macroValue);
+            int k;
+            ch = command.m_commandLine.at(idx+2).toLatin1();
+            switch (ch)
+            {
+            case 'D':
+                k = macroValue.lastIndexOf(QLatin1Char('\\'));
+                if (k == -1)
+                    macroValue = QLatin1String(".");
+                else
+                    macroValue = macroValue.left(k);
+                break;
+            case 'B':
+                macroValue = QFileInfo(macroValue).baseName();
+                break;
+            case 'F':
+                macroValue = QFileInfo(macroValue).fileName();
+                break;
+            case 'R':
+                k = macroValue.lastIndexOf(QLatin1Char('.'));
+                if (k > -1)
+                    macroValue = macroValue.left(k);
+                break;
+            default:
+                // TODO: yield error? ignore for now
+                return;
+            }
+
+            command.m_commandLine.replace(idx - 1, replacementLength + 4, macroValue);
+        }
+    } else {
+        QString macroValue = getFileNameMacroValue(command.m_commandLine.midRef(idx), replacementLength);
+        if (!macroValue.isNull()) {
+            command.m_commandLine.replace(idx - 1, replacementLength + 1, macroValue);
         }
     }
 }
 
-QString DescriptionBlock::getFileNameMacroValue(const char ch)
+QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& replacementLength)
 {
     QString result;
-    switch (ch) {
+    switch (str.at(0).toLatin1()) {
         case '@':
+            replacementLength = 1;
             result = m_target;
             break;
         case '*':
             {
-                result = m_target;
-                int idx = result.lastIndexOf(QLatin1Char('.'));
-                if (idx > -1)
-                    result.resize(idx);
+                if (str.length() >= 2 && str.at(1) == QLatin1Char('*')) {
+                    replacementLength = 2;
+                    result = m_dependents.join(QLatin1String(" "));
+                } else {
+                    replacementLength = 1;
+                    result = m_target;
+                    int idx = result.lastIndexOf(QLatin1Char('.'));
+                    if (idx > -1)
+                        result.resize(idx);
+                }
+            }
+            break;
+        case '?':
+            {
+                replacementLength = 1;
+                result = "";
+                bool firstAppend = true;
+                const QDateTime currentTimeStamp = QDateTime::currentDateTime();
+                QDateTime targetTimeStamp = QFileInfo(m_target).lastModified();
+                if (!targetTimeStamp.isValid())
+                    targetTimeStamp = currentTimeStamp;
+
+                foreach (const QString& dependentName, m_dependents) {
+                    QDateTime dependentTimeStamp = QFileInfo(dependentName).lastModified();
+                    if (!dependentTimeStamp.isValid())
+                        dependentTimeStamp = currentTimeStamp;
+
+                    if (targetTimeStamp <= dependentTimeStamp) {
+                        if (firstAppend)
+                            firstAppend = false;
+                        else
+                            result.append(QLatin1Char(' '));
+
+                        result.append(dependentName);
+                    }
+                }
             }
             break;
     }

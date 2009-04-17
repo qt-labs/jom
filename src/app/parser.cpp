@@ -228,14 +228,6 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
     }
 }
 
-/*
-   @command Prevents display of the command.
-   –[number ]command   	Turns off error checking for command. 
-                        By default, NMAKE halts when a command returns a nonzero exit code. 
-                        If –number is used, NMAKE stops if the exit code exceeds number. 
-   $** (all dependent files in the dependency)
-   $? (all dependent files in the dependency with a later timestamp than the target)
- */
 bool Parser::parseCommand(QList<Command>& commands, bool inferenceRule)
 {
     // eat empty lines
