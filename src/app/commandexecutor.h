@@ -52,6 +52,8 @@ private slots:
 
 private:
     bool executeNextCommand();
+    void createTempFiles();
+    void cleanupTempFiles();
 
 private:
     static QString      m_tempPath;
@@ -60,8 +62,13 @@ private:
     int                 m_nCommandIdx;
     Command*            m_pLastCommand;
 
-    QFile*              m_pTempFile;
-    bool                m_bKeepTempFile;
+    struct TempFile
+    {
+        QFile* file;
+        bool   keep;
+    };
+
+    QList<TempFile>     m_tempFiles;
 };
 
 } // namespace NMakeFile

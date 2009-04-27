@@ -37,8 +37,7 @@ CommandExecutor::CommandExecutor(QObject* parent)
 :   QObject(parent),
     m_pTarget(0),
     m_nCommandIdx(0),
-    m_pLastCommand(0),
-    m_pTempFile(0)
+    m_pLastCommand(0)
 {
     if (m_tempPath.isNull()) {
         WCHAR buf[MAX_PATH];
@@ -57,6 +56,7 @@ CommandExecutor::CommandExecutor(QObject* parent)
 
 CommandExecutor::~CommandExecutor()
 {
+    cleanupTempFiles();
 }
 
 void CommandExecutor::start(DescriptionBlock* target)
@@ -65,6 +65,33 @@ void CommandExecutor::start(DescriptionBlock* target)
     m_pLastCommand = 0;
     m_pTarget = target;
     target->expandFileNameMacros();
+    cleanupTempFiles();
+    createTempFiles();
+
+    bool mergeCommands = false;
+    QList<Command>::iterator it = target->m_commands.begin();
+    QList<Command>::iterator itEnd = target->m_commands.end();
+    for (; it != itEnd; ++it) {
+        if ((*it).m_commandLine.startsWith("cd ")) {    // TODO: this check is a stupid hack!
+            mergeCommands = true;
+        }
+    }
+
+    if (mergeCommands) {
+        Command cmd;
+        bool firstLoop = true;
+        for (it = target->m_commands.begin(); it != itEnd; ++it) {
+            if (firstLoop)
+                firstLoop = false;
+            else
+                cmd.m_commandLine += " && ";
+
+            cmd.m_commandLine += (*it).m_commandLine;
+        }
+        target->m_commands.clear();
+        target->m_commands.append(cmd);
+    }
+
     emit started(this);
     if (!executeNextCommand()) {
         emit finished(this, 0);
@@ -80,12 +107,6 @@ void CommandExecutor::onProcessError(QProcess::ProcessError error)
 void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     //qDebug() << "onProcessFinished" << m_pTarget->m_target;
-
-    if (m_pTempFile) {
-        if (!m_bKeepTempFile) m_pTempFile->remove();
-        delete m_pTempFile;
-        m_pTempFile = 0;
-    }
 
     if (exitStatus != QProcess::NormalExit)
         exitCode = 2;
@@ -120,34 +141,6 @@ bool CommandExecutor::executeNextCommand()
 
     Command& cmd = m_pTarget->m_commands[m_nCommandIdx];
     m_pLastCommand = &cmd;
-    if (cmd.m_inlineFile) {
-        QString fileName;
-        if (cmd.m_inlineFile->m_filename.isEmpty())
-            fileName = m_tempPath + QString("nmp%1.tmp").arg(GetTickCount());
-        else
-            fileName = cmd.m_inlineFile->m_filename;
-
-        m_pTempFile = new QFile(fileName);
-        if (!m_pTempFile->open(QFile::WriteOnly)) {
-            delete m_pTempFile;
-            throw Exception(QString("cannot open %1 for write").arg(m_pTempFile->fileName()));
-        }
-
-        m_bKeepTempFile = cmd.m_inlineFile->m_keep;
-
-        QString content = cmd.m_inlineFile->m_content;
-        if (content.contains("$<")) {
-            // TODO: handle more file macros here
-            content.replace("$<", m_pTarget->m_dependents.join(" "));
-        }
-
-        QTextStream textstream(m_pTempFile);
-        textstream << content;
-        m_pTempFile->close();
-
-        cmd.m_commandLine.replace("<<",
-            QString(m_pTempFile->fileName()).replace('/', '\\'));
-    }
 
     if (cmd.m_commandLine.startsWith('@'))
         cmd.m_commandLine = cmd.m_commandLine.right(cmd.m_commandLine.length() - 1);
@@ -194,6 +187,57 @@ bool CommandExecutor::executeNextCommand()
 void CommandExecutor::waitForFinished()
 {
     m_process.waitForFinished();
+}
+
+
+void CommandExecutor::createTempFiles()
+{
+    QList<Command>::iterator it = m_pTarget->m_commands.begin();
+    QList<Command>::iterator itEnd = m_pTarget->m_commands.end();
+    for (; it != itEnd; ++it) {
+        Command& cmd = *it;
+        if (!cmd.m_inlineFile)
+            continue;
+
+        QString fileName;
+        if (cmd.m_inlineFile->m_filename.isEmpty())
+            fileName = m_tempPath + QString("nmp%1.tmp").arg(GetTickCount());
+        else
+            fileName = cmd.m_inlineFile->m_filename;
+
+        TempFile tempFile;
+        tempFile.file = new QFile(fileName);
+        if (!tempFile.file->open(QFile::WriteOnly)) {
+            delete tempFile.file;
+            throw Exception(QString("cannot open %1 for write").arg(tempFile.file->fileName()));
+        }
+
+        tempFile.keep = cmd.m_inlineFile->m_keep;
+
+        QString content = cmd.m_inlineFile->m_content;
+        if (content.contains("$<")) {
+            // TODO: handle more file macros here
+            content.replace("$<", m_pTarget->m_dependents.join(" "));
+        }
+
+        QTextStream textstream(tempFile.file);
+        textstream << content;
+        tempFile.file->close();
+
+        cmd.m_commandLine.replace("<<",
+            QString(tempFile.file->fileName()).replace('/', '\\'));
+
+        m_tempFiles.append(tempFile);
+    }
+}
+
+void CommandExecutor::cleanupTempFiles()
+{
+    while (!m_tempFiles.isEmpty()) {
+        const TempFile& tempfile = m_tempFiles.takeLast();
+        if (!tempfile.keep) tempfile.file->remove();
+        delete tempfile.file;
+    }
 }
 
 } // namespace NMakeFile
