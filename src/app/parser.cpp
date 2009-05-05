@@ -172,6 +172,8 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
 {
     QString target = m_preprocessor->macroTable()->expandMacros(m_line.left(separatorPos).trimmed());
     QString value  = m_preprocessor->macroTable()->expandMacros(m_line.right(m_line.length() - separatorPos - separatorLength).trimmed());
+    target.replace(QLatin1Char('/'), QLatin1Char('\\'));
+    value.replace(QLatin1Char('/'), QLatin1Char('\\'));
 
     QList<Command> commands;
     readLine();
