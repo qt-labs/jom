@@ -70,8 +70,8 @@ void MacroTable::undefineMacro(const QString& name)
 QString MacroTable::expandMacros(QString str) const
 {
     int i;
-    const int strLength = str.length();
     while ((i = str.indexOf("$(")) != -1) {
+        const int strLength = str.length();
         if (strLength <= i+2)
             throw Exception("single $( at end of line found");
 
