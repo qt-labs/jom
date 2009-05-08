@@ -46,6 +46,8 @@ private slots:
     void inferenceRules_data();
     void inferenceRules();
     void cycleInTargets();
+    void multipleTargets();
+    void multipleTargetsFail();
     void comments();
     void fileNameMacros();
 
@@ -217,6 +219,57 @@ void ParserTest::cycleInTargets()
     Parser parser;
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("cycle_in_targets.mk")) );
+
+    bool exceptionThrown = false;
+    try {
+        parser.apply(&pp);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(exceptionThrown);
+}
+
+void ParserTest::multipleTargets()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("targetmultidef.mk")) );
+
+    Makefile* mkfile = 0;
+    bool exceptionThrown = false;
+    try {
+        mkfile = parser.apply(&pp);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+    QVERIFY(mkfile);
+    DescriptionBlock* target = mkfile->target("foo");
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.count(), 3);
+    QVERIFY(target->m_dependents.contains("foo1.cpp"));
+    QVERIFY(target->m_dependents.contains("foo3.cpp"));
+    QVERIFY(target->m_dependents.contains("foo4.cpp"));
+    QCOMPARE(target->m_commands.count(), 1);
+
+    target = mkfile->target("bar");
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.count(), 3);
+    QVERIFY(target->m_dependents.contains("foo1.cpp"));
+    QVERIFY(target->m_dependents.contains("foo3.cpp"));
+    QVERIFY(target->m_dependents.contains("foo4.cpp"));
+    QCOMPARE(target->m_commands.count(), 3);
+}
+
+void ParserTest::multipleTargetsFail()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("targetmultidef_fail.mk")) );
 
     bool exceptionThrown = false;
     try {
