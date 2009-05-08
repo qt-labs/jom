@@ -213,7 +213,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
         }
 
         if (!commands.isEmpty()) {
-            if (canAddCommands == DescriptionBlock::ACSEnabled)
+            if (canAddCommands == DescriptionBlock::ACSEnabled || descblock->m_commands.isEmpty())
                 descblock->m_commands.append(commands);
             else
                 error(QString("Cannot add commands to previously defined target %1.").arg(t));

@@ -241,7 +241,8 @@ void ParserTest::multipleTargets()
     bool exceptionThrown = false;
     try {
         mkfile = parser.apply(&pp);
-    } catch (...) {
+    } catch (Exception e) {
+        qDebug() << e.message();
         exceptionThrown = true;
     }
     QVERIFY(!exceptionThrown);
