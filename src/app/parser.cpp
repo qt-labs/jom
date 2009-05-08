@@ -202,7 +202,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
             descblock->m_canAddCommands = canAddCommands;
             canAddCommands = DescriptionBlock::ACSEnabled;
         }
-        descblock->m_dependents = dependents;
+        descblock->m_dependents.append(dependents);
         descblock->m_suffixes = m_suffixes;
 
         {
@@ -212,8 +212,12 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
                 (*it).replace(QLatin1String("$@"), t);
         }
 
-        if (canAddCommands)
-            descblock->m_commands = commands;
+        if (!commands.isEmpty()) {
+            if (canAddCommands == DescriptionBlock::ACSEnabled)
+                descblock->m_commands.append(commands);
+            else
+                error(QString("Cannot add commands to previously defined target %1.").arg(t));
+        }
 
         QList<Command>::iterator it = descblock->m_commands.begin();
         QList<Command>::iterator itEnd = descblock->m_commands.end();
