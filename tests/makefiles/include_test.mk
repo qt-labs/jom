@@ -5,3 +5,5 @@ INCLUDE = subdir
 !	include <include3.mk>
 !include "subdir\include4.mk"
 
+includeFoo: # this is not an include directive!
+

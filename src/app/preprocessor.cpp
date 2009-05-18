@@ -298,23 +298,30 @@ bool Preprocessor::isPreprocessingDirective(const QString& line, QString& direct
         return false;
 
     bool oldStyleIncludeDirectiveFound = false;
-    if (firstChar != '!') {
-        if (line.left(7).toLower().startsWith("include"))
+    if (firstChar != '!' && line.length() > 8) {
+        const char ch = line.at(7).toLatin1();
+        if (ch != ' ' && ch != '\t')
+            return false;
+
+        if (line.left(7).toLower() == QLatin1String("include"))
             oldStyleIncludeDirectiveFound = true;
         else
             return false;
     }
 
+    bool result = true;
     if (oldStyleIncludeDirectiveFound) {
         directive = "INCLUDE";
         value = line.mid(8);
     } else {
-        m_rexPreprocessingDirective.exactMatch(line);
-        directive = m_rexPreprocessingDirective.cap(1).toUpper();
-        value = m_rexPreprocessingDirective.cap(2).trimmed();
+        result = m_rexPreprocessingDirective.exactMatch(line);
+        if (result) {
+            directive = m_rexPreprocessingDirective.cap(1).toUpper();
+            value = m_rexPreprocessingDirective.cap(2).trimmed();
+        }
     }
 
-    return true;
+    return result;
 }
 
 void Preprocessor::skipUntilNextMatchingConditional()
