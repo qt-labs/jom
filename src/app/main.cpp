@@ -120,11 +120,13 @@ int main(int argc, char* argv[])
 {
     SetConsoleCtrlHandler(&ConsoleCtrlHandlerRoutine, TRUE);
     QCoreApplication app(argc, argv);
-    //TODO: command line options can also be specified as -ACF ...
+    //TODO156: command line options can also be specified as -ACF ...
+    //         even -fmakeflags.mk /nNoLogo /nologon works with nmake
 
     g_options.nmpFullPath = QCoreApplication::applicationFilePath();
     g_options.nmpFullPath.replace(QLatin1Char('/'), QDir::separator());
 
+    const QStringList arguments = app.arguments();
     QString filename, stdErrFile;
     QStringList otherParams;
     for (int i=1; i < argc; ++i) {
@@ -287,7 +289,6 @@ int main(int argc, char* argv[])
     if (!g_options.ignorePredefinedRulesAndMacros) {
         macroTable.setMacroValue("MAKE", g_options.nmpFullPath);
         macroTable.setMacroValue("MAKEDIR", QDir::currentPath());
-        macroTable.setMacroValue("MAKEFLAGS", QString::null); // TODO: fill this correctly
         macroTable.setMacroValue("AS", "ml");       // Macro Assembler
         macroTable.setMacroValue("ASFLAGS", QString::null);
         macroTable.setMacroValue("BC", "bc");       // Basic Compiler
@@ -306,6 +307,32 @@ int main(int argc, char* argv[])
         macroTable.setMacroValue("PASCALFLAGS", QString::null);
         macroTable.setMacroValue("RC", "rc");       // Resource Compiler
         macroTable.setMacroValue("RCFLAGS", QString::null);
+
+        QString makeflags;
+        bool firstFlag = true;
+        foreach (const QString& arg, arguments) {
+            if (arg.length() < 2)
+                continue;
+
+            QChar ch0 = arg.at(0);
+            QChar ch1 = arg.at(1).toLower();
+            if ((ch0 == QLatin1Char('/') || ch0 == QLatin1Char('-')) &&
+                ch1 != QLatin1Char('f') && ch1 != QLatin1Char('j'))
+            {
+                QString str = arg.mid(1).toUpper();
+                if (str.length() > 1) {
+                    // translate long option to short option
+                    // TODO: add more translations?
+                    if (str == "NOLOGO")
+                        str = "L";
+                }
+                if (!firstFlag)
+                    makeflags.append(" /"); // remove when TODO156 is implemented!
+                makeflags.append(str);
+                firstFlag = false;
+            }
+        }
+        macroTable.setMacroValue("MAKEFLAGS", makeflags);
     }
 
     Preprocessor preprocessor;
