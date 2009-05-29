@@ -216,6 +216,9 @@ int main(int argc, char* argv[])
                 case 'K':
                     g_options.buildUnrelatedTargetsOnError = true;
                     break;
+                case 'l':
+                case 'L':
+                    g_options.showLogo = false;
                 case 'n':
                 case 'N':
                     g_options.dryRun = true;
