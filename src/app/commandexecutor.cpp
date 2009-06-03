@@ -145,11 +145,11 @@ bool CommandExecutor::executeNextCommand()
     if (cmd.m_commandLine.startsWith('@'))
         cmd.m_commandLine = cmd.m_commandLine.right(cmd.m_commandLine.length() - 1);
 
-    bool spawnNMP = false;
+    bool spawnJOM = false;
     if (g_options.maxNumberOfJobs > 1) {
         int idx = cmd.m_commandLine.indexOf(g_options.nmpFullPath);
         if (idx > -1) {
-            spawnNMP = true;
+            spawnJOM = true;
             const QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
             cmd.m_commandLine.insert(idx + g_options.nmpFullPath.length(), arg);
         }
@@ -169,13 +169,12 @@ bool CommandExecutor::executeNextCommand()
     // transform quotes to a form that cmd.exe can understand
     cmd.m_commandLine.replace("\\\"", "\"\"\"");
 
-    if (spawnNMP) {
-        if (cmd.m_commandLine.startsWith(g_options.nmpFullPath))
-            m_process.start(cmd.m_commandLine);
-        else
-            m_process.start("cmd /c " + cmd.m_commandLine);
+    if (spawnJOM) {
+        int ret = _wsystem(cmd.m_commandLine.utf16());
+        if (ret == -1)
+            throw Exception("cannot spawn jom subprocess");
         m_nCommandIdx++;
-        m_process.waitForFinished(-1);
+        onProcessFinished(ret, QProcess::NormalExit);
     } else {
         m_process.start("cmd /c " + cmd.m_commandLine);
         m_nCommandIdx++;
