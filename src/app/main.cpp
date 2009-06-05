@@ -93,6 +93,8 @@ static void traverseChildProcesses(DWORD dwProcessId, const QMultiHash<DWORD, DW
     }
 }
 
+static TargetExecutor* g_pTargetExecutor = 0;
+
 BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
 {
     fprintf(stderr, "jom terminated by user\n");
@@ -115,6 +117,9 @@ BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
 
     DWORD dwProcessId = QCoreApplication::applicationPid();
     traverseChildProcesses(dwProcessId, processIds);
+
+    if (g_pTargetExecutor)
+        g_pTargetExecutor->removeTempFiles();
 
     exit(2);
     return TRUE;
@@ -359,6 +364,7 @@ int main(int argc, char* argv[])
     }
 
     TargetExecutor executor;
+    g_pTargetExecutor = &executor;
     try {
         executor.apply(mkfile, targets);
     }
@@ -369,5 +375,6 @@ int main(int argc, char* argv[])
 
     app.postEvent(&executor, new TargetExecutor::StartEvent());
     int result = app.exec();
+    g_pTargetExecutor = 0;
     return result;
 }

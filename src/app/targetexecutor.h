@@ -40,6 +40,7 @@ public:
     ~TargetExecutor();
 
     void apply(Makefile* mkfile, const QStringList& targets);
+    void removeTempFiles();
 
     struct StartEvent : public QEvent
     {

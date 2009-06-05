@@ -133,4 +133,15 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
     }
 }
 
+void TargetExecutor::removeTempFiles()
+{
+    foreach (QObject* child, children()) {
+        CommandExecutor* cmdex = qobject_cast<CommandExecutor*>(child);
+        if (!cmdex)
+            continue;
+
+        cmdex->cleanupTempFiles();
+    }
+}
+
 } //namespace NMakeFile

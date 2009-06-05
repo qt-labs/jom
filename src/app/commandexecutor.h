@@ -39,6 +39,7 @@ public:
     void start(DescriptionBlock* target);
     DescriptionBlock* target() { return m_pTarget; }
     void waitForFinished();
+    void cleanupTempFiles();
 
 signals:
     void started(CommandExecutor*);
@@ -53,7 +54,6 @@ private slots:
 private:
     bool executeNextCommand();
     void createTempFiles();
-    void cleanupTempFiles();
 
 private:
     static QString      m_tempPath;
