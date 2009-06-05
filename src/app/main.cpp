@@ -95,6 +95,8 @@ static void traverseChildProcesses(DWORD dwProcessId, const QMultiHash<DWORD, DW
 
 BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
 {
+    printf("jom terminated by user\n");
+
     // whatever the event is, we should stop processing
     QMultiHash<DWORD, DWORD> processIds;
     HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -113,6 +115,8 @@ BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
 
     DWORD dwProcessId = QCoreApplication::applicationPid();
     traverseChildProcesses(dwProcessId, processIds);
+
+    exit(2);
     return TRUE;
 }
 
