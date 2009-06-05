@@ -8,6 +8,7 @@ ThisIsNotDefined=well, at the moment is actually *is* defined.
 viel$(BUMSEN)_$(SEIN)$(MANNES)_ = Hast du Weinbrand in der Blutbahn...
 # what about a comment inbetween? good idea! :-)
 NoContent=               # this is a comment, dude
+LateDefinition = _$(Literal2)_
 Literal1 = ^# who does that anyway? ^# # but here ends the line, sucker!
 Literal2 = thi$$ i$$ pricele$$$$
 Literal3 = schnupsi^
@@ -21,4 +22,6 @@ SplitOverLines= \
 				 one \
 				 two\
 				 three
+Incremental = one
+Incremental = $(Incremental) two
 

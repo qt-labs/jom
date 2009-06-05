@@ -54,7 +54,15 @@ void MacroTable::setMacroValue(const QString& name, const QString& value, bool s
             throw Exception(QString("macro name %1 is invalid").arg(name));
         return;
     }
-    m_macros[expandedName] = expandMacros(value);
+
+    const QString instantiatedName = "$(" + expandedName + ")";
+    if (value.contains(instantiatedName)) {
+        QString str = value;
+        str.replace(instantiatedName, macroValue(expandedName));
+        m_macros[expandedName] = str;
+    } else {
+        m_macros[expandedName] = value;
+    }
 }
 
 bool MacroTable::isMacroDefined(const QString& name) const

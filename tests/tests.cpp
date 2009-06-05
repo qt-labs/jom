@@ -134,6 +134,9 @@ void ParserTest::macros()
     QCOMPARE(macroTable.macroValue("Literal5"), QLatin1String("backslash at the end\\"));
     QCOMPARE(macroTable.macroValue("Literal6"), QLatin1String("backslash at the end\\"));
     QCOMPARE(macroTable.macroValue("SplitOverLines"), QLatin1String("one  two three"));
+    QCOMPARE(macroTable.macroValue("Incremental"), QLatin1String("one two"));
+    QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
+             QLatin1String("_thi$ i$ pricele$$_"));
     QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
 }
 
