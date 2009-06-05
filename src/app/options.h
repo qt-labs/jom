@@ -46,7 +46,7 @@ struct Options
     int maxNumberOfJobs;
     bool dumpDependencyGraph;
     bool dumpDependencyGraphDot;
-    QString nmpFullPath;
+    QString fullAppPath;
 };
 
 extern Options g_options;

@@ -147,11 +147,11 @@ bool CommandExecutor::executeNextCommand()
 
     bool spawnJOM = false;
     if (g_options.maxNumberOfJobs > 1) {
-        int idx = cmd.m_commandLine.indexOf(g_options.nmpFullPath);
+        int idx = cmd.m_commandLine.indexOf(g_options.fullAppPath);
         if (idx > -1) {
             spawnJOM = true;
             const QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
-            cmd.m_commandLine.insert(idx + g_options.nmpFullPath.length(), arg);
+            cmd.m_commandLine.insert(idx + g_options.fullAppPath.length(), arg);
         }
     }
 
@@ -200,7 +200,7 @@ void CommandExecutor::createTempFiles()
 
         QString fileName;
         if (cmd.m_inlineFile->m_filename.isEmpty())
-            fileName = m_tempPath + QString("nmp%1.tmp").arg(GetTickCount());
+            fileName = m_tempPath + QString("jom%1.tmp").arg(GetTickCount());
         else
             fileName = cmd.m_inlineFile->m_filename;
 

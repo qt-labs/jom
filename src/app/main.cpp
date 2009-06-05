@@ -127,8 +127,8 @@ int main(int argc, char* argv[])
     //TODO156: command line options can also be specified as -ACF ...
     //         even -fmakeflags.mk /nNoLogo /nologon works with nmake
 
-    g_options.nmpFullPath = QCoreApplication::applicationFilePath();
-    g_options.nmpFullPath.replace(QLatin1Char('/'), QDir::separator());
+    g_options.fullAppPath = QCoreApplication::applicationFilePath();
+    g_options.fullAppPath.replace(QLatin1Char('/'), QDir::separator());
 
     const QStringList arguments = app.arguments();
     QString filename, stdErrFile;
@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
     MacroTable macroTable;
     readEnvironment(macroTable);
     if (!g_options.ignorePredefinedRulesAndMacros) {
-        macroTable.setMacroValue("MAKE", g_options.nmpFullPath);
+        macroTable.setMacroValue("MAKE", g_options.fullAppPath);
         macroTable.setMacroValue("MAKEDIR", QDir::currentPath());
         macroTable.setMacroValue("AS", "ml");       // Macro Assembler
         macroTable.setMacroValue("ASFLAGS", QString::null);
