@@ -188,7 +188,14 @@ void Preprocessor::basicReadLine(QString& line)
         line.append(' ');
         QString appendix;
         basicReadLine(appendix);
-        line.append(appendix);
+        // find the first non-whitespace character in appendix
+        const int appendixLength = appendix.length();
+        for (idx=0; idx < appendixLength; ++idx) {
+            QChar ch = appendix.at(idx);
+            if (ch != QLatin1Char(' ') && ch != QLatin1Char('\t'))
+                break;
+        }
+        line.append(appendix.mid(idx));
     }
     line.replace("^\\", "\\");
 
