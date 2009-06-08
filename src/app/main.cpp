@@ -67,7 +67,7 @@ static void readEnvironment(MacroTable& macroTable)
     int i = 0;
     if (_wenviron) {
         while (_wenviron[i]) {
-            QString env = QString::fromUtf16(_wenviron[i]);
+            QString env = QString::fromUtf16(reinterpret_cast<ushort*>(_wenviron[i]));
             QString lhs, rhs;
             int idx = env.indexOf('=');
             lhs = env.left(idx);
