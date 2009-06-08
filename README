@@ -3,3 +3,30 @@ jom - the tool with endless possibilities
 "jom" is "let's go" in Malay.
 Who wants to add more to this file?
 
+== How to compile jom with cmake ==
+We assume that everything we do happens in the folder X:\build-jom 
+1. get the C runtime of antlr and unpack the package into the folder X:\build-jom
+2. unpack these sources of jom into X:\build-jom\jom
+3. add a build directory somewhere - this normally either is a directory on the same level as the build directory
+   or a subdirectory of the source root directory.
+   !!! Do not try to build from within the source directory !!!
+4. switch into the build directory and run the following commands:
+
+     X:\build-jom\build> cmake X:\build-jom\jom -G "NMake Makefiles" -DCMAKE_PREFIX_PATH=X:\build-jom -DCMAKE_INSTALL_PREFIX=X:\build-jom\install
+     ...
+
+   To take a special version of Qt, append -DQT_QMAKE_EXECUTABLE:PATH=X:\build-jom\qt\bin\qmake.exe .
+
+   Now just run:
+
+     X:\build-jom\build> nmake && nmake install
+     ...
+
+   If you want to begin new, just throw away the build dir.
+
+== Running the tests ==
+   To build the unit tests in jom, add the option -DJOM_ENABLE_TESTS=ON to the cmake line.
+   To run the tests, you can simply type
+
+    X:\build-jom\> nmake test
+    ...
