@@ -170,7 +170,7 @@ bool CommandExecutor::executeNextCommand()
     cmd.m_commandLine.replace("\\\"", "\"\"\"");
 
     if (spawnJOM) {
-        int ret = _wsystem(cmd.m_commandLine.utf16());
+        int ret = _wsystem(reinterpret_cast<const WCHAR*>(cmd.m_commandLine.utf16()));
         if (ret == -1)
             throw Exception("cannot spawn jom subprocess");
         m_nCommandIdx++;
