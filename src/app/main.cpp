@@ -230,6 +230,7 @@ int main(int argc, char* argv[])
                 case 'l':
                 case 'L':
                     g_options.showLogo = false;
+                    break;
                 case 'n':
                 case 'N':
                     g_options.dryRun = true;
