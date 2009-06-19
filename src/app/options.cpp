@@ -22,6 +22,7 @@
  ****************************************************************************/
 #include "options.h"
 #include "macrotable.h"
+#include "exception.h"
 #include <QThread>
 
 namespace NMakeFile {
@@ -79,7 +80,12 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
             int idx = arg.indexOf(QLatin1Char('='));
             QString name = arg.left(idx);
             QString value = arg.mid(idx+1);
-            macroTable.setMacroValue(name, value);
+            try {
+                macroTable.setMacroValue(name, value);
+            } catch (Exception e) {
+                fprintf(stderr, qPrintable(e.message()));
+                exit(128);
+            }
         } else {
             // handle target
             targets.append(arg);
