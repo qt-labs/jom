@@ -41,7 +41,7 @@ const int nVersionMajor = 0;
 const int nVersionMinor = 6;
 const int nVersionPatch = 4;
 
-static void displayNMakeInformation()
+static void displayMakeInformation()
 {
 }
 
@@ -129,164 +129,23 @@ int main(int argc, char* argv[])
 {
     SetConsoleCtrlHandler(&ConsoleCtrlHandlerRoutine, TRUE);
     QCoreApplication app(argc, argv);
-    //TODO156: command line options can also be specified as -ACF ...
-    //         even -fmakeflags.mk /nNoLogo /nologon works with nmake
 
+    QString filename;
+    QStringList targets;
+    MacroTable macroTable;
+    if (!g_options.readCommandLineArguments(qApp->arguments(), filename, targets, macroTable)) {
+        showUsage();
+        return 128;
+    }
+    if (g_options.showUsageAndExit) {
+        showUsage();
+        return 0;
+    }
     g_options.fullAppPath = QCoreApplication::applicationFilePath();
     g_options.fullAppPath.replace(QLatin1Char('/'), QDir::separator());
 
-    const QStringList arguments = app.arguments();
-    QString filename, stdErrFile;
-    QStringList otherParams;
-    for (int i=1; i < argc; ++i) {
-        const char* param = argv[i];
-        if (param[0] == '-' || param[0] == '/') {
-            if (strlen(param) > 2) {
-                QString str = QString::fromLocal8Bit(param+1).toUpper();
-                if (str == "HELP") {
-                    showUsage();
-                    return 0;
-                } else if (str == "NOLOGO") {
-                    g_options.showLogo = false;
-                } else if (str == "DUMPGRAPH") {
-                    g_options.dumpDependencyGraph = true;
-                    g_options.showLogo = false;
-                } else if (str == "DUMPGRAPHDOT") {
-                    g_options.dumpDependencyGraph = true;
-                    g_options.dumpDependencyGraphDot = true;
-                    g_options.showLogo = false;
-                } else if (str.startsWith("ERRORREPORT")) {
-                    // ignore - we don't send stuff to Microsoft :)
-                }
-                continue;
-            }
-
-            switch (param[1]) {
-                case 'f':
-                case 'F':
-                    ++i;
-                    if (i >= argc) {
-                        printf("Error: no filename specified.\n");
-                        showUsage();
-                        return 128;
-                    }
-                    filename = QString(argv[i]);
-                    break;
-                case 'x':
-                case 'X':
-                    ++i;
-                    if (i >= argc) {
-                        printf("Error: no filename specified.\n");
-                        showUsage();
-                        return 128;
-                    }
-                    stdErrFile = QString(argv[i]);
-                    break;
-                case 'a':
-                case 'A':
-                    g_options.buildAllTargets = true;
-                    break;
-                case 'b':
-                case 'B':
-                    g_options.buildIfTimeStampsAreEqual = true;
-                    break;
-                case 'c':
-                case 'C':
-                    g_options.suppressOutputMessages = true;
-                    break;
-                case 'd':
-                case 'D':
-                    // display build information
-                    break;
-                case 'e':
-                case 'E':
-                    //TODO: "Override env-var macros" What does that mean?
-                    break;
-                case 'g':
-                case 'G':
-                    g_options.displayIncludeFileNames = true;
-                    break;
-                case 'i':
-                case 'I':
-                    g_options.stopOnErrors = false;
-                    break;
-                case 'j':
-                case 'J':
-                    {
-                        int j = i+1;
-                        QString s = QString::fromLocal8Bit(argv[j]);
-                        bool ok;
-                        int jobs = s.toUInt(&ok);
-                        if (!ok)
-                            continue;
-                        i=j;
-                        g_options.maxNumberOfJobs = jobs;
-                    }
-                    break;
-                case 'k':
-                case 'K':
-                    g_options.buildUnrelatedTargetsOnError = true;
-                    break;
-                case 'l':
-                case 'L':
-                    g_options.showLogo = false;
-                    break;
-                case 'n':
-                case 'N':
-                    g_options.dryRun = true;
-                    break;
-                case 'p':
-                case 'P':
-                    displayNMakeInformation();
-                    return 0;
-                case 'q':
-                case 'Q':
-                    g_options.checkTimeStampsButDoNotBuild = true;
-                    break;
-                case 'r':
-                case 'R':
-                    g_options.ignorePredefinedRulesAndMacros = true;
-                    break;
-                case 's':
-                case 'S':
-                    break;
-                case 't':
-                case 'T':
-                    g_options.changeTimeStampsButDoNotBuild = true;
-                    break;
-                case 'u':
-                case 'U':
-                    g_options.dumpInlineFiles = true;
-                    break;
-                case 'y':
-                case 'Y':
-                    g_options.batchModeEnabled = false;
-                    break;
-                case '?':
-                    showUsage();
-                    return 0;
-                    break;
-            }
-        } else {
-            otherParams.append(QString(argv[i]));
-        }
-    }
-
-    QStringList targets;
-    foreach (const QString& param, otherParams) {
-        if (param.contains('=')) {
-            // TODO: handle macro definition
-            qFatal("macro definition on command line not implemented :-P");
-        } else {
-            targets.append(param);
-        }
-    }
-
     if (g_options.showLogo)
         showLogo();
-
-    if (filename.isEmpty())
-        filename = "Makefile";
 
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
@@ -294,7 +153,6 @@ int main(int argc, char* argv[])
         return 128;
     }
 
-    MacroTable macroTable;
     readEnvironment(macroTable);
     if (!g_options.ignorePredefinedRulesAndMacros) {
         macroTable.setMacroValue("MAKE", g_options.fullAppPath);
@@ -317,32 +175,6 @@ int main(int argc, char* argv[])
         macroTable.setMacroValue("PASCALFLAGS", QString::null);
         macroTable.setMacroValue("RC", "rc");       // Resource Compiler
         macroTable.setMacroValue("RCFLAGS", QString::null);
-
-        QString makeflags;
-        bool firstFlag = true;
-        foreach (const QString& arg, arguments) {
-            if (arg.length() < 2)
-                continue;
-
-            QChar ch0 = arg.at(0);
-            QChar ch1 = arg.at(1).toLower();
-            if ((ch0 == QLatin1Char('/') || ch0 == QLatin1Char('-')) &&
-                ch1 != QLatin1Char('f') && ch1 != QLatin1Char('j'))
-            {
-                QString str = arg.mid(1).toUpper();
-                if (str.length() > 1) {
-                    // translate long option to short option
-                    // TODO: add more translations?
-                    if (str == "NOLOGO")
-                        str = "L";
-                }
-                if (!firstFlag)
-                    makeflags.append(" /"); // remove when TODO156 is implemented!
-                makeflags.append(str);
-                firstFlag = false;
-            }
-        }
-        macroTable.setMacroValue("MAKEFLAGS", makeflags);
     }
 
     Preprocessor preprocessor;

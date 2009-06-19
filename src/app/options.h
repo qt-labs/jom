@@ -22,13 +22,17 @@
  ****************************************************************************/
 #pragma once
 
-#include <QString>
+#include <QStringList>
 
 namespace NMakeFile {
+
+class MacroTable;
 
 struct Options
 {
     Options();
+    bool readCommandLineArguments(QStringList arguments, QString& makefile,
+                                  QStringList& targets, MacroTable& macroTable);
 
     bool buildAllTargets;
     bool buildIfTimeStampsAreEqual;
@@ -46,7 +50,13 @@ struct Options
     int maxNumberOfJobs;
     bool dumpDependencyGraph;
     bool dumpDependencyGraphDot;
+    bool displayMakeInformation;
+    bool showUsageAndExit;
     QString fullAppPath;
+    QString stderrFile; // TODO: do something with this
+
+private:
+    bool handleCommandLineOption(QString arg, QStringList& arguments, QString& makefile, QString& makeflags);
 };
 
 extern Options g_options;
