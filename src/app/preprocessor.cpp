@@ -195,7 +195,7 @@ void Preprocessor::basicReadLine(QString& line)
             if (ch != QLatin1Char(' ') && ch != QLatin1Char('\t'))
                 break;
         }
-        line.append(appendix.mid(idx));
+        line.append(appendix.midRef(idx));
     }
     line.replace("^\\", "\\");
 
