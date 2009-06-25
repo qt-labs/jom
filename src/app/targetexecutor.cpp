@@ -126,11 +126,12 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
     m_availableProcesses.append(executor);
 
     if (abortMakeProcess) {
+        m_depgraph->clear();
+        m_pendingTargets.clear();
         waitForProcesses();
-        qApp->exit(2);
-    } else {
-        qApp->postEvent(this, new StartEvent);
     }
+
+    qApp->postEvent(this, new StartEvent);
 }
 
 void TargetExecutor::removeTempFiles()
