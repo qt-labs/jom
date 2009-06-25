@@ -180,7 +180,9 @@ bool DependencyGraph::isEmpty() const
 
 void DependencyGraph::remove(DescriptionBlock* target)
 {
-    remove(m_nodeContainer.value(target));
+    Node* nodeToRemove = m_nodeContainer.value(target);
+    if (nodeToRemove)
+        remove(nodeToRemove);
 }
 
 void DependencyGraph::remove(Node* node)
