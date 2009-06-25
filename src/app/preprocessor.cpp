@@ -393,8 +393,7 @@ int Preprocessor::evaluateExpression(const QString& expr)
 
     return m_expressionParser->evaluate(m_macroTable->expandMacros(expr));
 #else
-    qWarning("Sorry, expressions in preprocessor directives are not supported. Compile with ANTLR_AVAILABLE.");
-    return 0;
+    qFatal("Sorry, expressions in preprocessor directives are not supported. Compile with ANTLR_AVAILABLE.");
 #endif
 }
 
