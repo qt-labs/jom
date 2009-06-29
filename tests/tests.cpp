@@ -78,7 +78,8 @@ void ParserTest::includeFiles()
     bool exceptionCaught = false;
     try {
         while (!pp.readLine().isNull());
-    } catch (...) {
+    } catch (Exception e) {
+        qDebug() << e.message();
         exceptionCaught = true;
     }
     QVERIFY(!exceptionCaught);

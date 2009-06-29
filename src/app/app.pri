@@ -1,4 +1,5 @@
 HEADERS += makefile.h \
+           makefilelinereader.h \
            macrotable.h \
            exception.h \
            dependencygraph.h \
@@ -10,6 +11,7 @@ HEADERS += makefile.h \
 
 SOURCES += macrotable.cpp \
            makefile.cpp \
+           makefilelinereader.cpp \
            exception.cpp \
            dependencygraph.cpp \
            options.cpp \

@@ -26,6 +26,7 @@
 #endif
 #include "macrotable.h"
 #include "exception.h"
+#include "makefilelinereader.h"
 
 #include <QDir>
 #include <QDebug>
@@ -52,7 +53,6 @@ void Preprocessor::setMacroTable(MacroTable* macroTable)
 bool Preprocessor::openFile(const QString& fileName)
 {
     m_conditionalStack.clear();
-    m_lineNumber = 0;
     if (!m_fileStack.isEmpty())
         m_fileStack.clear();
 
@@ -97,23 +97,22 @@ bool Preprocessor::internalOpenFile(QString fileName)
 
     // detect include cycles
     foreach (const TextFile& tf, m_fileStack) {
-        if (tf.file->fileName() == fileName) {
-            throw Exception(QLatin1String("cycle in include files: ") + fileInfo.fileName(), m_lineNumber);
+        if (tf.reader->fileName() == fileName) {
+            error(QLatin1String("cycle in include files: ") + fileInfo.fileName());
             return false;
         }
     }
 
-    QFile* file = new QFile(fileName);
-    if (!file->open(QFile::ReadOnly)) {
-        throw Exception(QLatin1String("Can't open ") + fileName, m_lineNumber);
-        delete file;
+    MakefileLineReader* reader = new MakefileLineReader(fileName);
+    if (!reader->open()) {
+        error(QLatin1String("Can't open ") + fileName);
+        delete reader;
         return false;
     }
 
     m_fileStack.push(TextFile());
     TextFile& textFile = m_fileStack.top();
-    textFile.file = file;
-    textFile.stream = new QTextStream(file);
+    textFile.reader = reader;
     textFile.fileDirectory = fileInfo.absolutePath();
     return true;
 }
@@ -124,11 +123,32 @@ QString Preprocessor::readLine()
     basicReadLine(line);
 
     if (parseMacro(line) || parsePreprocessingDirective(line)) {
-        m_lineNumber++;
         return readLine();
     }
 
     return line;
+}
+
+uint Preprocessor::lineNumber() const
+{
+    if (m_fileStack.isEmpty())
+        return 0;
+    return m_fileStack.top().reader->lineNumber();
+}
+
+QString Preprocessor::currentFileName() const
+{
+    if (m_fileStack.isEmpty())
+        return QString();
+    return m_fileStack.top().reader->fileName();
+}
+
+inline void removingLeadingCharacterFromSubstring(QString& str, const QString& substring)
+{
+    QStringMatcher sm(substring);
+    int idx = 0;
+    while (idx = sm.indexIn(str, idx) > -1)
+        str.remove(idx, 1);
 }
 
 void Preprocessor::basicReadLine(QString& line)
@@ -137,69 +157,17 @@ void Preprocessor::basicReadLine(QString& line)
         line = QString();
         return;
     }
-    line = m_fileStack.top().stream->readLine();
+    line = m_fileStack.top().reader->readLine();
     while (line.isNull()) {
-        delete m_fileStack.top().stream;
-        delete m_fileStack.top().file;
+        delete m_fileStack.top().reader;
         m_fileStack.pop();
         if (m_fileStack.isEmpty())
             return;
-        line = m_fileStack.top().stream->readLine();
+        line = m_fileStack.top().reader->readLine();
     }
 
-    // filter comments
-    int idx = line.indexOf('#');
-    bool escapedCommentSpecifierFound = false;
-    bool commentAtEndOfLine = false;
-    while (idx > -1) {
-        if (idx == 0) {
-            m_lineNumber++;
-            basicReadLine(line);
-            return;
-        }
-        else if (line.at(idx-1) == '^') {
-            escapedCommentSpecifierFound = true;
-            idx = line.indexOf('#', idx + 1);
-            continue;
-        }
-        line.resize(idx);
-        line = line.trimmed();
-        commentAtEndOfLine = true;
-        break;
-    }
     line.replace("$$", "$");
-    if (escapedCommentSpecifierFound)
-        line.replace("^#", "#");
-
-    // concatenate lines ending with ^
-    while (line.endsWith('^') && !commentAtEndOfLine) {
-        line = line.left(line.count() - 1);
-        line.append(QLatin1Char('\n'));
-        QString appendix;
-        basicReadLine(appendix);
-        line.append(appendix);
-    }
-
-    // concatenate multi lines
-    while (line.endsWith('\\') && !commentAtEndOfLine) {
-        if (line.count() > 2 && line.at(line.count() - 2) == '^')
-            break;
-        line.resize(line.length() - 1);
-        line.append(' ');
-        QString appendix;
-        basicReadLine(appendix);
-        // find the first non-whitespace character in appendix
-        const int appendixLength = appendix.length();
-        for (idx=0; idx < appendixLength; ++idx) {
-            QChar ch = appendix.at(idx);
-            if (ch != QLatin1Char(' ') && ch != QLatin1Char('\t'))
-                break;
-        }
-        line.append(appendix.midRef(idx));
-    }
     line.replace("^\\", "\\");
-
-    m_lineNumber++;
 }
 
 bool Preprocessor::parseMacro(const QString& line)
@@ -224,7 +192,7 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
 
     if (directive == "CMDSWITCHES") {
     } else if (directive == "ERROR") {
-        throw Exception("ERROR: " + value);
+        error("ERROR: " + value);
     } else if (directive == "MESSAGE") {
         printf(qPrintable(value));
     } else if (directive == "INCLUDE") {
@@ -399,7 +367,7 @@ int Preprocessor::evaluateExpression(const QString& expr)
 
 void Preprocessor::error(const QString& msg)
 {
-    throw Exception("Preprocessor: " + msg, m_lineNumber);
+    throw Exception("Preprocessor: " + msg, currentFileName(), lineNumber());
 }
 
 } // namespace NMakeFile

@@ -20,25 +20,35 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
+
 #pragma once
 
-#include <QString>
+#include <QtCore/QFile>
 
 namespace NMakeFile {
 
-class Exception
-{
+class MakefileLineReader {
 public:
-    Exception(const QString& message, const QString& fileName = QString(), int line = 0);
-    ~Exception();
+    MakefileLineReader(const QString& filename);
+    ~MakefileLineReader();
 
-    const QString& message() const { return m_message; }
-    int line() const { return m_line; }
+    bool open();
+    void close();
+    QString readLine();
+    QString fileName() const { return m_file.fileName(); }
+    uint lineNumber() const { return m_nLineNumber; }
 
 private:
-    QString m_message;
-    QString m_fileName;
-    int     m_line;
+    void addBufferToLine(QString& line, char* buf, int bufLength);
+    void removeFirstCharacter(char* buf, char* endPtr);
+
+private:
+    QFile m_file;
+    static const size_t m_nInitialLineBufferSize = 6144;
+    static const size_t m_nLineBufferGrowSize = 1024;
+    size_t m_nLineBufferSize;
+    char *m_lineBuffer;
+    uint m_nLineNumber;
 };
 
 } // namespace NMakeFile

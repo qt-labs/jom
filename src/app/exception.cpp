@@ -24,8 +24,9 @@
 
 namespace NMakeFile {
 
-Exception::Exception(const QString& message, int line)
+Exception::Exception(const QString& message, const QString& fileName, int line)
 :   m_message(message),
+    m_fileName(fileName),
     m_line(line)
 {
 }

@@ -22,8 +22,6 @@
  ****************************************************************************/
 #pragma once
 
-#include <QFile>
-#include <QTextStream>
 #include <QRegExp>
 #include <QStack>
 
@@ -31,6 +29,7 @@ namespace NMakeFile {
 
 class MacroTable;
 class PPExpression;
+class MakefileLineReader;
 
 class Preprocessor
 {
@@ -48,10 +47,8 @@ public:
         return ch == ' ' || ch == '\t';
     }
 
-    uint lineNumber() const
-    {
-        return m_lineNumber;
-    }
+    uint lineNumber() const;
+    QString currentFileName() const;
 
 private:
     bool internalOpenFile(QString fileName);
@@ -69,22 +66,20 @@ private:
 private:
     struct TextFile
     {
-        QFile*  file;
-        QTextStream* stream;
+        MakefileLineReader* reader;
         QString fileDirectory;
 
         TextFile()
-            : file(0), stream(0)
+            : reader(0)
         {}
 
         TextFile(const TextFile& rhs)
-            : file(rhs.file), stream(rhs.stream), fileDirectory(rhs.fileDirectory)
+            : reader(rhs.reader), fileDirectory(rhs.fileDirectory)
         {}
 
         TextFile& operator=(const TextFile& rhs)
         {
-            file = rhs.file;
-            stream = rhs.stream;
+            reader = rhs.reader;
             fileDirectory = rhs.fileDirectory;
             return *this;
         }
@@ -92,7 +87,6 @@ private:
 
     QStack<TextFile>    m_fileStack;
     MacroTable*         m_macroTable;
-    uint                m_lineNumber;
     QRegExp             m_rexMacro;
     QRegExp             m_rexPreprocessingDirective;
     QStack<bool>        m_conditionalStack;
