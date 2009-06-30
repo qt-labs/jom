@@ -147,12 +147,6 @@ int main(int argc, char* argv[])
     if (g_options.showLogo)
         showLogo();
 
-    QFile file(filename);
-    if (!file.open(QFile::ReadOnly)) {
-        printf(qPrintable(QString("Cannot open %1.\n").arg(filename)));
-        return 128;
-    }
-
     readEnvironment(macroTable);
     if (!g_options.ignorePredefinedRulesAndMacros) {
         macroTable.setMacroValue("MAKE", g_options.fullAppPath);
@@ -179,7 +173,13 @@ int main(int argc, char* argv[])
 
     Preprocessor preprocessor;
     preprocessor.setMacroTable(&macroTable);
-    preprocessor.openFile(filename);
+    try {
+        preprocessor.openFile(filename);
+    }
+    catch (Exception e) {
+        printf(qPrintable(e.message()));
+        return 128;
+    }
 
     Parser parser;
     Makefile* mkfile;

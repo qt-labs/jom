@@ -92,7 +92,10 @@ bool Preprocessor::internalOpenFile(QString fileName)
     }
 
     // make file name canonical for safe cycle detection
+    const QString origFileName = fileName;
     QFileInfo fileInfo(fileName);
+    if (!fileInfo.exists())
+        error(QString("File %1 doesn't exist.").arg(origFileName));
     fileName = fileInfo.canonicalFilePath();
 
     // detect include cycles
@@ -105,8 +108,8 @@ bool Preprocessor::internalOpenFile(QString fileName)
 
     MakefileLineReader* reader = new MakefileLineReader(fileName);
     if (!reader->open()) {
-        error(QLatin1String("Can't open ") + fileName);
         delete reader;
+        error(QLatin1String("Can't open ") + origFileName);
         return false;
     }
 
@@ -367,7 +370,7 @@ int Preprocessor::evaluateExpression(const QString& expr)
 
 void Preprocessor::error(const QString& msg)
 {
-    throw Exception("Preprocessor: " + msg, currentFileName(), lineNumber());
+    throw Exception(msg, currentFileName(), lineNumber());
 }
 
 } // namespace NMakeFile
