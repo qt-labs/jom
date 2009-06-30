@@ -111,7 +111,7 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
     if (exitStatus != QProcess::NormalExit)
         exitCode = 2;
     if (exitCode > m_pLastCommand->m_maxExitCode) {
-        printf("command failed with exit code %d\n", exitCode);
+        fprintf(stderr, "command failed with exit code %d\n", exitCode);
         emit finished(this, true);  // abort make process
         return;
     }

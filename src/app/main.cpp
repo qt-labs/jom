@@ -177,7 +177,8 @@ int main(int argc, char* argv[])
         preprocessor.openFile(filename);
     }
     catch (Exception e) {
-        printf(qPrintable(e.message()));
+        fprintf(stderr, qPrintable(e.message()));
+        fprintf(stderr, "\n");
         return 128;
     }
 
@@ -192,7 +193,7 @@ int main(int argc, char* argv[])
         else
             output = QString("ERROR: %1\n").arg(e.message());
 
-        printf(qPrintable(output));
+        fprintf(stderr, qPrintable(output));
         return 2;
     }
 
@@ -203,7 +204,7 @@ int main(int argc, char* argv[])
     }
     catch (Exception e) {
         QString msg = "Error in executor: " + e.message() + "\n";
-        printf(qPrintable(msg));
+        fprintf(stderr, qPrintable(msg));
     }
 
     app.postEvent(&executor, new TargetExecutor::StartEvent());
