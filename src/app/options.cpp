@@ -88,7 +88,8 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
             }
         } else {
             // handle target
-            targets.append(arg);
+            if (!targets.contains(arg))
+                targets.append(arg);
         }
     }
 
