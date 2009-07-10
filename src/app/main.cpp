@@ -39,7 +39,7 @@ using namespace NMakeFile;
 
 const int nVersionMajor = 0;
 const int nVersionMinor = 6;
-const int nVersionPatch = 5;
+const int nVersionPatch = 6;
 
 static void displayMakeInformation()
 {
