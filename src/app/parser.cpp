@@ -96,7 +96,6 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
     foreach (const QString& targetName, m_activeTargets)
         checkForCycles(m_makefile.target(targetName));
 
-    updateTimeStamps();
     preselectInferenceRules();
     return &m_makefile;
 }
@@ -158,12 +157,7 @@ DescriptionBlock* Parser::createTarget(const QString& targetName)
 {
     DescriptionBlock* target = new DescriptionBlock();
     target->m_target = targetName;
-    target->m_bFileExists = QFile::exists(targetName);
     target->m_suffixes = m_suffixes;
-    if (target->m_bFileExists) {
-        QFileInfo fi(targetName);
-        target->m_timeStamp = fi.lastModified();
-    }
     m_makefile.append(target);
     return target;
 }
@@ -380,37 +374,6 @@ void Parser::checkForCycles(DescriptionBlock* target)
     foreach (const QString& depname, target->m_dependents)
         checkForCycles(m_makefile.target(depname));
     target->m_bVisitedByCycleCheck = false;
-}
-
-void Parser::updateTimeStamps()
-{
-    foreach (DescriptionBlock* db, m_makefile.m_targets)
-        updateTimeStamp(db);
-}
-
-void Parser::updateTimeStamp(DescriptionBlock* db)
-{
-    if (db->m_timeStamp.isValid())
-        return;
-
-    if (db->m_dependents.isEmpty()) {
-        db->m_timeStamp = QDateTime::currentDateTime();
-        return;
-    }
-
-    db->m_timeStamp = QDateTime(QDate(1900, 1, 1));
-    foreach (const QString& depname, db->m_dependents) {
-        QDateTime depTimeStamp;
-        DescriptionBlock* dep = m_makefile.m_targets[depname];
-        if (!dep)
-            continue;
-
-        updateTimeStamp(dep);
-        depTimeStamp = dep->m_timeStamp;
-
-        if (depTimeStamp > db->m_timeStamp)
-            db->m_timeStamp = depTimeStamp;
-    }
 }
 
 QList<InferenceRule*> Parser::findRulesByTargetExtension(const QString& targetName)

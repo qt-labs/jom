@@ -286,6 +286,52 @@ static void replaceFileMacros(QString& str, const QString& dependent)
     str.replace("$<", dependent);
 }
 
+void Makefile::invalidateTimeStamps()
+{
+    QHash<QString, DescriptionBlock*>::iterator it = m_targets.begin();
+    QHash<QString, DescriptionBlock*>::iterator itEnd = m_targets.end();
+    for (; it != itEnd; ++it) {
+        DescriptionBlock* target = it.value();
+        target->m_timeStamp = QDateTime();
+        target->m_bFileExists = false;
+    }
+}
+
+/**
+ * Updates the time stamps for this target and all dependent targets.
+ */
+void Makefile::updateTimeStamps(DescriptionBlock* target)
+{
+    if (target->m_timeStamp.isValid())
+        return;
+
+    QFileInfo fi(target->m_target);
+    target->m_bFileExists = fi.exists();
+    if (target->m_bFileExists) {
+        target->m_timeStamp = fi.lastModified();
+        return;
+    }
+
+    if (target->m_dependents.isEmpty()) {
+        target->m_timeStamp = QDateTime::currentDateTime();
+        return;
+    }
+
+    target->m_timeStamp = QDateTime(QDate(1900, 1, 1));
+    foreach (const QString& depname, target->m_dependents) {
+        QDateTime depTimeStamp;
+        DescriptionBlock* dep = m_targets.value(depname, 0);
+        if (!dep)
+            continue;
+
+        updateTimeStamps(dep);
+        depTimeStamp = dep->m_timeStamp;
+
+        if (depTimeStamp > target->m_timeStamp)
+            target->m_timeStamp = depTimeStamp;
+    }
+}
+
 void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule* rule)
 {
     const QString& targetName = target->m_target;
