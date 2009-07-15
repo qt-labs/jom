@@ -46,7 +46,7 @@ set(JOM_SRCS src/app/macrotable.cpp
              src/app/preprocessor.cpp
              src/app/targetexecutor.cpp
              src/app/commandexecutor.cpp
-	     src/app/makefilelinereader.cpp)
+             src/app/makefilelinereader.cpp)
 
 if(ANTLR_FOUND)
     # if antlr library was found, simply add the definition, include the include directory and add some more files
@@ -117,3 +117,4 @@ if(JOM_ENABLE_TESTS)
     add_test(fileNameMacros jom-test fileNameMacros)
 
 endif(JOM_ENABLE_TESTS)
+
