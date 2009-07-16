@@ -21,10 +21,10 @@
  **
  ****************************************************************************/
 #include "ppexpression.h"
-#include "ppexpr/NMakeExpressionLexer.h"
-#include "ppexpr/NMakeExpressionParser.h"
-#include "preprocessor.h"
-#include "macrotable.h"
+#include "NMakeExpressionLexer.h"
+#include "NMakeExpressionParser.h"
+#include "../preprocessor.h"
+#include "../macrotable.h"
 
 #include <QFile>
 #include <QDebug>
