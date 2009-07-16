@@ -45,6 +45,7 @@ struct Options
     bool checkTimeStampsButDoNotBuild;
     bool changeTimeStampsButDoNotBuild;
     bool ignorePredefinedRulesAndMacros;
+    bool suppressExecutedCommandsDisplay;
     bool batchModeEnabled;
     bool dumpInlineFiles;
     int maxNumberOfJobs;

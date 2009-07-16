@@ -155,7 +155,7 @@ bool CommandExecutor::executeNextCommand()
         }
     }
 
-    if (!cmd.m_silent) {
+    if (!cmd.m_silent && !g_options.suppressExecutedCommandsDisplay) {
         printf(qPrintable(cmd.m_commandLine));
         printf("\n");
     }

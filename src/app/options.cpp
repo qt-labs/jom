@@ -41,6 +41,7 @@ Options::Options()
     checkTimeStampsButDoNotBuild(false),
     changeTimeStampsButDoNotBuild(false),
     ignorePredefinedRulesAndMacros(false),
+    suppressExecutedCommandsDisplay(false),
     batchModeEnabled(true),
     dumpInlineFiles(false),
     maxNumberOfJobs(QThread::idealThreadCount()),
@@ -218,6 +219,7 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                 ignorePredefinedRulesAndMacros = true;
                 break;
             case 'S':
+                suppressExecutedCommandsDisplay = true;
                 break;
             case 'T':
                 changeTimeStampsButDoNotBuild = true;
