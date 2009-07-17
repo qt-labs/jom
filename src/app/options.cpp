@@ -80,13 +80,11 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
             // handle macro definition
             int idx = arg.indexOf(QLatin1Char('='));
             QString name = arg.left(idx);
-            QString value = arg.mid(idx+1);
-            try {
-                macroTable.setMacroValue(name, value);
-            } catch (Exception e) {
-                fprintf(stderr, qPrintable(e.message()));
+            if (!macroTable.isMacroNameValid(name)) {
+                fprintf(stderr, "ERROR: The macro name %s is invalid.", qPrintable(name));
                 exit(128);
             }
+            macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1));
         } else {
             // handle target
             if (!targets.contains(arg))

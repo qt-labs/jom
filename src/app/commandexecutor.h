@@ -33,7 +33,7 @@ class CommandExecutor : public QObject
 {
     Q_OBJECT
 public:
-    CommandExecutor(QObject* parent);
+    CommandExecutor(QObject* parent, const QStringList& environment);
     ~CommandExecutor();
 
     void start(DescriptionBlock* target);

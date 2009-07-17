@@ -33,13 +33,13 @@
 
 namespace NMakeFile {
 
-TargetExecutor::TargetExecutor()
+TargetExecutor::TargetExecutor(const QStringList& environment)
 {
     m_makefile = 0;
     m_depgraph = new DependencyGraph();
 
     for (int i=0; i < g_options.maxNumberOfJobs; ++i) {
-        CommandExecutor* process = new CommandExecutor(this);
+        CommandExecutor* process = new CommandExecutor(this, environment);
         connect(process, SIGNAL(started(CommandExecutor*)), this, SLOT(onChildStarted(CommandExecutor*)));
         connect(process, SIGNAL(finished(CommandExecutor*, bool)), this, SLOT(onChildFinished(CommandExecutor*, bool)));
         m_availableProcesses.append(process);

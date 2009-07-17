@@ -23,11 +23,14 @@
 #include "macrotable.h"
 #include "exception.h"
 
+#include <QStringList>
 #include <QRegExp>
+#include <windows.h>
 
 namespace NMakeFile {
 
-MacroTable::MacroTable()
+MacroTable::MacroTable(QStringList* environment)
+:   m_environment(environment)
 {
 }
 
@@ -37,10 +40,23 @@ MacroTable::~MacroTable()
 
 QString MacroTable::macroValue(const QString& macroName) const
 {
-    return m_macros.value(macroName);
+    return m_macros.value(macroName).value;
 }
 
-void MacroTable::setMacroValue(const QString& name, const QString& value, bool silentErrors)
+/**
+ * Sets the value of a macro and marks it as environment variable.
+ * That means changing the macro value changes the environment.
+ * Note that environment macro names are converted to upper case.
+ */
+void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString& value)
+{
+    MacroData* macroData = internalSetMacroValue(name.toUpper(), value);
+    if (!macroData)
+        return;
+    macroData->isEnvironmentVariable = true;
+}
+
+bool MacroTable::isMacroNameValid(const QString& name) const
 {
     static QRegExp rexMacroIdentifier;
     if (rexMacroIdentifier.isEmpty()) {
@@ -48,21 +64,69 @@ void MacroTable::setMacroValue(const QString& name, const QString& value, bool s
         rexMacroIdentifier.setCaseSensitivity(Qt::CaseInsensitive);
     }
 
-    QString expandedName = expandMacros(name);
-    if (!rexMacroIdentifier.exactMatch(expandedName)) {
-        if (!silentErrors)
-            throw Exception(QString("macro name %1 is invalid").arg(name));
-        return;
-    }
+    return rexMacroIdentifier.exactMatch(name);
+}
 
+/**
+ * Sets the value of a macro. If the macro doesn't exist, it is defines as
+ * a normal macro (no environment variable) - changing the macro doesn't affect
+ * the environment.
+ * If the macros exists and is an environment variable then the corresponding
+ * environment variable is set to the new macro value.
+ */
+void MacroTable::setMacroValue(const QString& name, const QString& value)
+{
+    MacroData* macroData = internalSetMacroValue(name, value);
+    if (!macroData)
+        throw Exception(QString("macro name %1 is invalid").arg(name));
+
+    if (macroData->isEnvironmentVariable)
+        setEnvironmentVariable(name, value);
+}
+
+/**
+ * Sets the value of an environment variable.
+ * The environment will be passed to the QProcess instances.
+ */
+void MacroTable::setEnvironmentVariable(const QString& name, const QString& value)
+{
+    //### Changing the actual environment can be removed when we don't call system() anymore.
+    SetEnvironmentVariable(name.utf16(), value.utf16());
+
+    if (!m_environment)
+        return;
+
+    const QString namePlusEq = name + "=";
+    QStringList::iterator it = m_environment->begin();
+    QStringList::iterator itEnd = m_environment->end();
+    for (; it != itEnd; ++it) {
+        if ((*it).startsWith(namePlusEq, Qt::CaseInsensitive)) {
+            m_environment->erase(it);
+            break;
+        }
+    }
+    m_environment->append(namePlusEq + value);
+}
+
+MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, const QString& value)
+{
+    QString expandedName = expandMacros(name);
+    if (!isMacroNameValid(expandedName))
+        return 0;
+
+    MacroData* result = 0;
     const QString instantiatedName = "$(" + expandedName + ")";
     if (value.contains(instantiatedName)) {
         QString str = value;
         str.replace(instantiatedName, macroValue(expandedName));
-        m_macros[expandedName] = str;
+        result = &m_macros[expandedName];
+        result->value = str;
     } else {
-        m_macros[expandedName] = value;
+        result = &m_macros[expandedName];
+        result->value = value;
     }
+
+    return result;
 }
 
 bool MacroTable::isMacroDefined(const QString& name) const

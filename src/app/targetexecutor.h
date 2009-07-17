@@ -36,7 +36,7 @@ class DependencyGraph;
 class TargetExecutor : public QObject {
     Q_OBJECT
 public:
-    TargetExecutor();
+    TargetExecutor(const QStringList& environment);
     ~TargetExecutor();
 
     void apply(Makefile* mkfile, const QStringList& targets);

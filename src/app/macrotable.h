@@ -29,17 +29,33 @@ namespace NMakeFile {
 class MacroTable
 {
 public:
-    MacroTable();
+    MacroTable(QStringList* environment = 0);
     ~MacroTable();
 
     bool isMacroDefined(const QString& name) const;
+    bool isMacroNameValid(const QString& name) const;
     QString macroValue(const QString& macroName) const;
-    void setMacroValue(const QString& name, const QString& value, bool silentErrors = false);
+    void defineEnvironmentMacroValue(const QString& name, const QString& value);
+    void setMacroValue(const QString& name, const QString& value);
     void undefineMacro(const QString& name);
     QString expandMacros(QString str) const;
 
 private:
-    QHash<QString, QString> m_macros;
+    struct MacroData
+    {
+        MacroData()
+            : isEnvironmentVariable(false)
+        {}
+
+        bool isEnvironmentVariable;
+        QString value;
+    };
+
+    MacroData* internalSetMacroValue(const QString& name, const QString& value);
+    void setEnvironmentVariable(const QString& name, const QString& value);
+
+    QHash<QString, MacroData> m_macros;
+    QStringList* m_environment;
 };
 
 } // namespace NMakeFile

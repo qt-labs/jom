@@ -31,6 +31,7 @@
 #include <QDir>
 #include <QTextStream>
 #include <QCoreApplication>
+#include <QProcess>
 
 #include <windows.h>
 #include <Tlhelp32.h>
@@ -59,23 +60,15 @@ static void showUsage()
            "/DUMPGRAPHDOT dump dependency graph in dot format\n");
 }
 
-static void readEnvironment(MacroTable& macroTable)
+static void readEnvironment(const QStringList& environment, MacroTable& macroTable)
 {
-    wchar_t buf[1];
-    size_t retsize;
-    _wgetenv_s(&retsize, buf, 1, L""); // initialize _wenviron
-    int i = 0;
-    if (_wenviron) {
-        while (_wenviron[i]) {
-            QString env = QString::fromUtf16(reinterpret_cast<ushort*>(_wenviron[i]));
-            QString lhs, rhs;
-            int idx = env.indexOf('=');
-            lhs = env.left(idx);
-            rhs = env.right(env.length() - idx - 1);
-            //qDebug() << lhs << rhs;
-            macroTable.setMacroValue(lhs, rhs, true);
-            ++i;
-        }
+    foreach (const QString& env, environment) {
+        QString lhs, rhs;
+        int idx = env.indexOf('=');
+        lhs = env.left(idx);
+        rhs = env.right(env.length() - idx - 1);
+        //qDebug() << lhs << rhs;
+        macroTable.defineEnvironmentMacroValue(lhs, rhs);
     }
 }
 
@@ -132,7 +125,8 @@ int main(int argc, char* argv[])
 
     QString filename;
     QStringList targets;
-    MacroTable macroTable;
+    QStringList systemEnvironment = QProcess::systemEnvironment();
+    MacroTable macroTable(&systemEnvironment);
     if (!g_options.readCommandLineArguments(qApp->arguments(), filename, targets, macroTable)) {
         showUsage();
         return 128;
@@ -147,7 +141,7 @@ int main(int argc, char* argv[])
     if (g_options.showLogo)
         showLogo();
 
-    readEnvironment(macroTable);
+    readEnvironment(systemEnvironment, macroTable);
     if (!g_options.ignorePredefinedRulesAndMacros) {
         macroTable.setMacroValue("MAKE", g_options.fullAppPath);
         macroTable.setMacroValue("MAKEDIR", QDir::currentPath());
@@ -197,7 +191,7 @@ int main(int argc, char* argv[])
         return 2;
     }
 
-    TargetExecutor executor;
+    TargetExecutor executor(systemEnvironment);
     g_pTargetExecutor = &executor;
     try {
         executor.apply(mkfile, targets);

@@ -33,7 +33,7 @@ namespace NMakeFile {
 
 QString CommandExecutor::m_tempPath;
 
-CommandExecutor::CommandExecutor(QObject* parent)
+CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
 :   QObject(parent),
     m_pTarget(0),
     m_nCommandIdx(0),
@@ -48,6 +48,7 @@ CommandExecutor::CommandExecutor(QObject* parent)
         }
     }
 
+    m_process.setEnvironment(environment);
     connect(&m_process, SIGNAL(error(QProcess::ProcessError)), SLOT(onProcessError(QProcess::ProcessError)));
     connect(&m_process, SIGNAL(finished(int, QProcess::ExitStatus)), SLOT(onProcessFinished(int, QProcess::ExitStatus)));
     connect(&m_process, SIGNAL(readyReadStandardError()), SLOT(processReadyReadStandardError()));
