@@ -25,6 +25,7 @@
 
 #include <QStringList>
 #include <QRegExp>
+#include <QDebug>
 #include <windows.h>
 
 namespace NMakeFile {
@@ -54,6 +55,7 @@ void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString&
     if (!macroData)
         return;
     macroData->isEnvironmentVariable = true;
+    setEnvironmentVariable(name, value);
 }
 
 bool MacroTable::isMacroNameValid(const QString& name) const
@@ -91,7 +93,8 @@ void MacroTable::setMacroValue(const QString& name, const QString& value)
 void MacroTable::setEnvironmentVariable(const QString& name, const QString& value)
 {
     //### Changing the actual environment can be removed when we don't call system() anymore.
-    SetEnvironmentVariable(name.utf16(), value.utf16());
+    ::SetEnvironmentVariable(reinterpret_cast<const WCHAR*>(name.utf16()),
+                             reinterpret_cast<const WCHAR*>(value.utf16()));
 
     if (!m_environment)
         return;
