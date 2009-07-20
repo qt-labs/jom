@@ -177,7 +177,7 @@ bool CommandExecutor::executeNextCommand()
         m_nCommandIdx++;
         onProcessFinished(ret, QProcess::NormalExit);
     } else {
-        m_process.start("cmd /c " + cmd.m_commandLine);
+        m_process.start("cmd \"/c " + cmd.m_commandLine+"\"");
         m_nCommandIdx++;
     }
 
