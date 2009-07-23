@@ -93,8 +93,8 @@ void MacroTable::setMacroValue(const QString& name, const QString& value)
 void MacroTable::setEnvironmentVariable(const QString& name, const QString& value)
 {
     //### Changing the actual environment can be removed when we don't call system() anymore.
-    ::SetEnvironmentVariable(reinterpret_cast<const WCHAR*>(name.utf16()),
-                             reinterpret_cast<const WCHAR*>(value.utf16()));
+    ::SetEnvironmentVariableW(reinterpret_cast<const WCHAR*>(name.utf16()),
+                              reinterpret_cast<const WCHAR*>(value.utf16()));
 
     if (!m_environment)
         return;
