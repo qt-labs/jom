@@ -101,8 +101,8 @@ void CommandExecutor::start(DescriptionBlock* target)
 
 void CommandExecutor::onProcessError(QProcess::ProcessError error)
 {
-    qDebug() << "onProcessError" << error;
-    // TODO: pass error upwards and stop build if not prevented by command line option
+    //qDebug() << "onProcessError" << error;
+    onProcessFinished(2, (error == QProcess::Crashed) ? QProcess::CrashExit : QProcess::NormalExit);
 }
 
 void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
