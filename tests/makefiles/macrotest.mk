@@ -1,11 +1,10 @@
 VERY_LONG_Macro_Name_With_mucho_mucho_characters_and_some_number_too_1234458789765421200218427824996512548989654486630110059699471421 = AHA
-BUMSEN = Fressen
-UND = besoffen
+LOREM = ipsum
 SEIN = ist
 DES = kleinen
-MANNES = Sonnenschein
+WUPPIWUPPI = wallewalle
 ThisIsNotDefined=well, at the moment is actually *is* defined.
-viel$(BUMSEN)_$(SEIN)$(MANNES)_ = Hast du Weinbrand in der Blutbahn...
+viel$(LOREM)_$(SEIN)$(WUPPIWUPPI)_ = Icke wa dsch und er denn uurrrgh...
 # what about a comment inbetween? good idea! :-)
 NoContent=               # this is a comment, dude
 LateDefinition = _$(Literal2)_

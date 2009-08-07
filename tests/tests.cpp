@@ -125,7 +125,7 @@ void ParserTest::macros()
     QVERIFY(!bExceptionCaught);
     QCOMPARE(macroTable.macroValue("VERY_LONG_Macro_Name_With_mucho_mucho_characters_and_some_number_too_1234458789765421200218427824996512548989654486630110059699471421"), QLatin1String("AHA"));
     QCOMPARE(macroTable.macroValue("SEIN"), QLatin1String("ist"));
-    QCOMPARE(macroTable.macroValue("vielFressen_istSonnenschein_"), QLatin1String("Hast du Weinbrand in der Blutbahn..."));
+    QCOMPARE(macroTable.macroValue("vielipsum_istwallewalle_"), QLatin1String("Icke wa dsch und er denn uurrrgh..."));
     QVERIFY(macroTable.isMacroDefined("NoContent"));
     QCOMPARE(macroTable.macroValue("NoContent"), QLatin1String(""));
     QCOMPARE(macroTable.macroValue("Literal1"), QLatin1String("# who does that anyway? #"));
