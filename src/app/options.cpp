@@ -34,6 +34,7 @@ Options::Options()
     buildIfTimeStampsAreEqual(false),
     showLogo(true),
     suppressOutputMessages(false),
+    overrideEnvVarMacros(false),
     displayIncludeFileNames(false),
     dryRun(false),
     stopOnErrors(true),
@@ -84,7 +85,7 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
                 fprintf(stderr, "ERROR: The macro name %s is invalid.", qPrintable(name));
                 exit(128);
             }
-            macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1));
+            macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1), true);
         } else {
             // handle target
             if (!targets.contains(arg))
@@ -170,7 +171,7 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                 // display build information
                 break;
             case 'E':
-                //TODO: "Override env-var macros" What does that mean?
+                overrideEnvVarMacros = true;
                 break;
             case 'G':
                 displayIncludeFileNames = true;

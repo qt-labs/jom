@@ -22,6 +22,7 @@
  ****************************************************************************/
 #include "macrotable.h"
 #include "exception.h"
+#include "options.h"
 
 #include <QStringList>
 #include <QRegExp>
@@ -49,12 +50,15 @@ QString MacroTable::macroValue(const QString& macroName) const
  * That means changing the macro value changes the environment.
  * Note that environment macro names are converted to upper case.
  */
-void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString& value)
+void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString& value, bool forceReadOnly)
 {
+    if (m_macros.contains(name))
+        return;
     MacroData* macroData = internalSetMacroValue(name.toUpper(), value);
     if (!macroData)
         return;
     macroData->isEnvironmentVariable = true;
+    macroData->isReadOnly = forceReadOnly || g_options.overrideEnvVarMacros;
     setEnvironmentVariable(name, value);
 }
 
@@ -119,15 +123,13 @@ MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, co
 
     MacroData* result = 0;
     const QString instantiatedName = "$(" + expandedName + ")";
-    if (value.contains(instantiatedName)) {
-        QString str = value;
-        str.replace(instantiatedName, macroValue(expandedName));
-        result = &m_macros[expandedName];
-        result->value = str;
-    } else {
-        result = &m_macros[expandedName];
-        result->value = value;
-    }
+    QString newValue = value;
+    if (value.contains(instantiatedName))
+        newValue.replace(instantiatedName, macroValue(expandedName));
+
+    result = &m_macros[expandedName];
+    if (!result->isReadOnly)
+        result->value = newValue;
 
     return result;
 }

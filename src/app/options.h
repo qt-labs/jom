@@ -38,6 +38,7 @@ struct Options
     bool buildIfTimeStampsAreEqual;
     bool showLogo;
     bool suppressOutputMessages;
+    bool overrideEnvVarMacros;
     bool displayIncludeFileNames;
     bool dryRun;
     bool stopOnErrors;

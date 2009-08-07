@@ -35,7 +35,7 @@ public:
     bool isMacroDefined(const QString& name) const;
     bool isMacroNameValid(const QString& name) const;
     QString macroValue(const QString& macroName) const;
-    void defineEnvironmentMacroValue(const QString& name, const QString& value);
+    void defineEnvironmentMacroValue(const QString& name, const QString& value, bool forceReadOnly = false);
     void setMacroValue(const QString& name, const QString& value);
     void undefineMacro(const QString& name);
     QString expandMacros(QString str) const;
@@ -44,10 +44,11 @@ private:
     struct MacroData
     {
         MacroData()
-            : isEnvironmentVariable(false)
+            : isEnvironmentVariable(false), isReadOnly(false)
         {}
 
         bool isEnvironmentVariable;
+        bool isReadOnly;
         QString value;
     };
 
