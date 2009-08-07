@@ -64,7 +64,7 @@ private:
     Makefile* m_makefile;
     DependencyGraph* m_depgraph;
     QList<DescriptionBlock*> m_pendingTargets;
-
+    bool m_bAborted;
     QList<CommandExecutor*> m_availableProcesses;
 };
 

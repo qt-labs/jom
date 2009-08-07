@@ -34,6 +34,7 @@
 namespace NMakeFile {
 
 TargetExecutor::TargetExecutor(const QStringList& environment)
+:   m_bAborted(false)
 {
     m_makefile = 0;
     m_depgraph = new DependencyGraph();
@@ -53,6 +54,7 @@ TargetExecutor::~TargetExecutor()
 
 void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 {
+    m_bAborted = false;
     m_makefile = mkfile;
 
     DescriptionBlock* descblock;
@@ -75,7 +77,7 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
             m_depgraph->dotDump();
         else
             m_depgraph->dump();
-        exit(0);
+        QCoreApplication::exit();
     }
 }
 
@@ -90,15 +92,20 @@ bool TargetExecutor::event(QEvent* e)
 
 void TargetExecutor::startProcesses()
 {
+    if (m_bAborted)
+        return;
+
     DescriptionBlock* nextTarget = 0;
     while (!m_availableProcesses.isEmpty() && (nextTarget = m_depgraph->findAvailableTarget())) {
         CommandExecutor* process = m_availableProcesses.takeFirst();
         process->start(nextTarget);
+        if (m_bAborted)
+            break;
     }
 
     if (m_availableProcesses.count() == g_options.maxNumberOfJobs) {
         if (m_pendingTargets.isEmpty()) {
-            qApp->exit();
+            QCoreApplication::exit();
         } else {
             m_depgraph->clear();
             nextTarget = m_pendingTargets.takeFirst();
@@ -130,9 +137,11 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
     m_availableProcesses.append(executor);
 
     if (abortMakeProcess) {
+        m_bAborted = true;
         m_depgraph->clear();
         m_pendingTargets.clear();
         waitForProcesses();
+        QCoreApplication::exit(2);
     }
 
     qApp->postEvent(this, new StartEvent);
