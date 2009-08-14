@@ -72,44 +72,32 @@ static void readEnvironment(const QStringList& environment, MacroTable& macroTab
     }
 }
 
-static void traverseChildProcesses(DWORD dwProcessId, const QMultiHash<DWORD, DWORD>& processIds)
-{
-    foreach (DWORD dwChildPID, processIds.values(dwProcessId)) {
-        traverseChildProcesses(dwChildPID, processIds);
-        //printf("=====> CHILD PID %d\n", dwChildPID);
-        HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, TRUE, dwChildPID);
-        if (hProcess == INVALID_HANDLE_VALUE)
-            continue;
-
-        TerminateProcess(hProcess, 5);
-        CloseHandle(hProcess);
-    }
-}
-
 static TargetExecutor* g_pTargetExecutor = 0;
 
 BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
 {
-    fprintf(stderr, "jom terminated by user\n");
+    fprintf(stderr, "jom terminated by user (pid=%u)\n", QCoreApplication::applicationPid());
 
-    // whatever the event is, we should stop processing
-    QMultiHash<DWORD, DWORD> processIds;
     HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapShot == INVALID_HANDLE_VALUE)
         return 0;
     BOOL bSuccess;
+    const DWORD dwThisPID = QCoreApplication::applicationPid();
     PROCESSENTRY32 processEntry;
     processEntry.dwSize = sizeof(processEntry);
     bSuccess = Process32First(hSnapShot, &processEntry);
     while (bSuccess) {
-        if (processEntry.th32ParentProcessID > 0)
-            processIds.insert(processEntry.th32ParentProcessID, processEntry.th32ProcessID);
+        if (processEntry.th32ParentProcessID == dwThisPID) {
+            HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, TRUE, processEntry.th32ProcessID);
+            if (hProcess != INVALID_HANDLE_VALUE) {
+                //fprintf(stderr, "terminating process %u\n", processEntry.th32ProcessID);
+                TerminateProcess(hProcess, 5);
+                CloseHandle(hProcess);
+            }
+        }
         bSuccess = Process32Next(hSnapShot, &processEntry);
     }
     CloseHandle(hSnapShot);
-
-    DWORD dwProcessId = QCoreApplication::applicationPid();
-    traverseChildProcesses(dwProcessId, processIds);
 
     if (g_pTargetExecutor)
         g_pTargetExecutor->removeTempFiles();
