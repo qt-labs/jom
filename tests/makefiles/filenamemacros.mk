@@ -11,6 +11,10 @@ manyDependents: Timmy Jimmy Kenny Eric Kyle Stan
 	@echo $**
 	@echo $?
 
+manyDependentsSingleExecution: Timmy Jimmy Kenny Eric Kyle Stan
+	!@echo $**
+	!@echo $?
+
 Timmy:
 Jimmy:
 Kenny:

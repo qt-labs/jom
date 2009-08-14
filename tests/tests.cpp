@@ -365,6 +365,18 @@ void ParserTest::fileNameMacros()
     command = target->m_commands.first();
     QCOMPARE(command.m_commandLine, QLatin1String("echo Timmy Jimmy Kenny Eric Kyle Stan"));
 
+    target = mkfile->target(QLatin1String("manyDependentsSingleExecution"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.size(), 12);
+    QStringList lst = QStringList() << "Timmy" << "Jimmy" << "Kenny" << "Eric" << "Kyle" << "Stan";
+    lst.append(lst);
+    foreach (const QString& str, lst) {
+        QVERIFY(!target->m_commands.isEmpty());
+        command = target->m_commands.takeFirst();
+        QCOMPARE(command.m_commandLine, QLatin1String("echo ") + str);
+    }
+
     system("del generated.txt gen1.txt gen2.txt gen3.txt > NUL 2>&1");
     target = mkfile->target(QLatin1String("gen_init"));
     QVERIFY(target);

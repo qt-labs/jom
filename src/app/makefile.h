@@ -52,9 +52,7 @@ public:
     InlineFile* m_inlineFile;
     unsigned char m_maxExitCode;  // greatest allowed exit code
     bool m_silent;
-
-private:
-    friend class Parser;
+    bool m_singleExecution;       // Execute this command for each dependent, if the command contains $** or $?.
 };
 
 class CommandContainer {
@@ -91,8 +89,8 @@ public:
     AddCommandsState m_canAddCommands;
 
 private:
-    void expandFileNameMacros(Command& command);
-    QString getFileNameMacroValue(const QStringRef& str, int& replacementLength);
+    void expandFileNameMacros(Command& command, int depIdx);
+    QString getFileNameMacroValue(const QStringRef& str, int& replacementLength, int depIdx);
 
 private:
     static size_t m_nextId;

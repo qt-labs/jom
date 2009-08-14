@@ -245,21 +245,29 @@ bool Parser::parseCommand(QList<Command>& commands, bool inferenceRule)
     else
         cmd.m_commandLine = m_line.trimmed();
 
-    if (cmd.m_commandLine.startsWith('-')) {
-        cmd.m_commandLine = cmd.m_commandLine.right(cmd.m_commandLine.length() - 1);
-        cmd.m_maxExitCode = 255;
-        int idx = cmd.m_commandLine.indexOf(' ');
-        if (idx == -1) idx = cmd.m_commandLine.indexOf('\t');
-        if (idx > -1) {
-            QString numstr = cmd.m_commandLine.left(idx+1);
-            bool ok;
-            int exitCode = numstr.toInt(&ok);
-            if (ok) cmd.m_maxExitCode = (unsigned char)exitCode;
+    bool noCommandModifiersFound = false;
+    do {
+        if (cmd.m_commandLine.startsWith('-')) {
+            cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
+            cmd.m_maxExitCode = 255;
+            int idx = cmd.m_commandLine.indexOf(' ');
+            if (idx == -1) idx = cmd.m_commandLine.indexOf('\t');
+            if (idx > -1) {
+                QString numstr = cmd.m_commandLine.left(idx+1);
+                bool ok;
+                int exitCode = numstr.toInt(&ok);
+                if (ok) cmd.m_maxExitCode = (unsigned char)exitCode;
+            }
+        } else if (cmd.m_commandLine.startsWith('@')) {
+            cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
+            cmd.m_silent = true;
+        } else if (cmd.m_commandLine.startsWith('!')) {
+            cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
+            cmd.m_singleExecution = true;
+        } else {
+            noCommandModifiersFound = true;
         }
-    } else if (cmd.m_commandLine.startsWith('@')) {
-        cmd.m_commandLine = cmd.m_commandLine.right(cmd.m_commandLine.length() - 1);
-        cmd.m_silent = true;
-    }
+    } while (!noCommandModifiersFound);
 
     if (m_rexInlineMarkerOption.indexIn(m_line) != -1) {
         parseInlineFile(cmd);

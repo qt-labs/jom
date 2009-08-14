@@ -45,14 +45,16 @@ InlineFile::InlineFile(const InlineFile& rhs)
 Command::Command()
 :   m_inlineFile(0),
     m_maxExitCode(0),
-    m_silent(false)
+    m_silent(false),
+    m_singleExecution(false)
 {
 }
 
 Command::Command(const Command& rhs)
 :   m_maxExitCode(rhs.m_maxExitCode),
     m_commandLine(rhs.m_commandLine),
-    m_silent(rhs.m_silent)
+    m_silent(rhs.m_silent),
+    m_singleExecution(rhs.m_singleExecution)
 {
     if (rhs.m_inlineFile)
         m_inlineFile = new InlineFile(*rhs.m_inlineFile);
@@ -77,12 +79,31 @@ DescriptionBlock::DescriptionBlock()
 void DescriptionBlock::expandFileNameMacros()
 {
     QList<Command>::iterator it = m_commands.begin();
-    QList<Command>::iterator itEnd = m_commands.end();
-    for (; it != itEnd; ++it)
-        expandFileNameMacros(*it);
+    while (it != m_commands.end()) {
+        if ((*it).m_singleExecution) {
+            Command origCommand = *it;
+            it = m_commands.erase(it);
+            for (int i=0; i < m_dependents.count(); ++i) {
+                Command newCommand = origCommand;
+                expandFileNameMacros(newCommand, i);
+                it = m_commands.insert(it, newCommand);
+                ++it;
+            }
+        } else {
+            expandFileNameMacros(*it, -1);
+            ++it;
+        }
+    }
 }
 
-void DescriptionBlock::expandFileNameMacros(Command& command)
+/**
+ * Expands the filename macros for a given command.
+ *
+ * If parameter depIdx == -1, then all dependents are considered.
+ * Otherwise depIdx is the index of the dependent we want to put into the command.
+ * This is used for commands with the ! specifier.
+ */
+void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
 {
     int idx = command.m_commandLine.indexOf(QLatin1Char('$'));
     if (idx == -1 || ++idx >= command.m_commandLine.count())
@@ -91,7 +112,7 @@ void DescriptionBlock::expandFileNameMacros(Command& command)
     int replacementLength = 0;
     char ch = command.m_commandLine.at(idx).toLatin1();
     if (ch == '(') {
-        QString macroValue = getFileNameMacroValue(command.m_commandLine.midRef(idx+1), replacementLength);
+        QString macroValue = getFileNameMacroValue(command.m_commandLine.midRef(idx+1), replacementLength, depIdx);
         if (!macroValue.isNull()) {
             int k;
             ch = command.m_commandLine.at(idx+2).toLatin1();
@@ -123,16 +144,22 @@ void DescriptionBlock::expandFileNameMacros(Command& command)
             command.m_commandLine.replace(idx - 1, replacementLength + 4, macroValue);
         }
     } else {
-        QString macroValue = getFileNameMacroValue(command.m_commandLine.midRef(idx), replacementLength);
+        QString macroValue = getFileNameMacroValue(command.m_commandLine.midRef(idx), replacementLength, depIdx);
         if (!macroValue.isNull()) {
             command.m_commandLine.replace(idx - 1, replacementLength + 1, macroValue);
         }
     }
 }
 
-QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& replacementLength)
+QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& replacementLength, int depIdx)
 {
     QString result;
+    QStringList dependentCandidates;
+    if (depIdx == -1)
+        dependentCandidates = m_dependents;
+    else
+        dependentCandidates << m_dependents.at(depIdx);
+
     switch (str.at(0).toLatin1()) {
         case '@':
             replacementLength = 1;
@@ -142,7 +169,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
             {
                 if (str.length() >= 2 && str.at(1) == QLatin1Char('*')) {
                     replacementLength = 2;
-                    result = m_dependents.join(QLatin1String(" "));
+                    result = dependentCandidates.join(QLatin1String(" "));
                 } else {
                     replacementLength = 1;
                     result = m_target;
@@ -162,7 +189,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                 if (!targetTimeStamp.isValid())
                     targetTimeStamp = currentTimeStamp;
 
-                foreach (const QString& dependentName, m_dependents) {
+                foreach (const QString& dependentName, dependentCandidates) {
                     QDateTime dependentTimeStamp = QFileInfo(dependentName).lastModified();
                     if (!dependentTimeStamp.isValid())
                         dependentTimeStamp = currentTimeStamp;
