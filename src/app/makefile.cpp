@@ -231,6 +231,57 @@ void Makefile::dumpTarget(DescriptionBlock* db, uchar level) const
         dumpTarget(target(depname), level+1);
 }
 
+void Makefile::dumpTargets() const
+{
+    QHash<QString, DescriptionBlock*>::const_iterator it=m_targets.begin();
+    for (; it != m_targets.end(); ++it) {
+        DescriptionBlock* target = *it;
+        printf(qPrintable(target->m_target));
+        printf(":\n\tdependents:");
+        foreach (const QString& dependent, target->m_dependents) {
+            printf("\t");
+            printf(qPrintable(dependent));
+            printf("\n");
+        }
+        printf("\tcommands:");
+        foreach (const Command& cmd, target->m_commands) {
+            printf("\t");
+            printf(qPrintable(cmd.m_commandLine));
+            printf("\n");
+        }
+        printf("\n");
+    }
+
+}
+
+void Makefile::dumpInferenceRules() const
+{
+    foreach (const InferenceRule& ir, m_inferenceRules) {
+        if (ir.m_fromSearchPath != ".") {
+            printf("{");
+            printf(qPrintable(ir.m_fromSearchPath));
+            printf("}");
+        }
+        printf(qPrintable(ir.m_fromExtension));
+        if (ir.m_toSearchPath != ".") {
+            printf("{");
+            printf(qPrintable(ir.m_toSearchPath));
+            printf("}");
+        }
+        printf(qPrintable(ir.m_toExtension));
+        if (ir.m_batchMode)
+            printf("::\n");
+        else
+            printf(":\n");
+        foreach (const Command& cmd, ir.m_commands) {
+            printf("\t");
+            printf(qPrintable(cmd.m_commandLine));
+            printf("\n");
+        }
+        printf("\n");
+    }
+}
+
 void Makefile::filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName)
 {
     QFileInfo fi(targetName);

@@ -42,10 +42,6 @@ const int nVersionMajor = 0;
 const int nVersionMinor = 6;
 const int nVersionPatch = 6;
 
-static void displayMakeInformation()
-{
-}
-
 static void showLogo()
 {
     fprintf(stderr, "jom %d.%d.%d - empower your cores\n\n",
@@ -177,6 +173,15 @@ int main(int argc, char* argv[])
 
         fprintf(stderr, qPrintable(output));
         return 2;
+    }
+
+    if (g_options.displayMakeInformation) {
+        printf("MACROS:\n\n");
+        macroTable.dump();
+        printf("\nINFERENCE RULES:\n\n");
+        mkfile->dumpInferenceRules();
+        printf("\nTARGETS:\n\n");
+        mkfile->dumpTargets();
     }
 
     TargetExecutor executor(systemEnvironment);

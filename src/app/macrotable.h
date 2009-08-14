@@ -39,6 +39,7 @@ public:
     void setMacroValue(const QString& name, const QString& value);
     void undefineMacro(const QString& name);
     QString expandMacros(QString str) const;
+    void dump();
 
 private:
     struct MacroData

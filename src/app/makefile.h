@@ -166,6 +166,8 @@ public:
     }
 
     void dumpTarget(DescriptionBlock*, uchar level = 0) const;
+    void dumpTargets() const;
+    void dumpInferenceRules() const;
     void invalidateTimeStamps();
     void updateTimeStamps(DescriptionBlock* target);
     void applyInferenceRules(DescriptionBlock* target);

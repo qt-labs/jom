@@ -164,4 +164,15 @@ QString MacroTable::expandMacros(QString str) const
     return str;
 }
 
+void MacroTable::dump()
+{
+    QHash<QString, MacroData>::const_iterator it = m_macros.begin();
+    for (; it != m_macros.end(); ++it) {
+        printf(qPrintable(it.key()));
+        printf(" = ");
+        printf(qPrintable((*it).value));
+        printf("\n");
+    }
+}
+
 } // namespace NMakeFile
