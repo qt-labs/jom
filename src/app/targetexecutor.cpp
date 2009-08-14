@@ -100,7 +100,7 @@ void TargetExecutor::startProcesses()
         CommandExecutor* process = m_availableProcesses.takeFirst();
         process->start(nextTarget);
         if (m_bAborted)
-            break;
+            return;
     }
 
     if (m_availableProcesses.count() == g_options.maxNumberOfJobs) {
