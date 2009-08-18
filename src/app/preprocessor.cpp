@@ -146,14 +146,6 @@ QString Preprocessor::currentFileName() const
     return m_fileStack.top().reader->fileName();
 }
 
-inline void removingLeadingCharacterFromSubstring(QString& str, const QString& substring)
-{
-    QStringMatcher sm(substring);
-    int idx = 0;
-    while (idx = sm.indexIn(str, idx) > -1)
-        str.remove(idx, 1);
-}
-
 void Preprocessor::basicReadLine(QString& line)
 {
     if (m_fileStack.isEmpty()) {
