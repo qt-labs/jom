@@ -393,6 +393,16 @@ QList<InferenceRule*> Parser::findRulesByTargetExtension(const QString& targetNa
     return result;
 }
 
+inline QString fileNameFromFilePath(const QString& filePath)
+{
+    int idx = qMax(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
+    if (idx == -1)
+        return filePath;
+    QString fileName = filePath;
+    fileName.remove(0, idx+1);
+    return fileName;
+}
+
 void Parser::filterRulesByTargetName(QList<InferenceRule*>& rules, const QString& targetName)
 {
     QList<InferenceRule*>::iterator it = rules.begin();
@@ -403,8 +413,7 @@ void Parser::filterRulesByTargetName(QList<InferenceRule*>& rules, const QString
             continue;
         }
 
-        QFileInfo fi(targetName);
-        QString fileName = fi.fileName();
+        QString fileName = fileNameFromFilePath(targetName);
         QString directory = targetName.left(targetName.length() - fileName.length());
         removeDirSeparatorAtEnd(directory);
         if (directory.isEmpty()) directory = ".";
