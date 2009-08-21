@@ -79,9 +79,10 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 {
     bool targetIsExistingFile = target->m_bFileExists;
     if (!targetIsExistingFile) {
-        targetIsExistingFile = QFile::exists(target->m_target);  // could've been created in the mean time
+        QFileInfo fi(target->m_target);
+        targetIsExistingFile = fi.exists();  // could've been created in the mean time
         if (targetIsExistingFile)
-            target->m_timeStamp = QFileInfo(target->m_target).lastModified();
+            target->m_timeStamp = fi.lastModified();
     }
 
     if (!targetIsExistingFile || !target->m_timeStamp.isValid())
@@ -90,8 +91,9 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
     // find latest timestamp of all dependents
     QDateTime ts(QDate(1900, 1, 1));
     foreach (const QString& dependentName, target->m_dependents) {
-        if (QFile::exists(dependentName)) {
-            QDateTime ts2 = QFileInfo(dependentName).lastModified();
+        QFileInfo fi(dependentName);
+        if (fi.exists()) {
+            QDateTime ts2 = fi.lastModified();
             if (ts < ts2)
                 ts = ts2;
         } else {
