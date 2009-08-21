@@ -107,7 +107,7 @@ void CommandExecutor::onProcessError(QProcess::ProcessError error)
 
 void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    //qDebug() << "onProcessFinished" << m_pTarget->m_target;
+    //qDebug() << "onProcessFinished" << m_pTarget->m_targetName;
 
     if (exitStatus != QProcess::NormalExit)
         exitCode = 2;

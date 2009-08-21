@@ -163,7 +163,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
     switch (str.at(0).toLatin1()) {
         case '@':
             replacementLength = 1;
-            result = m_target;
+            result = m_targetName;
             break;
         case '*':
             {
@@ -172,7 +172,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                     result = dependentCandidates.join(QLatin1String(" "));
                 } else {
                     replacementLength = 1;
-                    result = m_target;
+                    result = m_targetName;
                     int idx = result.lastIndexOf(QLatin1Char('.'));
                     if (idx > -1)
                         result.resize(idx);
@@ -185,7 +185,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                 result = "";
                 bool firstAppend = true;
                 const QDateTime currentTimeStamp = QDateTime::currentDateTime();
-                QDateTime targetTimeStamp = QFileInfo(m_target).lastModified();
+                QDateTime targetTimeStamp = QFileInfo(m_targetName).lastModified();
                 if (!targetTimeStamp.isValid())
                     targetTimeStamp = currentTimeStamp;
 
@@ -253,7 +253,7 @@ void Makefile::dumpTarget(DescriptionBlock* db, uchar level) const
         for (int i=0; i < level; ++i)
             indent.append("  ");
 
-    qDebug() << indent + db->m_target << db->m_timeStamp.toString();
+    qDebug() << indent + db->m_targetName << db->m_timeStamp.toString();
     foreach (const QString depname, db->m_dependents)
         dumpTarget(target(depname), level+1);
 }
@@ -263,7 +263,7 @@ void Makefile::dumpTargets() const
     QHash<QString, DescriptionBlock*>::const_iterator it=m_targets.begin();
     for (; it != m_targets.end(); ++it) {
         DescriptionBlock* target = *it;
-        printf(qPrintable(target->m_target));
+        printf(qPrintable(target->m_targetName));
         printf(":\n\tdependents:");
         foreach (const QString& dependent, target->m_dependents) {
             printf("\t");
@@ -344,11 +344,11 @@ void Makefile::applyInferenceRules(DescriptionBlock* target)
         return;
 
     QList<InferenceRule*> rules = target->m_inferenceRules;
-    filterRulesByDependent(rules, target->m_target);
+    filterRulesByDependent(rules, target->m_targetName);
     //sortRulesBySuffixes(rules, *target->m_suffixes.data());
 
     if (rules.isEmpty()) {
-        //qDebug() << "XXX" << target->m_target << "no matching inference rule found.";
+        //qDebug() << "XXX" << target->m_targetName << "no matching inference rule found.";
         return;
     }
 
@@ -383,7 +383,7 @@ void Makefile::updateTimeStamps(DescriptionBlock* target)
     if (target->m_timeStamp.isValid())
         return;
 
-    QFileInfo fi(target->m_target);
+    QFileInfo fi(target->m_targetName);
     target->m_bFileExists = fi.exists();
     if (target->m_bFileExists) {
         target->m_timeStamp = fi.lastModified();
@@ -412,7 +412,7 @@ void Makefile::updateTimeStamps(DescriptionBlock* target)
 
 void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule* rule)
 {
-    const QString& targetName = target->m_target;
+    const QString& targetName = target->m_targetName;
     //qDebug() << "----> applyInferenceRule for" << targetName;
 
     QFileInfo fi(targetName);

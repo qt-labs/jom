@@ -77,7 +77,7 @@ public:
     void setExecuting() { m_bExecuting = true; }
     void expandFileNameMacros();
 
-    QString m_target;
+    QString m_targetName;
     QStringList m_dependents;
     QDateTime m_timeStamp;
     QSharedPointer<QStringList> m_suffixes;
@@ -134,7 +134,7 @@ public:
 
     void append(DescriptionBlock* target)
     {
-        m_targets[target->m_target] = target;
+        m_targets[target->m_targetName] = target;
         if (!m_firstTarget) m_firstTarget = target;
     }
 
