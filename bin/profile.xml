@@ -3,9 +3,9 @@
     <Tools>
         <Tool Filename="jom" AllowIntercept="true" />
         <Tool Filename="cl" AllowRemote="true" VCCompiler="true"/>
-        <Tool Filename="moc" AllowRemote="true" />
-        <Tool Filename="uic" AllowRemote="true" />
-        <Tool Filename="rcc" AllowRemote="true" />
+        <Tool Filename="moc" AllowRemote="true" DeriveCaptionFrom="lastparam"/>
+        <Tool Filename="uic" AllowRemote="true" DeriveCaptionFrom="lastparam"/>
+        <Tool Filename="rcc" AllowRemote="true" DeriveCaptionFrom="lastparam"/>
         <Tool Filename="link" AllowRemote="false" />
     </Tools>
 </Profile>
