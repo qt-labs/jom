@@ -73,7 +73,9 @@ void CommandExecutor::start(DescriptionBlock* target)
     QList<Command>::iterator it = target->m_commands.begin();
     QList<Command>::iterator itEnd = target->m_commands.end();
     for (; it != itEnd; ++it) {
-        if ((*it).m_commandLine.startsWith("cd ")) {    // TODO: this check is a stupid hack!
+        Command& cmd = *it;
+        // TODO: this check is a stupid hack!
+        if (cmd.m_commandLine.startsWith("cd ") && !cmd.m_commandLine.contains("&&")) {
             mergeCommands = true;
         }
     }
