@@ -153,8 +153,18 @@ bool CommandExecutor::executeNextCommand()
         int idx = cmd.m_commandLine.indexOf(g_options.fullAppPath);
         if (idx > -1) {
             spawnJOM = true;
+            const int appPathLength = g_options.fullAppPath.length();
             const QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
-            cmd.m_commandLine.insert(idx + g_options.fullAppPath.length(), arg);
+
+            // Check if the jom call is enclosed by double quotes.
+            const int idxRight = idx + appPathLength;
+            if (idx > 0 && cmd.m_commandLine.at(idx-1) == '"' &&
+                idxRight < cmd.m_commandLine.length() && cmd.m_commandLine.at(idxRight) == '"')
+            {
+                idx++;  // to insert behind the double quote
+            }
+
+            cmd.m_commandLine.insert(idx + appPathLength, arg);
         }
     }
 

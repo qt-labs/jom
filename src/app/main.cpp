@@ -68,6 +68,33 @@ static void readEnvironment(const QStringList& environment, MacroTable& macroTab
     }
 }
 
+/**
+ * Returns true, if the path contains some whitespace.
+ */
+static bool isComplexPathName(const QString& path)
+{
+    for (int i=path.length()-1; i > 0; i--) {
+        const QChar ch = path.at(i);
+        if (ch.isSpace())
+            return true;
+    }
+    return false;
+}
+
+/**
+ * Enclose the path in double quotes, if its a complex one.
+ */
+static QString encloseInDoubleQuotesIfNeeded(const QString& path)
+{
+    if (isComplexPathName(path)) {
+        QString result = "\"";
+        result.append(path);
+        result.append('"');
+        return result;
+    }
+    return path;
+}
+
 static TargetExecutor* g_pTargetExecutor = 0;
 
 BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
@@ -127,8 +154,8 @@ int main(int argc, char* argv[])
 
     readEnvironment(systemEnvironment, macroTable);
     if (!g_options.ignorePredefinedRulesAndMacros) {
-        macroTable.setMacroValue("MAKE", g_options.fullAppPath);
-        macroTable.setMacroValue("MAKEDIR", QDir::currentPath());
+        macroTable.setMacroValue("MAKE", encloseInDoubleQuotesIfNeeded(g_options.fullAppPath));
+        macroTable.setMacroValue("MAKEDIR", encloseInDoubleQuotesIfNeeded(QDir::currentPath()));
         macroTable.setMacroValue("AS", "ml");       // Macro Assembler
         macroTable.setMacroValue("ASFLAGS", QString::null);
         macroTable.setMacroValue("BC", "bc");       // Basic Compiler
