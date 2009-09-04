@@ -23,6 +23,7 @@
 #include "commandexecutor.h"
 #include "options.h"
 #include "exception.h"
+#include "helperfunctions.h"
 
 #include <QTemporaryFile>
 #include <QTextStream>
@@ -201,7 +202,6 @@ void CommandExecutor::waitForFinished()
     m_process.waitForFinished();
 }
 
-
 void CommandExecutor::createTempFiles()
 {
     QList<Command>::iterator it = m_pTarget->m_commands.begin();
@@ -212,9 +212,12 @@ void CommandExecutor::createTempFiles()
             continue;
 
         QString fileName;
-        if (cmd.m_inlineFile->m_filename.isEmpty())
-            fileName = m_tempPath + QString("jom%1.tmp").arg(GetTickCount());
-        else
+        if (cmd.m_inlineFile->m_filename.isEmpty()) {
+            do {
+                QString simplifiedTargetName = fileNameFromFilePath(m_pTarget->m_targetName);
+                fileName = m_tempPath + QString("%1.%2.jom").arg(simplifiedTargetName).arg(GetTickCount());
+            } while (QFile::exists(fileName));
+        } else
             fileName = cmd.m_inlineFile->m_filename;
 
         TempFile tempFile;

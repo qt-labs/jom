@@ -25,6 +25,7 @@
 #include "ppexpr/ppexpression.h"
 #include "options.h"
 #include "exception.h"
+#include "helperfunctions.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -391,16 +392,6 @@ QList<InferenceRule*> Parser::findRulesByTargetExtension(const QString& targetNa
         if (targetName.endsWith(rule.m_toExtension))
             result.append(const_cast<InferenceRule*>(&rule));
     return result;
-}
-
-inline QString fileNameFromFilePath(const QString& filePath)
-{
-    int idx = qMax(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
-    if (idx == -1)
-        return filePath;
-    QString fileName = filePath;
-    fileName.remove(0, idx+1);
-    return fileName;
 }
 
 void Parser::filterRulesByTargetName(QList<InferenceRule*>& rules, const QString& targetName)

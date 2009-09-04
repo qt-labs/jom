@@ -2,11 +2,11 @@
 <Profile FormatVersion="1">
     <Tools>
         <Tool Filename="jom" AllowIntercept="true" />
-        <Tool Filename="cl" AllowRemote="true" VCCompiler="true"/>
+        <Tool Filename="cl" AllowRemote="true" VCCompiler="true" DeriveCaptionFrom="lastparam"/>
         <Tool Filename="moc" AllowRemote="true" DeriveCaptionFrom="lastparam"/>
         <Tool Filename="uic" AllowRemote="true" DeriveCaptionFrom="lastparam"/>
         <Tool Filename="rcc" AllowRemote="true" DeriveCaptionFrom="lastparam"/>
-        <Tool Filename="link" AllowRemote="false" />
+        <Tool Filename="link" AllowRemote="false" DeriveCaptionFrom="lastparam"/>
     </Tools>
 </Profile>
 

@@ -1,4 +1,5 @@
-HEADERS += makefile.h \
+HEADERS += helperfunctions.h \
+           makefile.h \
            makefilelinereader.h \
            macrotable.h \
            exception.h \
