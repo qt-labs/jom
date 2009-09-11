@@ -49,7 +49,8 @@ Options::Options()
     dumpDependencyGraph(false),
     dumpDependencyGraphDot(false),
     displayMakeInformation(false),
-    showUsageAndExit(false)
+    showUsageAndExit(false),
+    incredibuildSupport(false)
 {
 }
 
@@ -121,6 +122,9 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
             } else if (upperArg.startsWith(QLatin1String("ERRORREPORT"))) {
                 arg.remove(0, 11);
                 // ignore - we don't send stuff to Microsoft :)
+            } else if (upperArg.startsWith(QLatin1String("INCREDIBUILDSUPPORT"))) {
+                arg.remove(0, 19);
+                incredibuildSupport = true;
             }
         }
 

@@ -155,7 +155,9 @@ bool CommandExecutor::executeNextCommand()
         if (idx > -1) {
             spawnJOM = true;
             const int appPathLength = g_options.fullAppPath.length();
-            const QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
+            QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
+            if (g_options.incredibuildSupport)
+                arg.prepend(" -incrediBuildSupport");
 
             // Check if the jom call is enclosed by double quotes.
             const int idxRight = idx + appPathLength;
@@ -190,7 +192,10 @@ bool CommandExecutor::executeNextCommand()
         m_nCommandIdx++;
         onProcessFinished(ret, QProcess::NormalExit);
     } else {
-        m_process.start("cmd /c " + cmd.m_commandLine);
+        if (g_options.incredibuildSupport)
+            m_process.start("cmd /c " + cmd.m_commandLine);
+        else
+            m_process.start("cmd \"/c " + cmd.m_commandLine + "\"");
         m_nCommandIdx++;
     }
 
