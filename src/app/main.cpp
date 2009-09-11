@@ -32,6 +32,7 @@
 #include <QTextStream>
 #include <QCoreApplication>
 #include <QProcess>
+#include <QTextCodec>
 
 #include <windows.h>
 #include <Tlhelp32.h>
@@ -133,6 +134,7 @@ int main(int argc, char* argv[])
 {
     SetConsoleCtrlHandler(&ConsoleCtrlHandlerRoutine, TRUE);
     QCoreApplication app(argc, argv);
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
 
     QString filename;
     QStringList targets;
