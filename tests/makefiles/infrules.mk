@@ -1,5 +1,7 @@
+DEPNAME=($<)
+
 .cpp.obj:
-	@echo .cpp.obj ($<)
+	@echo .cpp.obj $(DEPNAME)
 
 {subdir}.cpp.obj:
 	@echo {subdir}.cpp.obj ($<)

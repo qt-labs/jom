@@ -434,8 +434,8 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
             replaceFileMacros(command.m_inlineFile->m_content, inferredDependent);
             command.m_inlineFile->m_content = m_macroTable->expandMacros(command.m_inlineFile->m_content);
         }
-        replaceFileMacros(command.m_commandLine, inferredDependent);
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
+        replaceFileMacros(command.m_commandLine, inferredDependent);
     }
 }
 
