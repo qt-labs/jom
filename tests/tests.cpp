@@ -50,6 +50,7 @@ private slots:
     void multipleTargetsFail();
     void comments();
     void fileNameMacros();
+    void windowsPathsInTargetName();
 
 private:
     QString m_oldCurrentPath;
@@ -423,6 +424,33 @@ void ParserTest::fileNameMacros()
     QCOMPARE(command.m_commandLine, QLatin1String("echo infrules.mk"));
     command = target->m_commands.at(3);
     QCOMPARE(command.m_commandLine, QLatin1String("echo ") + currentPath + QLatin1String("\\infrules"));
+}
+
+void ParserTest::windowsPathsInTargetName()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    macroTable.setMacroValue("MAKEDIR", QDir::currentPath());
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("windowspaths.mk")) );
+
+    Makefile* mkfile = 0;
+    bool exceptionThrown = false;
+    try {
+        mkfile = parser.apply(&pp);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+
+    DescriptionBlock* target = mkfile->firstTarget();
+    QVERIFY(target);
+    QCOMPARE(target->m_targetName, QLatin1String("C:\\foo.txt"));
+
+    target = mkfile->target(QLatin1String("C:\\bar.txt"));
+    QVERIFY(target);
+    QCOMPARE(target->m_targetName, QLatin1String("C:\\bar.txt"));
 }
 
 QTEST_MAIN(ParserTest)
