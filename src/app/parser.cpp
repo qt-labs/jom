@@ -132,6 +132,10 @@ bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength)
         return false;
 
     separatorPos = m_line.indexOf(QLatin1Char(':'));
+
+    if (separatorPos == 1 && m_line.at(0).isLetter() && m_line.at(2) == '/')
+        separatorPos = m_line.indexOf(QLatin1Char(':'), 2);
+
     if (separatorPos < 0)
         return false;
 
