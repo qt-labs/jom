@@ -22,6 +22,7 @@
  ****************************************************************************/
 
 #include "makefilelinereader.h"
+#include "helperfunctions.h"
 
 namespace NMakeFile {
 
@@ -143,7 +144,7 @@ QString MakefileLineReader::readLine()
 
     // trim whitespace from the right
     int idx = line.length() - 1;
-    while (idx > 0 && (line.at(idx) == QLatin1Char(' ') || line.at(idx) == QLatin1Char('\t')))
+    while (idx > 0 && isSpaceOrTab(line.at(idx)))
         --idx;
     line.truncate(idx+1);
 

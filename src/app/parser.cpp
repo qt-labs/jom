@@ -128,7 +128,7 @@ bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength)
         return false;
 
     const QChar firstChar = m_line.at(0);
-    if (firstChar == ' ' || firstChar == '\t')
+    if (isSpaceOrTab(firstChar))
         return false;
 
     separatorPos = m_line.indexOf(QLatin1Char(':'));
@@ -240,7 +240,7 @@ bool Parser::parseCommand(QList<Command>& commands, bool inferenceRule)
     }
 
     // check if we have a command line
-    if (!m_line.startsWith(' ') && !m_line.startsWith('\t'))
+    if (!startsWithSpaceOrTab(m_line))
         return false;
 
     commands.append(Command());

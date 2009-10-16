@@ -41,12 +41,6 @@ public:
     MacroTable* macroTable() { return m_macroTable; }
     bool openFile(const QString& filename);
     QString readLine();
-
-    bool isWhiteSpace(const QChar& ch)
-    {
-        return ch == ' ' || ch == '\t';
-    }
-
     uint lineNumber() const;
     QString currentFileName() const;
 

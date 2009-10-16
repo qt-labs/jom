@@ -27,6 +27,7 @@
 #include "macrotable.h"
 #include "exception.h"
 #include "makefilelinereader.h"
+#include "helperfunctions.h"
 
 #include <QDir>
 #include <QDebug>
@@ -128,6 +129,9 @@ QString Preprocessor::readLine()
     if (parseMacro(line) || parsePreprocessingDirective(line)) {
         return readLine();
     }
+
+    if (!line.isEmpty() && !isSpaceOrTab(line.at(0)))
+        line = m_macroTable->expandMacros(line);
 
     return line;
 }
@@ -264,13 +268,13 @@ bool Preprocessor::isPreprocessingDirective(const QString& line, QString& direct
         return false;
 
     const QChar firstChar = line.at(0);
-    if (firstChar == ' ' || firstChar == '\t')
+    if (isSpaceOrTab(firstChar))
         return false;
 
     bool oldStyleIncludeDirectiveFound = false;
     if (firstChar != '!' && line.length() > 8) {
         const char ch = line.at(7).toLatin1();
-        if (ch != ' ' && ch != '\t')
+        if (!isSpaceOrTab(ch))
             return false;
 
         if (line.left(7).toLower() == QLatin1String("include"))
