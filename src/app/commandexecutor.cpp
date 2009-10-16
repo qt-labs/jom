@@ -44,7 +44,7 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
         WCHAR buf[MAX_PATH];
         DWORD count = GetTempPathW(MAX_PATH, buf);
         if (count) {
-            m_tempPath = QString::fromUtf16(reinterpret_cast<const ushort*>(buf), count);
+            m_tempPath = QString::fromWCharArray(buf, count);
             if (!m_tempPath.endsWith('\\')) m_tempPath.append('\\');
         }
     }
