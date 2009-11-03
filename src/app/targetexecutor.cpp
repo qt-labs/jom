@@ -97,6 +97,13 @@ void TargetExecutor::startProcesses()
 
     DescriptionBlock* nextTarget = 0;
     while (!m_availableProcesses.isEmpty() && (nextTarget = m_depgraph->findAvailableTarget())) {
+        if (nextTarget->m_commands.isEmpty()) {
+            // Short cut for targets without commands.
+            // We're not really interested in these.
+            m_depgraph->remove(nextTarget);
+            continue;
+        }
+
         CommandExecutor* process = m_availableProcesses.takeFirst();
         process->start(nextTarget);
         if (m_bAborted)
@@ -133,6 +140,7 @@ void TargetExecutor::onChildStarted(CommandExecutor* executor)
 
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakeProcess)
 {
+    Q_CHECK_PTR(executor->target());
     m_depgraph->remove(executor->target());
     m_availableProcesses.append(executor);
 
