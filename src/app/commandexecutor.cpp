@@ -70,32 +70,6 @@ void CommandExecutor::start(DescriptionBlock* target)
     cleanupTempFiles();
     createTempFiles();
 
-    bool mergeCommands = false;
-    QList<Command>::iterator it = target->m_commands.begin();
-    QList<Command>::iterator itEnd = target->m_commands.end();
-    for (; it != itEnd; ++it) {
-        Command& cmd = *it;
-        // TODO: this check is a stupid hack!
-        if (cmd.m_commandLine.startsWith("cd ") && !cmd.m_commandLine.contains("&&")) {
-            mergeCommands = true;
-        }
-    }
-
-    if (mergeCommands) {
-        Command cmd;
-        bool firstLoop = true;
-        for (it = target->m_commands.begin(); it != itEnd; ++it) {
-            if (firstLoop)
-                firstLoop = false;
-            else
-                cmd.m_commandLine += " && ";
-
-            cmd.m_commandLine += (*it).m_commandLine;
-        }
-        target->m_commands.clear();
-        target->m_commands.append(cmd);
-    }
-
     emit started(this);
     if (!executeNextCommand()) {
         emit finished(this, 0);
@@ -156,8 +130,6 @@ bool CommandExecutor::executeNextCommand()
             spawnJOM = true;
             const int appPathLength = g_options.fullAppPath.length();
             QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
-            if (g_options.incredibuildSupport)
-                arg.prepend(" -incrediBuildSupport");
 
             // Check if the jom call is enclosed by double quotes.
             const int idxRight = idx + appPathLength;
@@ -192,10 +164,7 @@ bool CommandExecutor::executeNextCommand()
         m_nCommandIdx++;
         onProcessFinished(ret, QProcess::NormalExit);
     } else {
-        if (g_options.incredibuildSupport)
-            m_process.start("cmd /c " + cmd.m_commandLine);
-        else
-            m_process.start("cmd \"/c " + cmd.m_commandLine + "\"");
+        m_process.start("cmd \"/c " + cmd.m_commandLine + "\"");
         m_nCommandIdx++;
     }
 
