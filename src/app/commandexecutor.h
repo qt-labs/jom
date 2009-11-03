@@ -24,8 +24,7 @@
 
 #include "makefile.h"
 #include <QProcess>
-
-class QFile;
+#include <QFile>
 
 namespace NMakeFile {
 
@@ -53,6 +52,9 @@ private slots:
 
 private:
     bool executeNextCommand();
+    void openCommandScript();
+    void fillCommandScript();
+    void writeCommandToCommandScript(const Command& cmd);
     void createTempFiles();
 
 private:
@@ -69,6 +71,7 @@ private:
     };
 
     QList<TempFile>     m_tempFiles;
+    QFile               m_commandScript;
 };
 
 } // namespace NMakeFile
