@@ -53,7 +53,6 @@ protected:
     bool event(QEvent* e);
 
 private slots:
-    void onChildStarted(CommandExecutor*);
     void onChildFinished(CommandExecutor*, bool abortMakeProcess);
 
 private:

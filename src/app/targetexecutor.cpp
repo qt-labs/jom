@@ -41,7 +41,6 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
 
     for (int i=0; i < g_options.maxNumberOfJobs; ++i) {
         CommandExecutor* process = new CommandExecutor(this, environment);
-        connect(process, SIGNAL(started(CommandExecutor*)), this, SLOT(onChildStarted(CommandExecutor*)));
         connect(process, SIGNAL(finished(CommandExecutor*, bool)), this, SLOT(onChildFinished(CommandExecutor*, bool)));
         m_availableProcesses.append(process);
     }
@@ -131,11 +130,6 @@ void TargetExecutor::waitForProcesses()
         if (process)
             process->waitForFinished();
     }
-}
-
-void TargetExecutor::onChildStarted(CommandExecutor* executor)
-{
-    Q_UNUSED(executor);
 }
 
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakeProcess)
