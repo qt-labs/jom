@@ -50,16 +50,6 @@ void MakefileLineReader::close()
     m_file.close();
 }
 
-// this is potentially slow
-void MakefileLineReader::removeFirstCharacter(char* buf, char* endPtr)
-{
-    char* tmp = buf;
-    while (*tmp && tmp != endPtr) {
-        *tmp = *(tmp+1);
-        tmp++;
-    }
-}
-
 void MakefileLineReader::addBufferToLine(QString& line, char* buf, int bufLength)
 {
     // filter in-line comments
@@ -71,8 +61,8 @@ void MakefileLineReader::addBufferToLine(QString& line, char* buf, int bufLength
                 bufLength = tmp - buf;
                 break;
             } else {
-                removeFirstCharacter(tmp-1, buf + bufLength - 1);
                 bufLength--;
+                memmove(tmp - 1, tmp, bufLength);   // remove the first character
             }
         }
     }
