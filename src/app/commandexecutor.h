@@ -41,7 +41,6 @@ public:
     void cleanupTempFiles();
 
 signals:
-    void started(CommandExecutor*);
     void finished(CommandExecutor* process, bool abortMakeProcess);
 
 private slots:
@@ -51,18 +50,15 @@ private slots:
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
 private:
-    bool executeNextCommand();
     void openCommandScript();
-    void fillCommandScript();
-    void writeCommandToCommandScript(const Command& cmd);
+    void fillCommandScript(bool& spawnJOM);
+    void writeCommandToCommandScript(const Command& cmd, bool& spawnJOM);
     void createTempFiles();
 
 private:
     static QString      m_tempPath;
     QProcess            m_process;
     DescriptionBlock*   m_pTarget;
-    int                 m_nCommandIdx;
-    Command*            m_pLastCommand;
 
     struct TempFile
     {

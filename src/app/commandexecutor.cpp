@@ -25,21 +25,19 @@
 #include "exception.h"
 #include "helperfunctions.h"
 
-#include <QTemporaryFile>
 #include <QTextStream>
+#include <QTemporaryFile>
 #include <QDebug>
 #include <windows.h>
 
 namespace NMakeFile {
 
 QString CommandExecutor::m_tempPath;
-static const bool g_bKeepCommandScriptFiles = true;
+static const bool g_bKeepCommandScriptFiles = false;
 
 CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
 :   QObject(parent),
-    m_pTarget(0),
-    m_nCommandIdx(0),
-    m_pLastCommand(0)
+    m_pTarget(0)
 {
     if (m_tempPath.isNull()) {
         WCHAR buf[MAX_PATH];
@@ -59,30 +57,33 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
 
 CommandExecutor::~CommandExecutor()
 {
-    if (!g_bKeepCommandScriptFiles) m_commandScript.remove();
+    if (!g_bKeepCommandScriptFiles && !m_commandScript.fileName().isEmpty())
+        m_commandScript.remove();
     cleanupTempFiles();
 }
 
 void CommandExecutor::start(DescriptionBlock* target)
 {
+    m_pTarget = target;
+
     if (target->m_commands.isEmpty()) {
         emit finished(this, false);
         return;
     }
 
-    m_nCommandIdx = 0;
-    m_pLastCommand = 0;
-    m_pTarget = target;
     target->expandFileNameMacros();
     cleanupTempFiles();
     createTempFiles();
     openCommandScript();
-    fillCommandScript();
+    bool spawnJOM = false;
+    fillCommandScript(spawnJOM);
 
-    emit started(this);
-    if (!executeNextCommand()) {
-        emit finished(this, false);
-    }
+    QString commandScriptFileName = m_commandScript.fileName().replace("/", "\\");
+    //qDebug() << "--- executing batch file" << commandScriptFileName;
+    m_process.start("cmd", QStringList() << "/C" << commandScriptFileName);
+
+    if (spawnJOM)
+        m_process.waitForFinished(-1);
 }
 
 void CommandExecutor::onProcessError(QProcess::ProcessError error)
@@ -97,15 +98,13 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
 
     if (exitStatus != QProcess::NormalExit)
         exitCode = 2;
-    if (exitCode > m_pLastCommand->m_maxExitCode) {
+    if (exitCode > 0) {
         fprintf(stderr, "command failed with exit code %d\n", exitCode);
         emit finished(this, true);  // abort make process
         return;
     }
 
-    if (!executeNextCommand()) {
-        emit finished(this, false);
-    }
+    emit finished(this, false);
 }
 
 void CommandExecutor::processReadyReadStandardError()
@@ -120,66 +119,6 @@ void CommandExecutor::processReadyReadStandardOutput()
     //printf("\n");
 }
 
-bool CommandExecutor::executeNextCommand()
-{
-    if (m_nCommandIdx >= m_pTarget->m_commands.count()) {
-        return false;
-    }
-
-    Command& cmd = m_pTarget->m_commands[m_nCommandIdx];
-    m_pLastCommand = &cmd;
-
-    if (cmd.m_commandLine.startsWith('@'))
-        cmd.m_commandLine = cmd.m_commandLine.right(cmd.m_commandLine.length() - 1);
-
-    bool spawnJOM = false;
-    if (g_options.maxNumberOfJobs > 1) {
-        int idx = cmd.m_commandLine.indexOf(g_options.fullAppPath);
-        if (idx > -1) {
-            spawnJOM = true;
-            const int appPathLength = g_options.fullAppPath.length();
-            QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
-
-            // Check if the jom call is enclosed by double quotes.
-            const int idxRight = idx + appPathLength;
-            if (idx > 0 && cmd.m_commandLine.at(idx-1) == '"' &&
-                idxRight < cmd.m_commandLine.length() && cmd.m_commandLine.at(idxRight) == '"')
-            {
-                idx++;  // to insert behind the double quote
-            }
-
-            cmd.m_commandLine.insert(idx + appPathLength, arg);
-        }
-    }
-
-    if (!cmd.m_silent && !g_options.suppressExecutedCommandsDisplay) {
-        printf(qPrintable(cmd.m_commandLine));
-        printf("\n");
-    }
-
-    if (g_options.dryRun) {
-        m_nCommandIdx++;
-        onProcessFinished(0, QProcess::NormalExit);
-        return true;
-    }
-
-    // transform quotes to a form that cmd.exe can understand
-    cmd.m_commandLine.replace("\\\"", "\"\"\"");
-
-    if (spawnJOM) {
-        int ret = _wsystem(reinterpret_cast<const WCHAR*>(cmd.m_commandLine.utf16()));
-        if (ret == -1)
-            throw Exception("cannot spawn jom subprocess");
-        m_nCommandIdx++;
-        onProcessFinished(ret, QProcess::NormalExit);
-    } else {
-        m_process.start("cmd \"/c " + cmd.m_commandLine + "\"");
-        m_nCommandIdx++;
-    }
-
-    return true;
-}
-
 void CommandExecutor::waitForFinished()
 {
     m_process.waitForFinished();
@@ -188,19 +127,17 @@ void CommandExecutor::waitForFinished()
 void CommandExecutor::openCommandScript()
 {
     if (!m_commandScript.exists()) {
-        // create command script file name
-        const QString fileNameTemplate = "D:\\TEMP\\jom%1.cmd";   // ### proper PATH!!!
-        unsigned int i = 1;
-        do {
-            QString fileName = fileNameTemplate.arg(i++);
-            m_commandScript.setFileName(fileName);
-        } while (m_commandScript.exists());
+        // create an unique temp file
+        QTemporaryFile* tempFile = new QTemporaryFile(this);
+        tempFile->setFileTemplate(m_tempPath + "jomex");
+        tempFile->open();
+        QString fileName = tempFile->fileName() + ".cmd";
+        m_commandScript.setFileName(fileName);
+    }
 
-        //create command script file
-        if (!m_commandScript.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-            const QString msg = "Can't create command script file %1.";
-            throw Exception(msg.arg(m_commandScript.fileName()));
-        }
+    if (!m_commandScript.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        const QString msg = "Can't create command script file %1.";
+        throw Exception(msg.arg(m_commandScript.fileName()));
     }
 
     Q_ASSERT(m_commandScript.isOpen());
@@ -208,23 +145,24 @@ void CommandExecutor::openCommandScript()
     m_commandScript.resize(0);
 }
 
-void CommandExecutor::fillCommandScript()
+void CommandExecutor::fillCommandScript(bool& spawnJOM)
 {
     Q_ASSERT(!m_pTarget->m_commands.isEmpty());
 
+    spawnJOM = false;
     m_commandScript.write("@echo off\n");
     foreach (const Command& cmd, m_pTarget->m_commands)
-        writeCommandToCommandScript(cmd);
+        writeCommandToCommandScript(cmd, spawnJOM);
+    m_commandScript.write("exit 0\n");
     m_commandScript.close();
 }
 
-void CommandExecutor::writeCommandToCommandScript(const Command& cmd)
+void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spawnJOM)
 {
     QString commandLine = cmd.m_commandLine;
     if (commandLine.startsWith('@'))
         commandLine = commandLine.right(commandLine.length() - 1);
 
-    bool spawnJOM = false;
     if (g_options.maxNumberOfJobs > 1) {
         int idx = commandLine.indexOf(g_options.fullAppPath);
         if (idx > -1) {
@@ -245,16 +183,20 @@ void CommandExecutor::writeCommandToCommandScript(const Command& cmd)
     }
 
     if (!cmd.m_silent && !g_options.suppressExecutedCommandsDisplay) {
+        QByteArray echoLine = commandLine.toLocal8Bit();
+        // we must quote all special characters properly
+        echoLine.replace("^", "^^");
+        echoLine.replace("&", "^&");
+        echoLine.replace("|", "^|");
+        echoLine.replace("<", "^<");
+        echoLine.replace(">", "^>");
         m_commandScript.write("echo ");
-        m_commandScript.write(commandLine.toLocal8Bit());
+        m_commandScript.write(echoLine);
         m_commandScript.write("\n");
     }
 
     if (g_options.dryRun)
         return;
-
-    // transform quotes to a form that cmd.exe can understand
-    commandLine.replace("\\\"", "\"\"\"");
 
     // write the actual command
     m_commandScript.write(commandLine.toLocal8Bit());
