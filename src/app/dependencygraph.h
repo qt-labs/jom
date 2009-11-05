@@ -65,6 +65,7 @@ private:
     void addEdge(Node* parent, Node* child);
     void internalDump(Node* node, QString& indent);
     void internalDotDump(Node* node, const QString& parent);
+    void displayNodeBuildInfo(Node* node);
     DescriptionBlock* findAvailableTarget(Node*);
 
 private:

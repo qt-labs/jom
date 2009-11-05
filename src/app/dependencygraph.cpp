@@ -22,6 +22,7 @@
  ****************************************************************************/
 #include "dependencygraph.h"
 #include "makefile.h"
+#include "options.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -222,6 +223,21 @@ DescriptionBlock* DependencyGraph::findAvailableTarget()
     return result;
 }
 
+void DependencyGraph::displayNodeBuildInfo(Node* node)
+{
+    if (g_options.displayBuildInfo) {
+        QString msg;
+        if (node->state == Node::UpToDateState)
+            msg = " ";
+        else
+            msg = "*";
+        msg += node->target->m_timeStamp.toString("yy/MM/dd hh:mm:ss") + " " +
+               node->target->m_targetName;
+        msg += "\n";
+        printf(qPrintable(msg));
+    }
+}
+
 DescriptionBlock* DependencyGraph::findAvailableTarget(Node* node)
 {
     if (node->children.isEmpty()) {
@@ -233,10 +249,12 @@ DescriptionBlock* DependencyGraph::findAvailableTarget(Node* node)
                 node->state = Node::UpToDateState;
                 m_nodesToRemove.append(node);
             }
+            displayNodeBuildInfo(node);
             return 0;
         }
 
         node->state = Node::ExecutingState;
+        displayNodeBuildInfo(node);
         return node->target;
     }
 

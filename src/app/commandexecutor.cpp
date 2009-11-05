@@ -175,6 +175,8 @@ void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spaw
             spawnJOM = true;
             const int appPathLength = g_options.fullAppPath.length();
             QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
+            if (g_options.displayBuildInfo)
+                arg += " /D";
 
             // Check if the jom call is enclosed by double quotes.
             const int idxRight = idx + appPathLength;
