@@ -54,6 +54,7 @@ struct Options
     bool dumpDependencyGraphDot;
     bool displayMakeInformation;
     bool showUsageAndExit;
+    bool displayBuildInfo;
     QString fullAppPath;
     QString stderrFile; // TODO: do something with this
 

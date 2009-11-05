@@ -49,7 +49,8 @@ Options::Options()
     dumpDependencyGraph(false),
     dumpDependencyGraphDot(false),
     displayMakeInformation(false),
-    showUsageAndExit(false)
+    showUsageAndExit(false),
+    displayBuildInfo(false)
 {
 }
 
@@ -168,7 +169,7 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                 suppressOutputMessages = true;
                 break;
             case 'D':
-                // display build information
+                displayBuildInfo = true;
                 break;
             case 'E':
                 overrideEnvVarMacros = true;
