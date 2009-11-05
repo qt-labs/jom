@@ -46,6 +46,7 @@ private slots:
     void inferenceRules_data();
     void inferenceRules();
     void cycleInTargets();
+    void dependentsWithSpace();
     void multipleTargets();
     void multipleTargetsFail();
     void comments();
@@ -233,6 +234,32 @@ void ParserTest::cycleInTargets()
         exceptionThrown = true;
     }
     QVERIFY(exceptionThrown);
+}
+
+void ParserTest::dependentsWithSpace()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("depswithspace.mk")) );
+
+    Makefile* mkfile = 0;
+    bool exceptionThrown = false;
+    try {
+        mkfile = parser.apply(&pp);
+    } catch (Exception e) {
+        qDebug() << e.message();
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+    QVERIFY(mkfile);
+    DescriptionBlock* target = mkfile->target("first");
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.count(), 3);
+    QCOMPARE(target->m_dependents.at(0), QLatin1String("one"));
+    QCOMPARE(target->m_dependents.at(1), QLatin1String("dependent two with spaces"));
+    QCOMPARE(target->m_dependents.at(2), QLatin1String("three"));
 }
 
 void ParserTest::multipleTargets()

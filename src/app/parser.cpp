@@ -170,6 +170,43 @@ DescriptionBlock* Parser::createTarget(const QString& targetName)
     return target;
 }
 
+static void split_append_helper(QStringList& lst, const QString& str, int from, int to)
+{
+    QString entry;
+    entry = str.mid(from, to - from);
+    entry = entry.trimmed();
+    if (entry.isEmpty())
+        return;
+
+    if (entry.startsWith('\"') && entry.endsWith('\"'))
+        entry = entry.mid(1, entry.length() - 2);
+    lst.append(entry);
+}
+
+static QStringList splitTargetNames(const QString& str)
+{
+    QStringList lst;
+    bool inDoubleQuotes = false;
+    int from = 0, to = 0;
+    for (int i=0; i < str.length(); ++i) {
+        const QChar ch = str.at(i);
+        if (ch == '\"')
+            inDoubleQuotes = !inDoubleQuotes;
+        else if ((ch == ' ' || ch == '\t') && !inDoubleQuotes)
+            to = i;
+        if (from < to) {
+            split_append_helper(lst, str, from, to);
+            to++;
+            from = to;
+        }
+    }
+
+    if (from < str.length()) {
+        split_append_helper(lst, str, from, str.length());
+    }
+    return lst;
+}
+
 void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
 {
     QString target = m_preprocessor->macroTable()->expandMacros(m_line.left(separatorPos).trimmed());
@@ -186,8 +223,8 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
             readLine();
     }
 
-    const QStringList targets = target.split(m_rexSingleWhiteSpace);
-    const QStringList dependents = value.split(m_rexSingleWhiteSpace, QString::SkipEmptyParts);
+    const QStringList targets = splitTargetNames(target);
+    const QStringList dependents = splitTargetNames(value);
     foreach (const QString& t, targets) {
         DescriptionBlock* descblock = m_makefile.m_targets[t];
         DescriptionBlock::AddCommandsState canAddCommands = separatorLength > 1 ? DescriptionBlock::ACSEnabled : DescriptionBlock::ACSDisabled;
