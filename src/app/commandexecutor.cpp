@@ -80,10 +80,16 @@ void CommandExecutor::start(DescriptionBlock* target)
 
     QString commandScriptFileName = m_commandScript.fileName().replace("/", "\\");
     //qDebug() << "--- executing batch file" << commandScriptFileName;
-    m_process.start("cmd", QStringList() << "/C" << commandScriptFileName);
 
-    if (spawnJOM)
-        m_process.waitForFinished(-1);
+    if (spawnJOM) {
+        QByteArray cmdLine = "cmd /C \"";
+        cmdLine += commandScriptFileName;
+        cmdLine += "\"";
+        int exitCode = system(cmdLine);
+        onProcessFinished(exitCode, QProcess::NormalExit);
+    } else {
+        m_process.start("cmd", QStringList() << "/C" << commandScriptFileName);
+    }
 }
 
 void CommandExecutor::onProcessError(QProcess::ProcessError error)
