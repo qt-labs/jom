@@ -1,1 +1,1 @@
-@xgConsole /profile=%~dp0\profile.xml /command="jom -incrediBuildSupport -j 10 %*"
+@xgConsole /profile=%~dp0\profile.xml /command="jom -j 10 %*"
