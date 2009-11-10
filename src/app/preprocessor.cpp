@@ -295,6 +295,7 @@ bool Preprocessor::isPreprocessingDirective(const QString& line, QString& direct
         }
     }
 
+    value = m_macroTable->expandMacros(value);
     return result;
 }
 
