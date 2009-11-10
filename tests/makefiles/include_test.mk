@@ -1,4 +1,4 @@
-!include include1.mk
+!include $(NOT_DEFINED)include1.mk
 include include2.mk # old style include directive
 
 INCLUDE = subdir
