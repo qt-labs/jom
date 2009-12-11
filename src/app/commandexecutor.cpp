@@ -104,7 +104,7 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
 
     if (exitStatus != QProcess::NormalExit)
         exitCode = 2;
-    if (exitCode > 0) {
+    if (exitCode != 0) {
         fprintf(stderr, "command failed with exit code %d\n", exitCode);
         emit finished(this, true);  // abort make process
         return;
@@ -215,6 +215,7 @@ void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spaw
         m_commandScript.write("IF %ERRORLEVEL% GTR ");
         m_commandScript.write(QByteArray::number(cmd.m_maxExitCode));
         m_commandScript.write(" EXIT %ERRORLEVEL%\n");
+        m_commandScript.write("IF %ERRORLEVEL% LSS 0 EXIT %ERRORLEVEL%\n");
     }
 }
 
