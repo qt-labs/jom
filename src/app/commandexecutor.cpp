@@ -32,6 +32,7 @@
 
 namespace NMakeFile {
 
+QByteArray CommandExecutor::m_globalCommandLines;
 QString CommandExecutor::m_tempPath;
 static const bool g_bKeepCommandScriptFiles = false;
 
@@ -157,10 +158,27 @@ void CommandExecutor::fillCommandScript(bool& spawnJOM)
 
     spawnJOM = false;
     m_commandScript.write("@echo off\n");
+    if (!m_globalCommandLines.isEmpty())
+        m_commandScript.write(m_globalCommandLines);
     foreach (const Command& cmd, m_pTarget->m_commands)
         writeCommandToCommandScript(cmd, spawnJOM);
     m_commandScript.write("exit 0\n");
     m_commandScript.close();
+}
+
+void CommandExecutor::handleSetCommand(const QString& commandLine)
+{
+    if (commandLine.length() < 4)
+        return;
+
+    if (!commandLine.startsWith("set", Qt::CaseInsensitive))
+        return;
+
+    if (!commandLine.at(3).isSpace())
+        return;
+
+    m_globalCommandLines.append(commandLine);
+    m_globalCommandLines.append("\n");
 }
 
 void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spawnJOM)
@@ -190,6 +208,8 @@ void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spaw
         }
     }
 
+    handleSetCommand(commandLine);
+
     if (!cmd.m_silent && !g_options.suppressExecutedCommandsDisplay) {
         QByteArray echoLine = commandLine.toLocal8Bit();
         // we must quote all special characters properly
@@ -205,6 +225,9 @@ void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spaw
 
     if (g_options.dryRun)
         return;
+
+    // do some necessary replacements
+    commandLine.replace("%%", "%");
 
     // write the actual command
     m_commandScript.write(commandLine.toLocal8Bit());

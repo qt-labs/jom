@@ -52,10 +52,12 @@ private slots:
 private:
     void openCommandScript();
     void fillCommandScript(bool& spawnJOM);
+    void handleSetCommand(const QString& commandLine);
     void writeCommandToCommandScript(const Command& cmd, bool& spawnJOM);
     void createTempFiles();
 
 private:
+    static QByteArray   m_globalCommandLines;
     static QString      m_tempPath;
     QProcess            m_process;
     DescriptionBlock*   m_pTarget;
