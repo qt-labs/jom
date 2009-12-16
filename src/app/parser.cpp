@@ -85,7 +85,7 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
 
     // make sure that all active targets exist
     foreach (const QString& targetName, m_activeTargets)
-        if (!m_makefile.m_targets.value(targetName))
+        if (!m_makefile.target(targetName))
             throw Exception(QString("Target %1 doesn't exist.").arg(targetName));
 
     // if no active target is defined, use the first one
@@ -242,7 +242,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
     const QStringList targets = splitTargetNames(target);
     const QStringList dependents = splitTargetNames(value);
     foreach (const QString& t, targets) {
-        DescriptionBlock* descblock = m_makefile.m_targets[t];
+        DescriptionBlock* descblock = m_makefile.target(t);
         DescriptionBlock::AddCommandsState canAddCommands = separatorLength > 1 ? DescriptionBlock::ACSEnabled : DescriptionBlock::ACSDisabled;
         if (descblock) {
             if (canAddCommands != descblock->m_canAddCommands &&
@@ -392,12 +392,7 @@ void Parser::parseInferenceRule()
     while (parseCommand(rule.m_commands, true))
         readLine();
 
-    QList<InferenceRule>::iterator it = qFind(m_makefile.m_inferenceRules.begin(),
-                                              m_makefile.m_inferenceRules.end(),
-                                              rule);
-    if (it != m_makefile.m_inferenceRules.end())
-        m_makefile.m_inferenceRules.erase(it);
-    m_makefile.m_inferenceRules.append(rule);
+    m_makefile.addInferenceRule(rule);
 }
 
 void Parser::parseDotDirective()
@@ -418,10 +413,9 @@ void Parser::parseDotDirective()
         m_ignoreExitCodes = true;
     } else if (directive == "PRECIOUS") {
         const QStringList& splitvalues = value.split(m_rexSingleWhiteSpace);
-        foreach (QString str, splitvalues) {
-            if (!str.isEmpty() && !m_makefile.m_preciousTargets.contains(str))
-                m_makefile.m_preciousTargets.append(str);
-        }
+        foreach (QString str, splitvalues)
+            if (!str.isEmpty())
+                m_makefile.addPreciousTarget(str);
     } else if (directive == "SILENT") {
         m_silentCommands = true;
     }
@@ -448,7 +442,7 @@ void Parser::checkForCycles(DescriptionBlock* target)
 QList<InferenceRule*> Parser::findRulesByTargetExtension(const QString& targetName)
 {
     QList<InferenceRule*> result;
-    foreach (const InferenceRule& rule, m_makefile.m_inferenceRules)
+    foreach (const InferenceRule& rule, m_makefile.inferenceRules())
         if (targetName.endsWith(rule.m_toExtension))
             result.append(const_cast<InferenceRule*>(&rule));
     return result;

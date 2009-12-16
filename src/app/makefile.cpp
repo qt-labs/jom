@@ -358,6 +358,22 @@ void Makefile::applyInferenceRules(DescriptionBlock* target)
     target->m_inferenceRules.clear();
 }
 
+void Makefile::addInferenceRule(const InferenceRule& rule)
+{
+    QList<InferenceRule>::iterator it = qFind(m_inferenceRules.begin(),
+                                              m_inferenceRules.end(),
+                                              rule);
+    if (it != m_inferenceRules.end())
+        m_inferenceRules.erase(it);
+    m_inferenceRules.append(rule);
+}
+
+void Makefile::addPreciousTarget(const QString& targetName)
+{
+    if (!m_preciousTargets.contains(targetName))
+        m_preciousTargets.append(targetName);
+}
+
 static void replaceFileMacros(QString& str, const QString& dependent)
 {
     // TODO: handle more file macros here

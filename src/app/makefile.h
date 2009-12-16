@@ -169,12 +169,19 @@ public:
         return m_preciousTargets;
     }
 
+    const QList<InferenceRule>& inferenceRules() const
+    {
+        return m_inferenceRules;
+    }
+
     void dumpTarget(DescriptionBlock*, uchar level = 0) const;
     void dumpTargets() const;
     void dumpInferenceRules() const;
     void invalidateTimeStamps();
     void updateTimeStamps(DescriptionBlock* target);
     void applyInferenceRules(DescriptionBlock* target);
+    void addInferenceRule(const InferenceRule& rule);
+    void addPreciousTarget(const QString& targetName);
 
 private:
     void filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName);
@@ -189,8 +196,6 @@ private:
     QStringList m_preciousTargets;
     QList<InferenceRule> m_inferenceRules;
     MacroTable* m_macroTable;
-
-    friend class Parser;
 };
 
 } // namespace NMakeFile
