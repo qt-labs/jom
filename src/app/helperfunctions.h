@@ -22,3 +22,9 @@ inline bool startsWithSpaceOrTab(const QString& str)
     Q_ASSERT(!str.isEmpty());
     return isSpaceOrTab(str.at(0));
 }
+
+inline void removeDirSeparatorAtEnd(QString& directory)
+{
+    if (directory.endsWith('/') || directory.endsWith('\\'))
+        directory.chop(1);
+}

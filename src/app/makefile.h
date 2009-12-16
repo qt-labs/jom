@@ -112,12 +112,6 @@ public:
     QString m_toExtension;
 };
 
-inline void removeDirSeparatorAtEnd(QString& directory)
-{
-    if (directory.endsWith('/') || directory.endsWith('\\'))
-        directory.resize(directory.length()-1);
-}
-
 class Makefile {
 public:
     Makefile()
