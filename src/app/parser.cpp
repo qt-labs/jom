@@ -195,12 +195,8 @@ static void split_append_helper(QStringList& lst, const QString& str, int from, 
     QString entry;
     entry = str.mid(from, to - from);
     entry = entry.trimmed();
-    if (entry.isEmpty())
-        return;
-
-    if (entry.startsWith('\"') && entry.endsWith('\"'))
-        entry = entry.mid(1, entry.length() - 2);
-    lst.append(entry);
+    if (!entry.isEmpty())
+        lst.append(entry);
 }
 
 static QStringList splitTargetNames(const QString& str)
