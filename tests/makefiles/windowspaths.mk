@@ -4,3 +4,14 @@ C:\foo.txt:
 C:/bar.txt:
 	@echo $@
 
+"C:\three.txt"::
+	@echo $@
+
+C:\three.txt::
+	@echo ...
+
+S ::
+	@echo $@
+
+"S" ::
+	@echo ...
