@@ -258,7 +258,7 @@ void ParserTest::dependentsWithSpace()
     QVERIFY(target);
     QCOMPARE(target->m_dependents.count(), 3);
     QCOMPARE(target->m_dependents.at(0), QLatin1String("one"));
-    QCOMPARE(target->m_dependents.at(1), QLatin1String("dependent two with spaces"));
+    QCOMPARE(target->m_dependents.at(1), QLatin1String("\"dependent two with spaces\""));
     QCOMPARE(target->m_dependents.at(2), QLatin1String("three"));
 }
 
