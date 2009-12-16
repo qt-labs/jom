@@ -121,6 +121,13 @@ bool Parser::isEmptyLine()
     return m_line.trimmed().isEmpty();
 }
 
+/**
+ * Test if this a description block and determine the separator position and length.
+ *
+ * The colon is in only one case not a separator:
+ * If there's a single character before the colon.
+ * In this case its interpreted as a drive letter.
+ */
 bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength)
 {
     const int lineLength = m_line.length();
@@ -131,12 +138,25 @@ bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength)
     if (isSpaceOrTab(firstChar))
         return false;
 
-    separatorPos = m_line.indexOf(QLatin1Char(':'));
+    separatorPos = -1;
+    int i = -1;
+    while (true) {
+        i = m_line.indexOf(QLatin1Char(':'), i+1);
+        if (i <= 0)
+            break;
+        if (i == 1)
+            continue;
 
-    if (separatorPos == 1 && firstChar.isLetter() && lineLength >= 3) {
-        const QChar ch = m_line.at(2);
-        if (ch == '/' || ch == '\\')
-            separatorPos = m_line.indexOf(QLatin1Char(':'), 2);
+        int k = i-1;
+        int l = i-2;
+        if (m_line.at(k).isLetter()) {
+            QChar ch = m_line.at(l);
+            if (ch.isSpace() || ch == '\"')
+                continue;
+        }
+
+        separatorPos = i;
+        break;
     }
 
     if (separatorPos < 0)
