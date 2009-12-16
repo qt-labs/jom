@@ -139,7 +139,19 @@ public:
 
     DescriptionBlock* target(const QString& name) const
     {
-        return m_targets.value(name);
+        DescriptionBlock* result = m_targets.value(name, 0);
+        if (!result) {
+            QString alternativeName = name;
+            if (name.startsWith('"') && name.endsWith('"')) {
+                alternativeName.remove(0, 1);
+                alternativeName.chop(1);
+            } else {
+                alternativeName.prepend('"');
+                alternativeName.append('"');
+            }
+            result = m_targets.value(alternativeName, 0);
+        }
+        return result;
     }
 
     const QHash<QString, DescriptionBlock*>& targets() const
