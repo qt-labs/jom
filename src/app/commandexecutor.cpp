@@ -34,7 +34,6 @@ namespace NMakeFile {
 
 QByteArray CommandExecutor::m_globalCommandLines;
 QString CommandExecutor::m_tempPath;
-static const bool g_bKeepCommandScriptFiles = false;
 
 CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
 :   QObject(parent),
@@ -58,7 +57,7 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
 
 CommandExecutor::~CommandExecutor()
 {
-    if (!g_bKeepCommandScriptFiles && !m_commandScript.fileName().isEmpty())
+    if (!g_options.debugMode && !m_commandScript.fileName().isEmpty())
         m_commandScript.remove();
     cleanupTempFiles();
 }
@@ -80,7 +79,8 @@ void CommandExecutor::start(DescriptionBlock* target)
     fillCommandScript(spawnJOM);
 
     QString commandScriptFileName = m_commandScript.fileName().replace("/", "\\");
-    //qDebug() << "--- executing batch file" << commandScriptFileName;
+    if (g_options.debugMode)
+        qDebug() << "--- executing batch file" << commandScriptFileName;
 
     if (spawnJOM) {
         QByteArray cmdLine = "cmd /C \"";

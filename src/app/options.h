@@ -55,6 +55,7 @@ struct Options
     bool displayMakeInformation;
     bool showUsageAndExit;
     bool displayBuildInfo;
+    bool debugMode;
     QString fullAppPath;
     QString stderrFile; // TODO: do something with this
 
