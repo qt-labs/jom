@@ -43,6 +43,7 @@ private slots:
     void macros();
 
     // parser tests
+    void descriptionBlocks();
     void inferenceRules_data();
     void inferenceRules();
     void cycleInTargets();
@@ -141,6 +142,49 @@ void ParserTest::macros()
     QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
              QLatin1String("_thi$ i$ pricele$$_"));
     QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
+}
+
+void ParserTest::descriptionBlocks()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("descriptionBlocks.mk")) );
+
+    Makefile* mkfile = 0;
+    bool exceptionThrown = false;
+    try {
+        mkfile = parser.apply(&pp);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+
+    QVERIFY(mkfile != 0);
+    DescriptionBlock* target = mkfile->target("one");
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_dependents.count(), 3);
+    QCOMPARE(target->m_commands.count(), 1);
+    
+    Command cmd = target->m_commands.first();
+    QCOMPARE(cmd.m_commandLine, QLatin1String("echo one"));
+
+    target = mkfile->target("two");
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_dependents.count(), 0);
+    QCOMPARE(target->m_commands.count(), 1);
+    
+    cmd = target->m_commands.first();
+    QCOMPARE(cmd.m_commandLine, QLatin1String("echo two"));
+
+    target = mkfile->target("three");
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_dependents.count(), 1);
+    QCOMPARE(target->m_commands.count(), 1);
+    
+    cmd = target->m_commands.first();
+    QCOMPARE(cmd.m_commandLine, QLatin1String("echo three; @echo end of three"));
 }
 
 // inferenceRules test mode
