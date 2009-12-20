@@ -83,7 +83,14 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 bool TargetExecutor::event(QEvent* e)
 {
     if (e->type() == QEvent::User) {
-        startProcesses();
+        try {
+            startProcesses();
+        } catch (Exception e) {
+            m_bAborted = true;
+            QString msg = "Error: " + e.message() + "\n";
+            fprintf(stderr, qPrintable(msg));
+            QCoreApplication::exit(1);
+        }
         return true;
     }
     return QObject::event(e);
