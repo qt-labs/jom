@@ -1,4 +1,5 @@
 # this is just a comment
+!IF 1 # - 1
 COMPILER = Ada95    # here's a comment after a macro definition
 DEF = ^#define  # ignore me
 
@@ -8,6 +9,8 @@ first: second third    # la la la la
 # baaaaar
 	echo I'm Winnetou
 # Wie viele Winnes haben wir in gesamt?
+second:
+third:
 
 .cpp.obj: # and another one
     echo inference rule applied
@@ -15,4 +18,7 @@ first: second third    # la la la la
 forth: fifth ; echo # this is no comment
 	echo # this neither
 fifth:
+!ENDIF
+
+.SILENT: # comment after dot directive
 
