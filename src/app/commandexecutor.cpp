@@ -254,7 +254,12 @@ void CommandExecutor::createTempFiles()
         QString fileName;
         if (cmd.m_inlineFile->m_filename.isEmpty()) {
             do {
-                QString simplifiedTargetName = fileNameFromFilePath(m_pTarget->m_targetName);
+                QString simplifiedTargetName = m_pTarget->m_targetName;
+                if (simplifiedTargetName.startsWith('"'))
+                    simplifiedTargetName.remove(0, 1);
+                if (simplifiedTargetName.endsWith('"'))
+                    simplifiedTargetName.chop(1);
+                simplifiedTargetName = fileNameFromFilePath(simplifiedTargetName);
                 fileName = m_tempPath + QString("%1.%2.jom").arg(simplifiedTargetName).arg(GetTickCount());
             } while (QFile::exists(fileName));
         } else
