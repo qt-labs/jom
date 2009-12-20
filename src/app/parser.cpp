@@ -230,7 +230,40 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
     target.replace(QLatin1Char('/'), QLatin1Char('\\'));
     value.replace(QLatin1Char('/'), QLatin1Char('\\'));
 
+    // extract command from description block line
+    QString inPlaceCommand;
+    do {
+        if (value.isEmpty())
+            break;
+
+        int idx = value.indexOf(QLatin1Char(';'));
+        if (idx < 0)
+            break;
+
+        const int valueLength = value.count();
+        QVector<bool> quotedVector(valueLength);
+        quotedVector[0] = (value.at(0) == QLatin1Char('"'));
+        for (int i=1; i < valueLength; ++i) {
+            bool isInDoubleQuote = quotedVector[i-1];
+            if (value.at(i) == QLatin1Char('"'))
+                isInDoubleQuote = !isInDoubleQuote;
+            quotedVector[i] = isInDoubleQuote;
+        }
+
+        while (idx >= 0 && quotedVector.at(idx))
+            idx = value.indexOf(QLatin1Char(';'), idx+1);
+
+        if (idx >= 0) {
+            inPlaceCommand = value.right(valueLength - idx - 1).trimmed();
+            value.truncate(idx);
+            value = value.trimmed();
+        }
+    } while (false);
+
     QList<Command> commands;
+    if (!inPlaceCommand.isEmpty())
+        parseCommandLine(inPlaceCommand, commands, false);
+
     readLine();
     if (m_line.trimmed().isEmpty()) {
         readLine();
@@ -296,15 +329,21 @@ bool Parser::parseCommand(QList<Command>& commands, bool inferenceRule)
     if (!startsWithSpaceOrTab(m_line))
         return false;
 
+    parseCommandLine(m_line, commands, inferenceRule);
+    return true;
+}
+
+void Parser::parseCommandLine(const QString& cmdLine, QList<Command>& commands, bool inferenceRule)
+{
     commands.append(Command());
     Command& cmd = commands.last();
     if (m_ignoreExitCodes) cmd.m_maxExitCode = 255;
     cmd.m_silent = m_silentCommands;
 
     if (!inferenceRule)
-        cmd.m_commandLine = m_preprocessor->macroTable()->expandMacros(m_line.trimmed());
+        cmd.m_commandLine = m_preprocessor->macroTable()->expandMacros(cmdLine.trimmed());
     else
-        cmd.m_commandLine = m_line.trimmed();
+        cmd.m_commandLine = cmdLine.trimmed();
 
     bool noCommandModifiersFound = false;
     do {
@@ -330,11 +369,9 @@ bool Parser::parseCommand(QList<Command>& commands, bool inferenceRule)
         }
     } while (!noCommandModifiersFound);
 
-    if (m_rexInlineMarkerOption.indexIn(m_line) != -1) {
+    if (m_rexInlineMarkerOption.indexIn(cmdLine) != -1) {
         parseInlineFile(cmd);
     }
-
-    return true;
 }
 
 void Parser::parseInlineFile(Command& cmd)
