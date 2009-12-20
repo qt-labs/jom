@@ -264,7 +264,7 @@ void CommandExecutor::createTempFiles()
         tempFile.file = new QFile(fileName);
         if (!tempFile.file->open(QFile::WriteOnly)) {
             delete tempFile.file;
-            throw Exception(QString("cannot open %1 for write").arg(tempFile.file->fileName()));
+            throw Exception(QString("cannot open %1 for write").arg(fileName));
         }
 
         tempFile.keep = cmd.m_inlineFile->m_keep;
