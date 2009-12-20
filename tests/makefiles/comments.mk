@@ -16,8 +16,9 @@ third:
     echo inference rule applied
 
 forth: fifth ; echo # this is no comment
-	echo # this neither
-fifth:
+    echo # this neither
+fifth: file^#99.txt # This is a comment!
+    echo $**
 !ENDIF
 
 .SILENT: # comment after dot directive

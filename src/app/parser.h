@@ -51,11 +51,11 @@ protected:
 private:
     void readLine();
     bool isEmptyLine();
-    bool isDescriptionBlock(int& separatorPos, int& separatorLength);
+    bool isDescriptionBlock(int& separatorPos, int& separatorLength, int& commandSeparatorPos);
     bool isInferenceRule();
     bool isDotDirective();
     DescriptionBlock* createTarget(const QString& targetName);
-    void parseDescriptionBlock(int separatorPos, int separatorLength);
+    void parseDescriptionBlock(int separatorPos, int separatorLength, int commandSeparatorPos);
     void parseInferenceRule();
     void parseDotDirective();
     bool parseCommand(QList<Command>& commands, bool inferenceRule);

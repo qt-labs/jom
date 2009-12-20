@@ -61,7 +61,7 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
     m_suffixes = QSharedPointer<QStringList>(new QStringList);
     *m_suffixes << ".exe" << ".obj" << ".asm" << ".c" << ".cpp" << ".cxx"
                 << ".bas" << ".cbl" << ".for" << ".pas" << ".res" << ".rc";
-    int dbSeparatorPos, dbSeparatorLength;
+    int dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos;
 
     readLine();
     while (!m_line.isNull()) {
@@ -73,8 +73,8 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
         } else if (isInferenceRule()) {
             Preprocessor::removeInlineComments(m_line);
             parseInferenceRule();
-        } else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength)) {
-            parseDescriptionBlock(dbSeparatorPos, dbSeparatorLength);
+        } else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos)) {
+            parseDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos);
         } else {
             error("don't know what to do");
             readLine();
@@ -124,14 +124,65 @@ bool Parser::isEmptyLine()
 }
 
 /**
+ * Returns the index of the command separator or -1 if its non-existent.
+ */
+static int removeCommentsAndFindCommandSeparator(QString& line)
+{
+    if (line.isEmpty())
+        return -1;
+
+    QVector<bool> quotedVector(line.length());
+    quotedVector[0] = (line.at(0) == QLatin1Char('"'));
+    for (int i=1; i < line.length(); ++i) {
+        bool isInDoubleQuote = quotedVector[i-1];
+        if (line.at(i) == QLatin1Char('"'))
+            isInDoubleQuote = !isInDoubleQuote;
+        quotedVector[i] = isInDoubleQuote;
+    }
+
+    int commentIdx = -1;
+    QList<int> toRemove;
+    while (true) {
+        commentIdx = line.indexOf(QLatin1Char('#'), commentIdx + 1);
+        if (commentIdx > 0 && (line.at(commentIdx - 1) == QLatin1Char('^'))) {
+            toRemove.append(commentIdx - 1);  // remove the ^ characters later
+            continue;
+        }
+        if (commentIdx < 0 || !quotedVector[commentIdx])
+            break;
+    }
+
+    int cmdSepIdx = -1;
+    do {
+        cmdSepIdx = line.indexOf(QLatin1Char(';'), cmdSepIdx + 1);
+    } while (cmdSepIdx >= 0 && quotedVector[cmdSepIdx]);
+
+    if (commentIdx == cmdSepIdx)  // equality means, they are both -1
+        return -1;
+
+    if ((0 <= commentIdx && commentIdx < cmdSepIdx) || cmdSepIdx == -1) {
+        // The # indicates a comment.
+        line.truncate(commentIdx);
+        for (int i=toRemove.count() - 1; i >= 0; i--)
+            line.remove(toRemove.at(i), 1);
+        cmdSepIdx = -1;
+    } else {
+        // The # is inside the command and not a comment.
+    }
+    return cmdSepIdx;
+}
+
+/**
  * Test if this a description block and determine the separator position and length.
  *
  * The colon is in only one case not a separator:
  * If there's a single character before the colon.
  * In this case its interpreted as a drive letter.
  */
-bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength)
+bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength, int& commandSeparatorPos)
 {
+    commandSeparatorPos = removeCommentsAndFindCommandSeparator(m_line);
+
     const int lineLength = m_line.length();
     if (lineLength == 0)
         return false;
@@ -225,46 +276,26 @@ static QStringList splitTargetNames(const QString& str)
     return lst;
 }
 
-void Parser::parseDescriptionBlock(int separatorPos, int separatorLength)
+void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int commandSeparatorPos)
 {
     QString target = m_preprocessor->macroTable()->expandMacros(m_line.left(separatorPos).trimmed());
-    QString value  = m_preprocessor->macroTable()->expandMacros(m_line.right(m_line.length() - separatorPos - separatorLength).trimmed());
+    //QString value  = m_preprocessor->macroTable()->expandMacros(m_line.right(m_line.length() - separatorPos - separatorLength).trimmed());
+    QString value = m_line;
+    if (commandSeparatorPos >= 0) value.truncate(commandSeparatorPos);
+    value.remove(0, separatorPos + separatorLength);
+    value = m_preprocessor->macroTable()->expandMacros(value.trimmed());
     target.replace(QLatin1Char('/'), QLatin1Char('\\'));
     value.replace(QLatin1Char('/'), QLatin1Char('\\'));
 
     // extract command from description block line
-    QString inPlaceCommand;
-    do {
-        if (value.isEmpty())
-            break;
-
-        int idx = value.indexOf(QLatin1Char(';'));
-        if (idx < 0)
-            break;
-
-        const int valueLength = value.count();
-        QVector<bool> quotedVector(valueLength);
-        quotedVector[0] = (value.at(0) == QLatin1Char('"'));
-        for (int i=1; i < valueLength; ++i) {
-            bool isInDoubleQuote = quotedVector[i-1];
-            if (value.at(i) == QLatin1Char('"'))
-                isInDoubleQuote = !isInDoubleQuote;
-            quotedVector[i] = isInDoubleQuote;
-        }
-
-        while (idx >= 0 && quotedVector.at(idx))
-            idx = value.indexOf(QLatin1Char(';'), idx+1);
-
-        if (idx >= 0) {
-            inPlaceCommand = value.right(valueLength - idx - 1).trimmed();
-            value.truncate(idx);
-            value = value.trimmed();
-        }
-    } while (false);
-
     QList<Command> commands;
-    if (!inPlaceCommand.isEmpty())
+    if (commandSeparatorPos >= 0) {
+        QString inPlaceCommand;
+        inPlaceCommand = m_line;
+        inPlaceCommand.remove(0, commandSeparatorPos + 1);
+        inPlaceCommand = inPlaceCommand.trimmed();
         parseCommandLine(inPlaceCommand, commands, false);
+    }
 
     readLine();
     if (m_line.trimmed().isEmpty()) {

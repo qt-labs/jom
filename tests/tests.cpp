@@ -396,6 +396,12 @@ void ParserTest::comments()
     cmd2 = target->m_commands.at(1);
     QCOMPARE(cmd1.m_commandLine, QLatin1String("echo # this is no comment"));
     QCOMPARE(cmd2.m_commandLine, QLatin1String("echo # this neither"));
+
+    target = mkfile->target("fifth");
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_dependents.count(), 1);
+    QCOMPARE(target->m_dependents.first(), QLatin1String("file#99.txt"));
+    QCOMPARE(target->m_commands.count(), 1);
 }
 
 void ParserTest::fileNameMacros()
