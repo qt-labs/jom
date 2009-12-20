@@ -387,6 +387,15 @@ void ParserTest::comments()
     Command cmd2 = target->m_commands.at(1);
     QCOMPARE(cmd1.m_commandLine, QLatin1String("echo I'm Winneone"));
     QCOMPARE(cmd2.m_commandLine, QLatin1String("echo I'm Winnetou"));
+
+    target = mkfile->target("forth");
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_dependents.count(), 1);
+    QCOMPARE(target->m_commands.count(), 2);
+    cmd1 = target->m_commands.at(0);
+    cmd2 = target->m_commands.at(1);
+    QCOMPARE(cmd1.m_commandLine, QLatin1String("echo # this is no comment"));
+    QCOMPARE(cmd2.m_commandLine, QLatin1String("echo # this neither"));
 }
 
 void ParserTest::fileNameMacros()

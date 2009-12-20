@@ -12,3 +12,7 @@ first: second third    # la la la la
 .cpp.obj: # and another one
     echo inference rule applied
 
+forth: fifth ; echo # this is no comment
+	echo # this neither
+fifth:
+
