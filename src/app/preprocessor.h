@@ -44,6 +44,8 @@ public:
     uint lineNumber() const;
     QString currentFileName() const;
 
+    static void removeInlineComments(QString& line);
+
 private:
     bool internalOpenFile(QString fileName);
     void basicReadLine(QString& line);

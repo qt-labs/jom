@@ -50,26 +50,6 @@ void MakefileLineReader::close()
     m_file.close();
 }
 
-void MakefileLineReader::addBufferToLine(QString& line, char* buf, int bufLength)
-{
-    // filter in-line comments
-    char* tmp = buf;
-    for (; *tmp; ++tmp) {
-        if (*tmp == '#') {
-            if (tmp[-1] != '^') {
-                *tmp = '\0';
-                bufLength = tmp - buf;
-                break;
-            } else {
-                bufLength--;
-                memmove(tmp - 1, tmp, bufLength);   // remove the first character
-            }
-        }
-    }
-
-    line.append(QString::fromLatin1(buf, bufLength));
-}
-
 QString MakefileLineReader::readLine()
 {
     QString line;
@@ -113,21 +93,21 @@ QString MakefileLineReader::readLine()
             if (bufLength >= 3 && buf[bufLength - 3] == '^') {
                 buf[bufLength - 3] = '\\';      // replace "^\\\n" -> "\\\\\n"
                 bufLength -= 2;                 // remove "\\\n"
-                addBufferToLine(line, buf, bufLength);
+                line.append(QString::fromLatin1(buf, bufLength));
                 endOfLineReached = true;
             } else {
                 bufLength -= 2; // remove "\\\n"
-                addBufferToLine(line, buf, bufLength);
+                line.append(QString::fromLatin1(buf, bufLength));
                 multiLineAppendix = true;
             }
         } else if (bufLength >= 2 && buf[bufLength - 2] == '^') {
             bufLength--;
             buf[bufLength-1] = '\n';
-            addBufferToLine(line, buf, bufLength);
+            line.append(QString::fromLatin1(buf, bufLength));
             multiLineAppendix = true;
         } else {
             bufLength--;    // remove trailing \n
-            addBufferToLine(line, buf, bufLength);
+            line.append(QString::fromLatin1(buf, bufLength));
             endOfLineReached = true;
         }
     } while (!endOfLineReached);

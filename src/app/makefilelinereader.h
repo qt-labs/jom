@@ -39,7 +39,6 @@ public:
     uint lineNumber() const { return m_nLineNumber; }
 
 private:
-    void addBufferToLine(QString& line, char* buf, int bufLength);
     void removeFirstCharacter(char* buf, char* endPtr);
 
 private:

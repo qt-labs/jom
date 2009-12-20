@@ -178,6 +178,7 @@ bool Preprocessor::parseMacro(const QString& line)
     QString value = m_rexMacro.cap(2);
 
     value = value.trimmed();
+    removeInlineComments(value);
     //qDebug() << "parseMacro" << name << value;
     m_macroTable->setMacroValue(name, value);
     return true;
@@ -296,6 +297,7 @@ bool Preprocessor::isPreprocessingDirective(const QString& line, QString& direct
     }
 
     value = m_macroTable->expandMacros(value);
+    removeInlineComments(value);
     return result;
 }
 
@@ -369,6 +371,23 @@ int Preprocessor::evaluateExpression(const QString& expr)
 void Preprocessor::error(const QString& msg)
 {
     throw Exception(msg, currentFileName(), lineNumber());
+}
+
+void Preprocessor::removeInlineComments(QString& line)
+{
+    int idx = -1;
+    while (true) {
+        idx = line.indexOf(QLatin1Char('#'), idx + 1);
+        if (idx > 0 && line.at(idx - 1) == QLatin1Char('^')) {
+            line.remove(idx - 1, 1);
+            continue;
+        }
+        break;
+    }
+    if (idx >= 0) {
+        line.truncate(idx);
+        line = line.trimmed();
+    }
 }
 
 } // namespace NMakeFile

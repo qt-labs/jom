@@ -65,15 +65,17 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
 
     readLine();
     while (!m_line.isNull()) {
-        if (isEmptyLine())
+        if (isEmptyLine()) {
             readLine();
-        else if (isDotDirective())
+        } else if (isDotDirective()) {
+            Preprocessor::removeInlineComments(m_line);
             parseDotDirective();
-        else if (isInferenceRule())
+        } else if (isInferenceRule()) {
+            Preprocessor::removeInlineComments(m_line);
             parseInferenceRule();
-        else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength))
+        } else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength)) {
             parseDescriptionBlock(dbSeparatorPos, dbSeparatorLength);
-        else {
+        } else {
             error("don't know what to do");
             readLine();
         }
