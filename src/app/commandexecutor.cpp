@@ -226,9 +226,6 @@ void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spaw
     if (g_options.dryRun)
         return;
 
-    // do some necessary replacements
-    commandLine.replace("%%", "%");
-
     // write the actual command
     m_commandScript.write(commandLine.toLocal8Bit());
     m_commandScript.write("\n");
