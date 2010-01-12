@@ -15,11 +15,6 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
 # search for Qt4 - it is required
 find_package(Qt4 REQUIRED)
 
-# search for libantlr - call our own FindANTLR.cmake-module in cmake/modules
-# this will define a variable called ANTLR_FOUND which we can use to determine
-# whether ANTLR should be compiled in
-find_package(ANTLR)
-
 # some general definitions & the directories that should be included
 add_definitions(${QT_DEFINITIONS})
 include_directories(${QT_INCLUDES} src/app ${CMAKE_BINARY_DIR})
@@ -47,31 +42,16 @@ set(JOM_SRCS src/app/fileinfo.cpp
              src/app/options.cpp
              src/app/parser.cpp
              src/app/preprocessor.cpp
+             src/app/ppexpr/ppexpr_grammar.cpp
+             src/app/ppexpr/ppexprparser.cpp
              src/app/targetexecutor.cpp
              src/app/commandexecutor.cpp
              src/app/makefilelinereader.cpp)
-
-if(ANTLR_FOUND)
-    # if antlr library was found, simply add the definition, include the include directory and add some more files
-    add_definitions(-DANTLR_AVAILABLE)
-
-    include_directories(${ANTLR_INCLUDE_DIR})
-
-    set(JOM_SRCS ${JOM_SRCS}
-                 src/app/ppexpr/ppexpression.cpp
-                 src/app/ppexpr/NMakeExpressionLexer.c
-                 src/app/ppexpr/NMakeExpressionParser.c)
-endif(ANTLR_FOUND)
 
 # run moc on all headers and add the moc files to the SRCS
 qt4_wrap_cpp(JOM_SRCS ${JOM_MOCS})
 add_executable(jom src/app/main.cpp ${JOM_SRCS})
 target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY} ws2_32)
-if(ANTLR_FOUND)
-    target_link_libraries(jom ${ANTLR_LIBRARIES})
-endif(ANTLR_FOUND)
-
-
 
 set(MEXT_MOCS src/mext/consoleoutprocess.h)
 set(MEXT_SRCS src/mext/main.cpp
@@ -96,9 +76,6 @@ if(JOM_ENABLE_TESTS)
     target_link_libraries(jom-test ${QT_QTMAIN_LIBRARY} 
                                    ${QT_QTCORE_LIBRARY} 
                                    ${QT_QTTEST_LIBRARY})
-    if(ANTLR_FOUND)
-        target_link_libraries(jom-test ${ANTLR_LIBRARIES})
-    endif(ANTLR_FOUND)
 
     # copy the data directory 'makefiles' over into the build directory as the tests should be run from there
     file(GLOB_RECURSE JOM_TEST_DATA RELATIVE ${CMAKE_SOURCE_DIR}/tests/makefiles/ "tests/makefiles/*")

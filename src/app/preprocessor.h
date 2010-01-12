@@ -25,10 +25,11 @@
 #include <QRegExp>
 #include <QStack>
 
+class PPExprParser;
+
 namespace NMakeFile {
 
 class MacroTable;
-class PPExpression;
 class MakefileLineReader;
 
 class Preprocessor
@@ -86,7 +87,7 @@ private:
     QRegExp             m_rexMacro;
     QRegExp             m_rexPreprocessingDirective;
     QStack<bool>        m_conditionalStack;
-    PPExpression*       m_expressionParser;
+    PPExprParser*       m_expressionParser;
 };
 
 } //namespace NMakeFile

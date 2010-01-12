@@ -24,6 +24,7 @@
 #include <QDir>
 #include <QDebug>
 
+#include <ppexpr/ppexprparser.h>
 #include <preprocessor.h>
 #include <parser.h>
 #include <exception.h>
@@ -41,6 +42,9 @@ private slots:
     void includeFiles();
     void includeCycle();
     void macros();
+    void preprocessorExpressions_data();
+    void preprocessorExpressions();
+    void preprocessorDivideByZero();
 
     // parser tests
     void descriptionBlocks();
@@ -56,10 +60,12 @@ private slots:
 
 private:
     QString m_oldCurrentPath;
+    PPExprParser* m_ppexpr;
 };
 
 void ParserTest::initTestCase()
 {
+    m_ppexpr = 0;
     m_oldCurrentPath = QDir::currentPath();
     if (QFile::exists("../makefiles"))
         QDir::setCurrent("../makefiles");
@@ -142,6 +148,57 @@ void ParserTest::macros()
     QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
              QLatin1String("_thi$ i$ pricele$$_"));
     QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
+}
+
+void ParserTest::preprocessorExpressions_data()
+{
+     QTest::addColumn<QByteArray>("expression");
+     QTest::addColumn<int>("expected");
+     QTest::newRow("max number") << QByteArray("2147483647") << 2147483647;
+     QTest::newRow("min number") << QByteArray("-2147483647") << -2147483647;
+     QTest::newRow("file exists 1") << QByteArray("EXIST(include_test.mk)") << 1;
+     QTest::newRow("file exists 2") << QByteArray("EXIST( \"include_test.mk\" )") << 1;
+     QTest::newRow("file exists 3") << QByteArray("EXIST  ( include_test.mk\t)") << 1;
+     QTest::newRow("file not exists") << QByteArray("EXIST(\"no such file\")") << 0;
+     QTest::newRow("macro defined 1") << QByteArray("DEFINED ( ThisIsDefined\t)") << 1;
+     QTest::newRow("macro defined 2") << QByteArray("DEFINED(\"ThisIsDefined\")") << 1;
+     QTest::newRow("macro defined 3") << QByteArray("DEFINED\t(ThisIsDefinedButEmpty)") << 1;
+     QTest::newRow("macro defined 4") << QByteArray("DEFINED (   ThisIsUnfortunatelyNotDefined    )") << 0;
+     QTest::newRow("shellcommand") << QByteArray("[ cmd /c exit 12 ]") << 12;
+     QTest::newRow("ops +*") << QByteArray("2+3*5") << 17;
+     QTest::newRow("ops (+)*") << QByteArray("(2+3)*5") << 25;
+}
+
+void ParserTest::preprocessorExpressions()
+{
+    if (!m_ppexpr)
+        m_ppexpr = new PPExprParser;
+
+    MacroTable* macroTable = 0;
+    QByteArray cdt(QTest::currentDataTag());
+    if (cdt.startsWith("macro defined")) {
+        macroTable = new MacroTable;
+        macroTable->setMacroValue("ThisIsDefined", "yes");
+        macroTable->setMacroValue("ThisIsDefinedButEmpty", QString());
+        m_ppexpr->setMacroTable(macroTable);
+    }
+
+    QFETCH(QByteArray, expression);
+    QFETCH(int, expected);
+    bool parserSuccess = m_ppexpr->parse(expression.data());
+    QVERIFY(parserSuccess);
+    QCOMPARE(m_ppexpr->expressionValue(), expected);
+    delete macroTable;
+}
+
+void ParserTest::preprocessorDivideByZero()
+{
+    if (!m_ppexpr)
+        m_ppexpr = new PPExprParser;
+
+    bool parserSuccess = m_ppexpr->parse("1 / (156-156)");
+    QCOMPARE(parserSuccess, false);
+    QCOMPARE(m_ppexpr->errorMessage(), QByteArray("division by zero"));
 }
 
 void ParserTest::descriptionBlocks()

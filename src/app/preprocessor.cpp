@@ -21,9 +21,7 @@
  **
  ****************************************************************************/
 #include "preprocessor.h"
-#ifdef ANTLR_AVAILABLE
-#   include "ppexpr/ppexpression.h"
-#endif
+#include "ppexpr/ppexprparser.h"
 #include "macrotable.h"
 #include "exception.h"
 #include "makefilelinereader.h"
@@ -45,6 +43,7 @@ Preprocessor::Preprocessor()
 
 Preprocessor::~Preprocessor()
 {
+    delete m_expressionParser;
 }
 
 void Preprocessor::setMacroTable(MacroTable* macroTable)
@@ -358,15 +357,13 @@ void Preprocessor::exitConditional()
 
 int Preprocessor::evaluateExpression(const QString& expr)
 {
-#ifdef ANTLR_AVAILABLE
     if (!m_expressionParser)
-        m_expressionParser = new PPExpression(this);
+        m_expressionParser = new PPExprParser;
 
-    return m_expressionParser->evaluate(m_macroTable->expandMacros(expr));
-#else
-    qFatal("Sorry, expressions in preprocessor directives are not supported. Compile with ANTLR_AVAILABLE.");
-    return 0;
-#endif
+    if (!m_expressionParser->parse(qPrintable(m_macroTable->expandMacros(expr))))
+        error("Can't evaluate preprocessor expression: " + expr);
+
+    return m_expressionParser->expressionValue();
 }
 
 void Preprocessor::error(const QString& msg)

@@ -22,7 +22,6 @@
  ****************************************************************************/
 #include "parser.h"
 #include "preprocessor.h"
-#include "ppexpr/ppexpression.h"
 #include "options.h"
 #include "exception.h"
 #include "helperfunctions.h"
