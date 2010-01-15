@@ -281,9 +281,12 @@ void CommandExecutor::createTempFiles()
         textstream << content;
         tempFile.file->close();
 
-        cmd.m_commandLine.replace("<<",
-            QString(tempFile.file->fileName()).replace('/', '\\'));
-
+        QString replacement = QString(tempFile.file->fileName()).replace('/', '\\');
+        if (replacement.contains(' ') || replacement.contains('\t')) {
+            replacement.prepend("\"");
+            replacement.append("\"");
+        }
+        cmd.m_commandLine.replace("<<", replacement);
         m_tempFiles.append(tempFile);
     }
 }
