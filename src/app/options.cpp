@@ -95,6 +95,9 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
         }
     }
 
+    if (!stopOnErrors && buildUnrelatedTargetsOnError)  // /I overrides /K
+        buildUnrelatedTargetsOnError = false;
+
     macroTable.setMacroValue(QLatin1String("MAKEFLAGS"), makeflags);
     if (makefile.isNull())
         makefile = QLatin1String("Makefile");

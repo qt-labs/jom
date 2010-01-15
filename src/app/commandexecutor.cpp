@@ -107,7 +107,8 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
         exitCode = 2;
     if (exitCode != 0) {
         fprintf(stderr, "command failed with exit code %d\n", exitCode);
-        emit finished(this, true);  // abort make process
+        bool abortMakeProcess = !g_options.buildUnrelatedTargetsOnError;
+        emit finished(this, abortMakeProcess);
         return;
     }
 
