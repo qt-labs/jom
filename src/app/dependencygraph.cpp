@@ -80,7 +80,7 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 {
     bool targetIsExistingFile = target->m_bFileExists;
     if (!targetIsExistingFile) {
-        QFileInfo fi(target->m_targetName);
+        QFileInfo fi(target->targetFileName());
         targetIsExistingFile = fi.exists();  // could've been created in the mean time
         if (targetIsExistingFile)
             target->m_timeStamp = fi.lastModified();
@@ -132,7 +132,7 @@ void DependencyGraph::dump()
 
 void DependencyGraph::internalDump(Node* node, QString& indent)
 {
-    printf(qPrintable(indent + node->target->m_targetName + "\n"));
+    printf(qPrintable(indent + node->target->targetName() + "\n"));
     indent.append(' ');
     foreach (Node* child, node->children) {
         internalDump(child, indent);
@@ -151,11 +151,11 @@ void DependencyGraph::dotDump()
 void DependencyGraph::internalDotDump(Node* node, const QString& parent)
 {
     if (!parent.isNull()) {
-        QString line = "  \"" + parent + "\" -> \"" + node->target->m_targetName + "\";\n";
+        QString line = "  \"" + parent + "\" -> \"" + node->target->targetName() + "\";\n";
         printf(line.toAscii());
     }
     foreach (Node* child, node->children) {
-        internalDotDump(child, node->target->m_targetName);
+        internalDotDump(child, node->target->targetName());
     }
 }
 
@@ -232,7 +232,7 @@ void DependencyGraph::displayNodeBuildInfo(Node* node)
         else
             msg = "*";
         msg += node->target->m_timeStamp.toString("yy/MM/dd hh:mm:ss") + " " +
-               node->target->m_targetName;
+               node->target->targetName();
         msg += "\n";
         printf(qPrintable(msg));
     }

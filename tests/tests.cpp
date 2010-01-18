@@ -532,20 +532,21 @@ void ParserTest::windowsPathsInTargetName()
 
     DescriptionBlock* target = mkfile->firstTarget();
     QVERIFY(target != 0);
-    QCOMPARE(target->m_targetName, QLatin1String("C:\\foo.txt"));
+    QCOMPARE(target->targetName(), QLatin1String("C:\\foo.txt"));
 
     target = mkfile->target(QLatin1String("C:\\bar.txt"));
     QVERIFY(target != 0);
-    QCOMPARE(target->m_targetName, QLatin1String("C:\\bar.txt"));
+    QCOMPARE(target->targetName(), QLatin1String("C:\\bar.txt"));
 
     target = mkfile->target(QLatin1String("\"C:\\three.txt\""));
     QVERIFY(target != 0);
-    QCOMPARE(target->m_targetName, QLatin1String("\"C:\\three.txt\""));
+    QCOMPARE(target->targetName(), QLatin1String("\"C:\\three.txt\""));
+    QCOMPARE(target->targetFileName(), QLatin1String("C:\\three.txt"));
     QCOMPARE(target->m_commands.count(), 2);
 
     target = mkfile->target(QLatin1String("S"));
     QVERIFY(target != 0);
-    QCOMPARE(target->m_targetName, QLatin1String("S"));
+    QCOMPARE(target->targetName(), QLatin1String("S"));
     QCOMPARE(target->m_commands.count(), 2);
 }
 

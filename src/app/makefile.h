@@ -77,7 +77,27 @@ public:
     void setExecuting() { m_bExecuting = true; }
     void expandFileNameMacros();
 
-    QString m_targetName;
+    void setTargetName(const QString& name);
+
+    /**
+     * Returns the name of the target.
+     * This string may be surrounded by double quotes!
+     */
+    QString targetName() const
+    {
+        return m_targetName;
+    }
+    
+    /**
+     * Returns the target's name as file name.
+     * The target name can be surrounded by double quotes.
+     * This function removes them.
+     */
+    QString targetFileName() const
+    {
+        return m_targetFileName;
+    }
+
     QStringList m_dependents;
     QDateTime m_timeStamp;
     QSharedPointer<QStringList> m_suffixes;
@@ -96,6 +116,8 @@ private:
     static size_t m_nextId;
     size_t m_id;
     bool m_bExecuting;
+    QString m_targetName;
+    QString m_targetFileName;
 };
 
 class InferenceRule : public CommandContainer {
@@ -128,7 +150,7 @@ public:
 
     void append(DescriptionBlock* target)
     {
-        m_targets[target->m_targetName] = target;
+        m_targets[target->targetName()] = target;
         if (!m_firstTarget) m_firstTarget = target;
     }
 

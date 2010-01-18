@@ -92,7 +92,7 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
 
     // if no active target is defined, use the first one
     if (m_activeTargets.isEmpty()) {
-        m_activeTargets.append(m_makefile.firstTarget()->m_targetName);
+        m_activeTargets.append(m_makefile.firstTarget()->targetName());
     }
 
     // check for cycles in active targets
@@ -237,7 +237,7 @@ bool Parser::isDotDirective()
 DescriptionBlock* Parser::createTarget(const QString& targetName)
 {
     DescriptionBlock* target = new DescriptionBlock();
-    target->m_targetName = targetName;
+    target->setTargetName(targetName);
     target->m_suffixes = m_suffixes;
     m_makefile.append(target);
     return target;
@@ -500,7 +500,7 @@ void Parser::checkForCycles(DescriptionBlock* target)
 
     if (target->m_bVisitedByCycleCheck) {
         QString msg = QLatin1String("cycle in targets detected: %1");
-        throw Exception(msg.arg(target->m_targetName));
+        throw Exception(msg.arg(target->targetName()));
     }
 
     target->m_bVisitedByCycleCheck = true;
@@ -546,7 +546,7 @@ void Parser::preselectInferenceRules()
     foreach (const QString targetName, m_activeTargets) {
         DescriptionBlock* target = m_makefile.target(targetName);
         if (target->m_commands.isEmpty())
-            preselectInferenceRules(target->m_targetName, target->m_inferenceRules, *(target->m_suffixes));
+            preselectInferenceRules(target->targetFileName(), target->m_inferenceRules, *(target->m_suffixes));
         preselectInferenceRulesRecursive(target);
     }
 }
