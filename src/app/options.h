@@ -56,6 +56,7 @@ struct Options
     bool showUsageAndExit;
     bool displayBuildInfo;
     bool debugMode;
+    bool showVersionAndExit;
     QString fullAppPath;
     QString stderrFile; // TODO: do something with this
 

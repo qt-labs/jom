@@ -51,7 +51,8 @@ Options::Options()
     displayMakeInformation(false),
     showUsageAndExit(false),
     displayBuildInfo(false),
-    debugMode(false)
+    debugMode(false),
+    showVersionAndExit(false)
 {
 }
 
@@ -129,6 +130,9 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
             } else if (upperArg.startsWith(QLatin1String("ERRORREPORT"))) {
                 arg.remove(0, 11);
                 // ignore - we don't send stuff to Microsoft :)
+            } else if (upperArg.startsWith(QLatin1String("VERSION"))) {
+                arg.remove(0, 7);
+                showVersionAndExit = true;
             }
         }
 

@@ -41,7 +41,7 @@ using namespace NMakeFile;
 
 const int nVersionMajor = 0;
 const int nVersionMinor = 8;
-const int nVersionPatch = 6;
+const int nVersionPatch = 7;
 
 static void showLogo()
 {
@@ -146,6 +146,9 @@ int main(int argc, char* argv[])
     }
     if (g_options.showUsageAndExit) {
         showUsage();
+        return 0;
+    } else if (g_options.showVersionAndExit) {
+        printf("jom version %d.%d.%d\n", nVersionMajor, nVersionMinor, nVersionPatch);
         return 0;
     }
     g_options.fullAppPath = QCoreApplication::applicationFilePath();
