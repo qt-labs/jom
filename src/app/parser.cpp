@@ -27,8 +27,6 @@
 #include "exception.h"
 #include "helperfunctions.h"
 
-#include <QFile>
-#include <QFileInfo>
 #include <QTextStream>
 #include <QDebug>
 
@@ -546,7 +544,7 @@ void Parser::preselectInferenceRules()
     foreach (const QString targetName, m_activeTargets) {
         DescriptionBlock* target = m_makefile.target(targetName);
         if (target->m_commands.isEmpty())
-            preselectInferenceRules(target->targetFileName(), target->m_inferenceRules, *(target->m_suffixes));
+            preselectInferenceRules(target->targetName(), target->m_inferenceRules, *(target->m_suffixes));
         preselectInferenceRulesRecursive(target);
     }
 }

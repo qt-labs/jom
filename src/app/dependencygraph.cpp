@@ -23,9 +23,9 @@
 #include "dependencygraph.h"
 #include "makefile.h"
 #include "options.h"
+#include "fileinfo.h"
 
 #include <QFile>
-#include <QFileInfo>
 #include <QDebug>
 
 namespace NMakeFile {
@@ -80,7 +80,7 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 {
     bool targetIsExistingFile = target->m_bFileExists;
     if (!targetIsExistingFile) {
-        QFileInfo fi(target->targetFileName());
+        FileInfo fi(target->targetName());
         targetIsExistingFile = fi.exists();  // could've been created in the mean time
         if (targetIsExistingFile)
             target->m_timeStamp = fi.lastModified();
@@ -92,7 +92,7 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
     // find latest timestamp of all dependents
     QDateTime ts(QDate(1900, 1, 1));
     foreach (const QString& dependentName, target->m_dependents) {
-        QFileInfo fi(dependentName);
+        FileInfo fi(dependentName);
         if (fi.exists()) {
             QDateTime ts2 = fi.lastModified();
             if (ts < ts2)

@@ -541,7 +541,6 @@ void ParserTest::windowsPathsInTargetName()
     target = mkfile->target(QLatin1String("\"C:\\three.txt\""));
     QVERIFY(target != 0);
     QCOMPARE(target->targetName(), QLatin1String("\"C:\\three.txt\""));
-    QCOMPARE(target->targetFileName(), QLatin1String("C:\\three.txt"));
     QCOMPARE(target->m_commands.count(), 2);
 
     target = mkfile->target(QLatin1String("S"));

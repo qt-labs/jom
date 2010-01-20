@@ -87,16 +87,6 @@ public:
     {
         return m_targetName;
     }
-    
-    /**
-     * Returns the target's name as file name.
-     * The target name can be surrounded by double quotes.
-     * This function removes them.
-     */
-    QString targetFileName() const
-    {
-        return m_targetFileName;
-    }
 
     QStringList m_dependents;
     QDateTime m_timeStamp;
@@ -117,7 +107,6 @@ private:
     size_t m_id;
     bool m_bExecuting;
     QString m_targetName;
-    QString m_targetFileName;
 };
 
 class InferenceRule : public CommandContainer {

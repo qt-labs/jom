@@ -1,4 +1,5 @@
-HEADERS += helperfunctions.h \
+HEADERS += fileinfo.h \
+           helperfunctions.h \
            makefile.h \
            makefilelinereader.h \
            macrotable.h \
@@ -10,7 +11,8 @@ HEADERS += helperfunctions.h \
            targetexecutor.h \
            commandexecutor.h
 
-SOURCES += macrotable.cpp \
+SOURCES += fileinfo.cpp \
+           macrotable.cpp \
            makefile.cpp \
            makefilelinereader.cpp \
            exception.cpp \

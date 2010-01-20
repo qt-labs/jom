@@ -28,6 +28,7 @@
 #include "exception.h"
 #include "makefilelinereader.h"
 #include "helperfunctions.h"
+#include "fileinfo.h"
 
 #include <QDir>
 #include <QDebug>
@@ -94,7 +95,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
 
     // make file name canonical for safe cycle detection
     const QString origFileName = fileName;
-    QFileInfo fileInfo(fileName);
+    FileInfo fileInfo(fileName);
     if (!fileInfo.exists())
         error(QString("File %1 doesn't exist.").arg(origFileName));
     fileName = fileInfo.canonicalFilePath();

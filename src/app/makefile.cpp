@@ -21,7 +21,7 @@
  **
  ****************************************************************************/
 #include "makefile.h"
-#include <QFileInfo>
+#include "fileinfo.h"
 #include <QDebug>
 
 namespace NMakeFile {
@@ -79,11 +79,6 @@ DescriptionBlock::DescriptionBlock()
 void DescriptionBlock::setTargetName(const QString& name)
 {
     m_targetName = name;
-    m_targetFileName = name;
-    if (m_targetFileName.startsWith('"'))
-        m_targetFileName.remove(0, 1);
-    if (m_targetFileName.endsWith('"'))
-        m_targetFileName.chop(1);
 }
 
 void DescriptionBlock::expandFileNameMacros()
@@ -136,10 +131,10 @@ void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
                     macroValue = macroValue.left(k);
                 break;
             case 'B':
-                macroValue = QFileInfo(macroValue).baseName();
+                macroValue = FileInfo(macroValue).baseName();
                 break;
             case 'F':
-                macroValue = QFileInfo(macroValue).fileName();
+                macroValue = FileInfo(macroValue).fileName();
                 break;
             case 'R':
                 k = macroValue.lastIndexOf(QLatin1Char('.'));
@@ -173,7 +168,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
     switch (str.at(0).toLatin1()) {
         case '@':
             replacementLength = 1;
-            result = targetFileName();
+            result = targetName();
             break;
         case '*':
             {
@@ -182,7 +177,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                     result = dependentCandidates.join(QLatin1String(" "));
                 } else {
                     replacementLength = 1;
-                    result = targetFileName();
+                    result = targetName();
                     int idx = result.lastIndexOf(QLatin1Char('.'));
                     if (idx > -1)
                         result.resize(idx);
@@ -195,12 +190,12 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                 result = "";
                 bool firstAppend = true;
                 const QDateTime currentTimeStamp = QDateTime::currentDateTime();
-                QDateTime targetTimeStamp = QFileInfo(targetFileName()).lastModified();
+                QDateTime targetTimeStamp = FileInfo(targetName()).lastModified();
                 if (!targetTimeStamp.isValid())
                     targetTimeStamp = currentTimeStamp;
 
                 foreach (const QString& dependentName, dependentCandidates) {
-                    QDateTime dependentTimeStamp = QFileInfo(dependentName).lastModified();
+                    QDateTime dependentTimeStamp = FileInfo(dependentName).lastModified();
                     if (!dependentTimeStamp.isValid())
                         dependentTimeStamp = currentTimeStamp;
 
@@ -321,7 +316,7 @@ void Makefile::dumpInferenceRules() const
 
 void Makefile::filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName)
 {
-    QFileInfo fi(targetName);
+    FileInfo fi(targetName);
     QString baseName = fi.baseName();
 
     QList<InferenceRule*>::iterator it = rules.begin();
@@ -354,7 +349,7 @@ void Makefile::applyInferenceRules(DescriptionBlock* target)
         return;
 
     QList<InferenceRule*> rules = target->m_inferenceRules;
-    filterRulesByDependent(rules, target->targetFileName());
+    filterRulesByDependent(rules, target->targetName());
     //sortRulesBySuffixes(rules, *target->m_suffixes.data());
 
     if (rules.isEmpty()) {
@@ -409,7 +404,7 @@ void Makefile::updateTimeStamps(DescriptionBlock* target)
     if (target->m_timeStamp.isValid())
         return;
 
-    QFileInfo fi(target->targetFileName());
+    FileInfo fi(target->targetName());
     target->m_bFileExists = fi.exists();
     if (target->m_bFileExists) {
         target->m_timeStamp = fi.lastModified();
@@ -438,10 +433,10 @@ void Makefile::updateTimeStamps(DescriptionBlock* target)
 
 void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule* rule)
 {
-    const QString& targetName = target->targetFileName();
+    const QString& targetName = target->targetName();
     //qDebug() << "----> applyInferenceRule for" << targetName;
 
-    QFileInfo fi(targetName);
+    FileInfo fi(targetName);
     QString inferredDependent = fi.baseName() + rule->m_fromExtension;
     if (rule->m_fromSearchPath != QLatin1String("."))
         inferredDependent.prepend(rule->m_fromSearchPath + QLatin1Char('\\'));
