@@ -53,19 +53,10 @@ qt4_wrap_cpp(JOM_SRCS ${JOM_MOCS})
 add_executable(jom src/app/main.cpp ${JOM_SRCS})
 target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY} ws2_32)
 
-set(MEXT_MOCS src/mext/consoleoutprocess.h)
-set(MEXT_SRCS src/mext/main.cpp
-              src/mext/consoleoutprocess.cpp)
-
-qt4_wrap_cpp(MEXT_SRCS ${MEXT_MOCS})
-add_executable(mext ${MEXT_SRCS})
-target_link_libraries(mext ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY} ws2_32)
-
-
 # install binaries to bin/, libraries to lib/ and import libraries to lib/ too
-install(TARGETS jom mext RUNTIME DESTINATION bin
-                         LIBRARY DESTINATION lib
-                         ARCHIVE DESTINATION lib)
+install(TARGETS jom  RUNTIME DESTINATION bin
+                     LIBRARY DESTINATION lib
+                     ARCHIVE DESTINATION lib)
 
 # if we want to use tests:
 if(JOM_ENABLE_TESTS)

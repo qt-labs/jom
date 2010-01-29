@@ -1,4 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS = src/app \
-          src/mext
+SUBDIRS = src/app
 CONFIG += ordered
