@@ -23,7 +23,9 @@
 #include "options.h"
 #include "macrotable.h"
 #include "exception.h"
+
 #include <QThread>
+#include <QFile>
 
 namespace NMakeFile {
 
@@ -70,6 +72,8 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
 {
     QString makeflags;
     arguments.removeAt(0);
+    if (!expandCommandFiles(arguments))
+        return false;
 
     while (!arguments.isEmpty()) {
         QString arg = arguments.takeFirst();
@@ -103,6 +107,67 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
     if (makefile.isNull())
         makefile = QLatin1String("Makefile");
 
+    return true;
+}
+
+static QStringList splitCommandLine(QString str)
+{
+    str = str.trimmed();
+    // ### TODO: split the string, respect "foo bar" and "foo ""knuffi"" bar"
+    QStringList arguments = str.split(QLatin1Char(' '), QString::SkipEmptyParts);
+    return arguments;
+}
+
+bool Options::expandCommandFiles(QStringList& arguments)
+{
+    QStringList newArguments;
+    QStringList::iterator it = arguments.begin();
+    while (it != arguments.end()) {
+        if (it->startsWith(QLatin1Char('@'))) {
+            QString fileName = *it;
+            int frontRemoveCount = 1;
+            if (fileName.at(1) == QLatin1Char('"') && fileName.endsWith(QLatin1Char('"'))) {
+                frontRemoveCount = 2;
+                fileName.chop(1);
+            }
+            fileName.remove(0, frontRemoveCount);
+            QFile file(fileName);
+            if (!file.open(QFile::ReadOnly)) {
+                fprintf(stderr, "Can't read command file: ");
+                fprintf(stderr, qPrintable(fileName));
+                fprintf(stderr, "\n");
+                return false;
+            }
+
+            QStringList rawCommandFileArgs;
+            do {
+                QByteArray lineData = file.readLine();
+                if (lineData.isNull())
+                    break;
+
+                rawCommandFileArgs.append(QString::fromLocal8Bit(lineData));
+            } while (true);
+            file.close();
+
+            foreach (const QString& rawArg, rawCommandFileArgs) {
+                newArguments.append( splitCommandLine(rawArg) );
+            }
+
+            // Remove other command file incantations, these aren't supported.
+            QStringList::iterator it2 = newArguments.begin();
+            while (it2 != newArguments.end()) {
+                if (it2->startsWith(QLatin1Char('@')))
+                    it2 = newArguments.erase(it2);
+                else
+                    ++it2;
+            }
+
+            it = arguments.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    arguments.append(newArguments);
     return true;
 }
 

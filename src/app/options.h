@@ -28,8 +28,9 @@ namespace NMakeFile {
 
 class MacroTable;
 
-struct Options
+class Options
 {
+public:
     Options();
     bool readCommandLineArguments(QStringList arguments, QString& makefile,
                                   QStringList& targets, MacroTable& macroTable);
@@ -61,6 +62,7 @@ struct Options
     QString stderrFile; // TODO: do something with this
 
 private:
+    bool expandCommandFiles(QStringList& arguments);
     bool handleCommandLineOption(QString arg, QStringList& arguments, QString& makefile, QString& makeflags);
 };
 
