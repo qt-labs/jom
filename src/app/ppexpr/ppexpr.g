@@ -133,7 +133,8 @@ bool PPExprParser::parse(const char* str)
     const int INITIAL_STATE = 0;
     int yytoken = -1;
 
-    reallocateStack();
+    if (!state_stack)
+        reallocateStack();
 
     tos = 0;
     m_errorMessage.clear();
@@ -159,8 +160,14 @@ bool PPExprParser::parse(const char* str)
         }
 
         else if (act > 0) {
-            if (++tos == stack_size)
+            if (++tos == stack_size) {
                 reallocateStack();
+                if (!state_stack) {
+                    m_errorMessage = "stack overflow";
+                    yy_delete_buffer((YY_BUFFER_STATE)yyInputBuffer);
+                    return false;
+                }
+            }
 
             sym_stack [tos] = yylval;
             state_stack [tos] = act;
