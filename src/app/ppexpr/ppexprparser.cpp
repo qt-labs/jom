@@ -3,7 +3,7 @@
 #line 99 "ppexpr.g"
 
 #include "ppexprparser.h"
-#include <macrotable.h>
+#include "../macrotable.h"
 #include "ppexpr-lex.inc"
 
 PPExprParser::PPExprParser()
