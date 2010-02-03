@@ -98,7 +98,7 @@ protected:
 
 /.
 #include "ppexprparser.h"
-#include "../macrotable.h"
+#include "macrotable.h"
 #include "ppexpr-lex.inc"
 
 PPExprParser::PPExprParser()
@@ -149,7 +149,9 @@ bool PPExprParser::parse(const char* str)
     {
         if (yytoken == -1 && - TERMINAL_COUNT != action_index [state_stack [tos]]) {
             yytoken = yylex();
-//            printf("*** yylex %d\n", yytoken);
+#ifdef DEBUG_GRAMMAR
+            printf("*** yylex %d\n", yytoken);
+#endif
         }
 
         int act = t_action(state_stack [tos], yytoken);
@@ -178,18 +180,20 @@ bool PPExprParser::parse(const char* str)
         {
             int r = - act - 1;
 
-//            int ridx = rule_index [r];
-//            printf ("*** reduce using rule %d %s ::=", r + 1, spell[rule_info [ridx]]);
-//            ++ridx;
-//            for (int i = ridx; i < ridx + rhs [r]; ++i)
-//            {
-//                int symbol = rule_info [i];
-//                if (const char *name = spell [symbol])
-//                    printf (" %s", name);
-//                else
-//                    printf (" #%d", symbol);
-//            }
-//            printf ("\n");
+#ifdef DEBUG_GRAMMAR
+            int ridx = rule_index [r];
+            printf ("*** reduce using rule %d %s ::=", r + 1, spell[rule_info [ridx]]);
+            ++ridx;
+            for (int i = ridx; i < ridx + rhs [r]; ++i)
+            {
+                int symbol = rule_info [i];
+                if (const char *name = spell [symbol])
+                    printf (" %s", name);
+                else
+                    printf (" #%d", symbol);
+            }
+            printf ("\n");
+#endif
 
             tos -= rhs [r];
             act = state_stack [tos++];
@@ -199,28 +203,28 @@ bool PPExprParser::parse(const char* str)
 
 expression  ::=  term0;
 term0       ::=  term1;
-term0       ::=  term1 BOOL_AND term1;
+term0       ::=  term0 BOOL_AND term1;
 /.
     case $rule_number: // $rule
         sym(1).num = (sym(1).num != 0 && sym(3).num != 0) ? 1 : 0;
         break;
 ./
 
-term0       ::=  term1 BOOL_OR term1;
+term0       ::=  term0 BOOL_OR term1;
 /.
     case $rule_number: // $rule
         sym(1).num = (sym(1).num != 0 || sym(3).num != 0) ? 1 : 0;
         break;
 ./
 
-term0       ::=  term1 BIT_AND term1;
+term0       ::=  term0 BIT_AND term1;
 /.
     case $rule_number: // $rule
         sym(1).num &= sym(3).num;
         break;
 ./
 
-term0       ::=  term1 BIT_OR term1;
+term0       ::=  term0 BIT_OR term1;
 /.
     case $rule_number: // $rule
         sym(1).num |= sym(3).num;
@@ -255,42 +259,42 @@ strterm1    ::= STRING NOT_EQUAL STRING;
 ./
 
 term2       ::= term3;
-term2       ::= term3 EQUAL term3;
+term2       ::= term2 EQUAL term3;
 /.
     case $rule_number: // $rule
         sym(1).num = (sym(1).num == sym(3).num);
         break;
 ./
 
-term2       ::= term3 NOT_EQUAL term3;
+term2       ::= term2 NOT_EQUAL term3;
 /.
     case $rule_number: // $rule
         sym(1).num = (sym(1).num != sym(3).num);
         break;
 ./
 
-term2       ::= term3 LESS_THAN term3;
+term2       ::= term2 LESS_THAN term3;
 /.
     case $rule_number: // $rule
         sym(1).num = (sym(1).num < sym(3).num);
         break;
 ./
 
-term2       ::= term3 GREATER_THAN term3;
+term2       ::= term2 GREATER_THAN term3;
 /.
     case $rule_number: // $rule
         sym(1).num = (sym(1).num > sym(3).num);
         break;
 ./
 
-term2       ::= term3 EQUAL_OR_LESS_THAN term3;
+term2       ::= term2 EQUAL_OR_LESS_THAN term3;
 /.
     case $rule_number: // $rule
         sym(1).num = (sym(1).num <= sym(3).num);
         break;
 ./
 
-term2       ::= term3 EQUAL_OR_GREATER_THAN term3;
+term2       ::= term2 EQUAL_OR_GREATER_THAN term3;
 /.
     case $rule_number: // $rule
         sym(1).num = (sym(1).num >= sym(3).num);
@@ -298,14 +302,14 @@ term2       ::= term3 EQUAL_OR_GREATER_THAN term3;
 ./
 
 term3       ::= term4;
-term3       ::= term4 SHIFT_LEFT term4;
+term3       ::= term3 SHIFT_LEFT term4;
 /.
     case $rule_number: // $rule
         sym(1).num <<= sym(3).num;
         break;
 ./
 
-term3       ::= term4 SHIFT_RIGHT term4;
+term3       ::= term3 SHIFT_RIGHT term4;
 /.
     case $rule_number: // $rule
         sym(1).num >>= sym(3).num;
@@ -313,14 +317,14 @@ term3       ::= term4 SHIFT_RIGHT term4;
 ./
 
 term4       ::= term5;
-term4       ::= term5 PLUS term5;
+term4       ::= term4 PLUS term5;
 /.
     case $rule_number: // $rule
         sym(1).num += sym(3).num;
         break;
 ./
 
-term4       ::= term5 MINUS term5;
+term4       ::= term4 MINUS term5;
 /.
     case $rule_number: // $rule
         sym(1).num -= sym(3).num;
@@ -328,14 +332,14 @@ term4       ::= term5 MINUS term5;
 ./
 
 term5       ::= term6;
-term5       ::= term6 MULT term6;
+term5       ::= term5 MULT term6;
 /.
     case $rule_number: // $rule
         sym(1).num *= sym(3).num;
         break;
 ./
 
-term5       ::= term6 DIV term6;
+term5       ::= term5 DIV term6;
 /.
     case $rule_number: { // $rule
         const int rhs = sym(3).num;
@@ -349,7 +353,7 @@ term5       ::= term6 DIV term6;
     }
 ./
 
-term5       ::= term6 MOD term6;
+term5       ::= term5 MOD term6;
 /.
     case $rule_number: // $rule
         sym(1).num %= sym(3).num;

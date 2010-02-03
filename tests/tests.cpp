@@ -45,6 +45,8 @@ private slots:
     void preprocessorExpressions_data();
     void preprocessorExpressions();
     void preprocessorDivideByZero();
+    void preprocessorInvalidExpressions_data();
+    void preprocessorInvalidExpressions();
 
     // parser tests
     void descriptionBlocks();
@@ -60,12 +62,12 @@ private slots:
 
 private:
     QString m_oldCurrentPath;
-    PPExprParser* m_ppexpr;
+    Preprocessor* m_preprocessor;
 };
 
 void ParserTest::initTestCase()
 {
-    m_ppexpr = 0;
+    m_preprocessor = 0;
     m_oldCurrentPath = QDir::currentPath();
     if (QFile::exists("../makefiles"))
         QDir::setCurrent("../makefiles");
@@ -75,6 +77,7 @@ void ParserTest::initTestCase()
 
 void ParserTest::cleanupTestCase()
 {
+    delete m_preprocessor;
     QDir::setCurrent(m_oldCurrentPath);
 }
 
@@ -167,38 +170,94 @@ void ParserTest::preprocessorExpressions_data()
      QTest::newRow("shellcommand") << QByteArray("[ cmd /c exit 12 ]") << 12;
      QTest::newRow("ops +*") << QByteArray("2+3*5") << 17;
      QTest::newRow("ops (+)*") << QByteArray("(2+3)*5") << 25;
+     QTest::newRow("1+-1") << QByteArray("1+-1") << 0;
+     QTest::newRow("string equality 1") << QByteArray("\"string one\" == \"string one\"") << 1;
+     QTest::newRow("string equality 2") << QByteArray("\"one \"\" two\" == \"one \"\" two\"") << 1;
+     QTest::newRow("string inquality") << QByteArray("\"one two\" != \"two one\"") << 1;
+     QTest::newRow("string number mix") << QByteArray("(\"foo\" != \"bar\") == 1") << 1;
+     QTest::newRow("macros in qmake Makefile") << QByteArray("\"$(QMAKESPEC)\" == \"win32-msvc\" || \"$(QMAKESPEC)\" == \"win32-msvc.net\" || \"$(QMAKESPEC)\" == \"win32-msvc2002\" || \"$(QMAKESPEC)\" == \"win32-msvc2003\" || \"$(QMAKESPEC)\" == \"win32-msvc2005\" || \"$(QMAKESPEC)\" == \"win32-msvc2008\" || \"$(QMAKESPEC)\" == \"win32-icc\"") << 1;
+     QTest::newRow("pretty random test") << QByteArray("1 == 1 || 2 == 2 + 1 + 1 + -1|| 3 == 3") << 1;
 }
 
 void ParserTest::preprocessorExpressions()
 {
-    if (!m_ppexpr)
-        m_ppexpr = new PPExprParser;
+    if (!m_preprocessor)
+        m_preprocessor = new Preprocessor;
 
     MacroTable* macroTable = 0;
     QByteArray cdt(QTest::currentDataTag());
-    if (cdt.startsWith("macro defined")) {
+    if (cdt.startsWith("macro")) {
         macroTable = new MacroTable;
         macroTable->setMacroValue("ThisIsDefined", "yes");
         macroTable->setMacroValue("ThisIsDefinedButEmpty", QString());
-        m_ppexpr->setMacroTable(macroTable);
+        macroTable->setMacroValue("QMAKESPEC", "win32-msvc2008");
+        m_preprocessor->setMacroTable(macroTable);
     }
 
     QFETCH(QByteArray, expression);
     QFETCH(int, expected);
-    bool parserSuccess = m_ppexpr->parse(expression.data());
-    QVERIFY(parserSuccess);
-    QCOMPARE(m_ppexpr->expressionValue(), expected);
-    delete macroTable;
+    bool success = true;
+    int expressionValue = -1;
+    try {
+        expressionValue = m_preprocessor->evaluateExpression(QString::fromLocal8Bit(expression.data()));
+    } catch (...) {
+        success = false;
+    }
+    QVERIFY(success);
+    QCOMPARE(expressionValue, expected);
+
+    if (macroTable) {
+        m_preprocessor->setMacroTable(0);
+        delete macroTable;
+    }
 }
 
 void ParserTest::preprocessorDivideByZero()
 {
-    if (!m_ppexpr)
-        m_ppexpr = new PPExprParser;
+    if (!m_preprocessor)
+        m_preprocessor = new Preprocessor;
 
-    bool parserSuccess = m_ppexpr->parse("1 / (156-156)");
-    QCOMPARE(parserSuccess, false);
-    QCOMPARE(m_ppexpr->errorMessage(), QByteArray("division by zero"));
+    NMakeFile::Exception error;
+    bool exceptionCaught = false;
+    try {
+        m_preprocessor->evaluateExpression("1 / (156-156)");
+    } catch (NMakeFile::Exception e) {
+        exceptionCaught = true;
+        error = e;
+    }
+    QCOMPARE(exceptionCaught, true);
+    QVERIFY(error.message().endsWith("division by zero"));
+}
+
+void ParserTest::preprocessorInvalidExpressions_data()
+{
+     QTest::addColumn<QByteArray>("expression");
+     QTest::newRow("empty") << QByteArray("");
+     QTest::newRow("invalid characters") << QByteArray("\0x01\0x02\0x03");
+     QTest::newRow("missing (") << QByteArray("1 + 1)");
+     QTest::newRow("missing )") << QByteArray("(1 + 1");
+     QTest::newRow("double op") << QByteArray("1++1");
+     QTest::newRow("string == number") << QByteArray("\"foo\" == 156");
+     //QTest::newRow("") << QByteArray("");
+}
+
+void ParserTest::preprocessorInvalidExpressions()
+{
+    if (!m_preprocessor)
+        m_preprocessor = new Preprocessor;
+
+    QFETCH(QByteArray, expression);
+    NMakeFile::Exception error;
+    bool exceptionCaught = false;
+    try {
+        m_preprocessor->evaluateExpression(QString::fromLocal8Bit(expression));
+    } catch (NMakeFile::Exception e) {
+        error = e;
+        exceptionCaught = true;
+    }
+
+    QVERIFY(exceptionCaught);
+    QVERIFY(!error.message().isEmpty());
 }
 
 void ParserTest::descriptionBlocks()

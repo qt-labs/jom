@@ -32,44 +32,39 @@ public:
     T_SHIFT_RIGHT = 14,
     T_STRING = 2,
 
-    ACCEPT_STATE = 26,
+    ACCEPT_STATE = 34,
     RULE_COUNT = 34,
     STATE_COUNT = 61,
     TERMINAL_COUNT = 25,
     NON_TERMINAL_COUNT = 11,
 
     GOTO_INDEX_OFFSET = 61,
-    GOTO_INFO_OFFSET = 96,
-    GOTO_CHECK_OFFSET = 96
+    GOTO_INFO_OFFSET = 142,
+    GOTO_CHECK_OFFSET = 142
   };
 
-  static const char  *const spell [];
-  static const int            lhs [];
-  static const int            rhs [];
+  static const char  *const    spell [];
+  static const short             lhs [];
+  static const short             rhs [];
 
 #ifndef QLALR_NO_PPEXPR_GRAMMAR_DEBUG_INFO
   static const int     rule_index [];
   static const int      rule_info [];
 #endif // QLALR_NO_PPEXPR_GRAMMAR_DEBUG_INFO
 
-  static const int   goto_default [];
-  static const int action_default [];
-  static const int   action_index [];
-  static const int    action_info [];
-  static const int   action_check [];
+  static const short    goto_default [];
+  static const short  action_default [];
+  static const short    action_index [];
+  static const short     action_info [];
+  static const short    action_check [];
 
   static inline int nt_action (int state, int nt)
   {
-    const int *const goto_index = &action_index [GOTO_INDEX_OFFSET];
-    const int *const goto_check = &action_check [GOTO_CHECK_OFFSET];
-
-    const int yyn = goto_index [state] + nt;
-
-    if (yyn < 0 || goto_check [yyn] != nt)
+    const int yyn = action_index [GOTO_INDEX_OFFSET + state] + nt;
+    if (yyn < 0 || action_check [GOTO_CHECK_OFFSET + yyn] != nt)
       return goto_default [nt];
 
-    const int *const goto_info = &action_info [GOTO_INFO_OFFSET];
-    return goto_info [yyn];
+    return action_info [GOTO_INFO_OFFSET + yyn];
   }
 
   static inline int t_action (int state, int token)

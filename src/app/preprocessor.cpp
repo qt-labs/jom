@@ -49,6 +49,8 @@ Preprocessor::~Preprocessor()
 void Preprocessor::setMacroTable(MacroTable* macroTable)
 {
     m_macroTable = macroTable;
+    if (m_expressionParser)
+        m_expressionParser->setMacroTable(m_macroTable);
 }
 
 bool Preprocessor::openFile(const QString& fileName)
@@ -357,11 +359,13 @@ void Preprocessor::exitConditional()
 
 int Preprocessor::evaluateExpression(const QString& expr)
 {
-    if (!m_expressionParser)
+    if (!m_expressionParser) {
         m_expressionParser = new PPExprParser;
+        m_expressionParser->setMacroTable(m_macroTable);
+    }
 
     if (!m_expressionParser->parse(qPrintable(m_macroTable->expandMacros(expr))))
-        error("Can't evaluate preprocessor expression: " + expr);
+        error(QLatin1String("Can't evaluate preprocessor expression. ") + QString::fromAscii(m_expressionParser->errorMessage()));
 
     return m_expressionParser->expressionValue();
 }

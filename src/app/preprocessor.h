@@ -44,6 +44,7 @@ public:
     QString readLine();
     uint lineNumber() const;
     QString currentFileName() const;
+    int evaluateExpression(const QString& expr);
 
     static void removeInlineComments(QString& line);
 
@@ -54,7 +55,6 @@ private:
     bool parsePreprocessingDirective(const QString& line);
     bool isPreprocessingDirective(const QString& line, QString& directive, QString& value);
     void skipUntilNextMatchingConditional();
-    int evaluateExpression(const QString& expr);
     void error(const QString& msg);
     void enterConditional(bool followElseBranch);
     void exitConditional();
