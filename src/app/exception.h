@@ -29,7 +29,7 @@ namespace NMakeFile {
 class Exception
 {
 public:
-    Exception(const QString& message, const QString& fileName = QString(), int line = 0);
+    explicit Exception(const QString& message = QString(), const QString& fileName = QString(), int line = 0);
     ~Exception();
 
     const QString& message() const { return m_message; }
