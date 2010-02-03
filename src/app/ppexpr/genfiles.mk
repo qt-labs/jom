@@ -1,8 +1,8 @@
 all: ppexpr_grammar.cpp
 
-ppexpr-lex.incl: ppexpr.l
+ppexpr-lex.inc: ppexpr.l
     flex ppexpr.l
 
-ppexpr_grammar.cpp: ppexpr.g ppexpr-lex.incl
-    qlalr ppexpr.g
+ppexpr_grammar.cpp: ppexpr.g ppexpr-lex.inc
+    qlalr --no-lines ppexpr.g
 
