@@ -57,6 +57,7 @@ private:
     void createTempFiles();
 
 private:
+    static ulong        m_startUpTickCount;
     static QByteArray   m_globalCommandLines;
     static QString      m_tempPath;
     QProcess            m_process;

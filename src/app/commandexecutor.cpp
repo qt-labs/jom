@@ -32,6 +32,7 @@
 
 namespace NMakeFile {
 
+ulong CommandExecutor::m_startUpTickCount = 0;
 QByteArray CommandExecutor::m_globalCommandLines;
 QString CommandExecutor::m_tempPath;
 
@@ -39,6 +40,9 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
 :   QObject(parent),
     m_pTarget(0)
 {
+    if (m_startUpTickCount == 0)
+        m_startUpTickCount = GetTickCount();
+
     if (m_tempPath.isNull()) {
         WCHAR buf[MAX_PATH];
         DWORD count = GetTempPathW(MAX_PATH, buf);
@@ -258,7 +262,9 @@ void CommandExecutor::createTempFiles()
                     simplifiedTargetName.chop(1);
                 }
                 simplifiedTargetName = fileNameFromFilePath(simplifiedTargetName);
-                fileName = m_tempPath + QString("%1.%2.jom").arg(simplifiedTargetName).arg(GetTickCount());
+                fileName = m_tempPath + QString("%1.%2.%3.jom").arg(simplifiedTargetName)
+                                                               .arg(GetCurrentProcessId())
+                                                               .arg(GetTickCount() - m_startUpTickCount);
             } while (QFile::exists(fileName));
         } else
             fileName = cmd.m_inlineFile->m_filename;
