@@ -98,7 +98,7 @@ protected:
 
 /.
 #include "ppexprparser.h"
-#include "macrotable.h"
+#include "../macrotable.h"
 #include "ppexpr-lex.inc"
 
 PPExprParser::PPExprParser()
