@@ -22,6 +22,7 @@ line 2
 line 3
 <<
 	echo N | comp test_basic_expected.txt output\test_basic.txt
+	@echo .
 
 test_fileRemoval:
 	echo @if exist << exit /b 1 >> output\post_check.cmd
@@ -48,4 +49,5 @@ three
 four
 <<
 	echo N | comp test_multipleFiles_expected.txt output\test_multipleFiles.txt
+	@echo .
 
