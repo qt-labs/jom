@@ -207,6 +207,7 @@ void ParserTest::inferenceRules_data()
     QTest::newRow("4") << IRTM_ParseTimeRule << "foo4.obj" << "echo {subdir}.cpp.obj (subdir\\foo4.cpp)" << "";
     QTest::newRow("5") << IRTM_DeferredRule << "foo5.obj" << "echo {subdir}.cpp.obj (subdir\\foo5.cpp)" << "subdir\\foo5.cpp";
     QTest::newRow("6") << IRTM_DeferredRule << "foo6.obj" << "echo .cpp.obj (foo6.cpp)" << "foo6.cpp";
+    QTest::newRow("7") << IRTM_DeferredRule << "foo.bar.obj" << "echo .cpp.obj (foo.bar.cpp)" << "foo.bar.cpp";
     QTest::newRow("cleanup") << IRTM_Cleanup << "" << "" << "";
 
     QStringList filesToCreate;
