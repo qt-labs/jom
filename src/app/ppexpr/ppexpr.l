@@ -1,6 +1,4 @@
-%option 8bit noyywrap nounistd batch
-/*%option bison-bridge*/
-/*%option reentrant*/
+%option 8bit nounistd batch
 %option warn
 /*%option nodefault*/
 %option outfile="ppexpr-lex.inc"
@@ -9,10 +7,17 @@
 %{
 #define YY_DECL int PPExprParser::yylex()
 #define ECHO
+#define YY_SKIP_YYWRAP
+#define fileno _fileno
 
 static int isatty (int)
 {
     return 0;
+}
+
+static int yywrap()
+{
+    return 1;
 }
 %}
 
