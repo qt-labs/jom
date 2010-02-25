@@ -317,11 +317,16 @@ void Makefile::dumpInferenceRules() const
 void Makefile::filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName)
 {
     FileInfo fi(targetName);
-    QString baseName = fi.baseName();
+    QString targetFileName = fi.fileName();
 
     QList<InferenceRule*>::iterator it = rules.begin();
     while (it != rules.end()) {
         const InferenceRule* rule = *it;
+
+        // Thanks to Parser::preselectInferenceRules the target name
+        // is guaranteed to end with rule->m_toExtension.
+        QString baseName = targetFileName;
+        baseName.chop(rule->m_toExtension.length());
         QString dependentName = rule->m_fromSearchPath + QLatin1Char('\\') +
                                 baseName + rule->m_fromExtension;
 
@@ -436,8 +441,10 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
     const QString& targetName = target->targetName();
     //qDebug() << "----> applyInferenceRule for" << targetName;
 
-    FileInfo fi(targetName);
-    QString inferredDependent = fi.baseName() + rule->m_fromExtension;
+    QString inferredDependent = FileInfo(targetName).fileName();
+    inferredDependent.chop(rule->m_toExtension.length());
+    inferredDependent.append(rule->m_fromExtension);
+
     if (rule->m_fromSearchPath != QLatin1String("."))
         inferredDependent.prepend(rule->m_fromSearchPath + QLatin1Char('\\'));
 
