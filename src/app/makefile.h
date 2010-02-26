@@ -88,6 +88,14 @@ public:
         return m_targetName;
     }
 
+    /**
+     * Returns this target's name as a file name, i.e. unquoted.
+     */
+    QString targetFilePath() const
+    {
+        return m_targetFilePath;
+    }
+
     QStringList m_dependents;
     QDateTime m_timeStamp;
     QSharedPointer<QStringList> m_suffixes;
@@ -107,6 +115,7 @@ private:
     size_t m_id;
     bool m_bExecuting;
     QString m_targetName;
+    QString m_targetFilePath;
 };
 
 class InferenceRule : public CommandContainer {

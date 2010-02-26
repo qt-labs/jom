@@ -506,27 +506,27 @@ void Parser::checkForCycles(DescriptionBlock* target)
     target->m_bVisitedByCycleCheck = false;
 }
 
-QList<InferenceRule*> Parser::findRulesByTargetExtension(const QString& targetName)
+QList<InferenceRule*> Parser::findRulesByTargetExtension(const QString& targetFileName)
 {
     QList<InferenceRule*> result;
     foreach (const InferenceRule& rule, m_makefile.inferenceRules())
-        if (targetName.endsWith(rule.m_toExtension))
+        if (targetFileName.endsWith(rule.m_toExtension))
             result.append(const_cast<InferenceRule*>(&rule));
     return result;
 }
 
-void Parser::filterRulesByTargetName(QList<InferenceRule*>& rules, const QString& targetName)
+void Parser::filterRulesByTargetName(QList<InferenceRule*>& rules, const QString& targetFileName)
 {
     QList<InferenceRule*>::iterator it = rules.begin();
     while (it != rules.end()) {
         const InferenceRule* rule = *it;
-        if (!targetName.endsWith(rule->m_toExtension)) {
+        if (!targetFileName.endsWith(rule->m_toExtension)) {
             it = rules.erase(it);
             continue;
         }
 
-        QString fileName = fileNameFromFilePath(targetName);
-        QString directory = targetName.left(targetName.length() - fileName.length());
+        QString fileName = fileNameFromFilePath(targetFileName);
+        QString directory = targetFileName.left(targetFileName.length() - fileName.length());
         removeDirSeparatorAtEnd(directory);
         if (directory.isEmpty()) directory = ".";
         if (directory != rule->m_toSearchPath) {
@@ -543,18 +543,18 @@ void Parser::preselectInferenceRules()
     foreach (const QString targetName, m_activeTargets) {
         DescriptionBlock* target = m_makefile.target(targetName);
         if (target->m_commands.isEmpty())
-            preselectInferenceRules(target->targetName(), target->m_inferenceRules, *(target->m_suffixes));
+            preselectInferenceRules(target->targetFilePath(), target->m_inferenceRules, *(target->m_suffixes));
         preselectInferenceRulesRecursive(target);
     }
 }
 
-void Parser::preselectInferenceRules(const QString& targetName,
+void Parser::preselectInferenceRules(const QString& targetFileName,
                                      QList<InferenceRule*>& rules,
                                      const QStringList& suffixes)
 {
     bool inferenceRulesApplicable = false;
     foreach (const QString& suffix, suffixes) {
-        if (targetName.endsWith(suffix)) {
+        if (targetFileName.endsWith(suffix)) {
             inferenceRulesApplicable = true;
             break;
         }
@@ -563,8 +563,8 @@ void Parser::preselectInferenceRules(const QString& targetName,
     if (!inferenceRulesApplicable)
         return;
 
-    rules = findRulesByTargetExtension(targetName);
-    filterRulesByTargetName(rules, targetName);
+    rules = findRulesByTargetExtension(targetFileName);
+    filterRulesByTargetName(rules, targetFileName);
 }
 
 void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
@@ -572,18 +572,24 @@ void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
     foreach (const QString& dependentName, target->m_dependents) {
         DescriptionBlock* dependent = m_makefile.target(dependentName);
         QSharedPointer<QStringList> suffixes;
+        QString dependentFileName = dependentName;
         if (dependent) {
             if (!dependent->m_commands.isEmpty()) {
                 preselectInferenceRulesRecursive(dependent);
                 continue;
             }
             suffixes = dependent->m_suffixes;
+            dependentFileName = dependent->targetFilePath();
         } else {
             suffixes = target->m_suffixes;
+            if (dependentFileName.startsWith(QLatin1Char('"')) && dependentFileName.endsWith(QLatin1Char('"'))) {
+                dependentFileName.remove(0, 1);
+                dependentFileName.chop(1);
+            }
         }
 
         QList<InferenceRule*> selectedRules;
-        preselectInferenceRules(dependentName, selectedRules, *suffixes);
+        preselectInferenceRules(dependentFileName, selectedRules, *suffixes);
 
         if (!dependent) {
             if (selectedRules.isEmpty())

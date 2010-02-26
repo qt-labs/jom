@@ -1,7 +1,15 @@
-jom - the tool with endless possibilities
+jom - the parallel make tool for Windows
 
 "jom" is "let's go" in Malay.
-Who wants to add more to this file?
+
+== How to compile jom ==
+This is a Qt program, so the usual steps to compile jom on command line are:
+    qmake
+    nmake
+
+If you need support for makefile preprocessor expressions, then you will need libantlr.
+More details can be found in in src/app/app.pri
+For qmake generated makefiles you can go ahead without ANTLR.
 
 == How to compile jom with cmake ==
 We assume that everything we do happens in the folder X:\build-jom 

@@ -79,6 +79,11 @@ DescriptionBlock::DescriptionBlock()
 void DescriptionBlock::setTargetName(const QString& name)
 {
     m_targetName = name;
+    m_targetFilePath = name;
+    if (m_targetFilePath.startsWith(QLatin1Char('"')) && m_targetFilePath.endsWith(QLatin1Char('"'))) {
+        m_targetFilePath.remove(0, 1);
+        m_targetFilePath.chop(1);
+    }
 }
 
 void DescriptionBlock::expandFileNameMacros()
@@ -168,7 +173,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
     switch (str.at(0).toLatin1()) {
         case '@':
             replacementLength = 1;
-            result = targetName();
+            result = targetFilePath();
             break;
         case '*':
             {
@@ -177,7 +182,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                     result = dependentCandidates.join(QLatin1String(" "));
                 } else {
                     replacementLength = 1;
-                    result = targetName();
+                    result = targetFilePath();
                     int idx = result.lastIndexOf(QLatin1Char('.'));
                     if (idx > -1)
                         result.resize(idx);
@@ -190,7 +195,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                 result = "";
                 bool firstAppend = true;
                 const QDateTime currentTimeStamp = QDateTime::currentDateTime();
-                QDateTime targetTimeStamp = FileInfo(targetName()).lastModified();
+                QDateTime targetTimeStamp = FileInfo(targetFilePath()).lastModified();
                 if (!targetTimeStamp.isValid())
                     targetTimeStamp = currentTimeStamp;
 
@@ -317,11 +322,16 @@ void Makefile::dumpInferenceRules() const
 void Makefile::filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName)
 {
     FileInfo fi(targetName);
-    QString baseName = fi.baseName();
+    QString targetFileName = fi.fileName();
 
     QList<InferenceRule*>::iterator it = rules.begin();
     while (it != rules.end()) {
         const InferenceRule* rule = *it;
+
+        // Thanks to Parser::preselectInferenceRules the target name
+        // is guaranteed to end with rule->m_toExtension.
+        QString baseName = targetFileName;
+        baseName.chop(rule->m_toExtension.length());
         QString dependentName = rule->m_fromSearchPath + QLatin1Char('\\') +
                                 baseName + rule->m_fromExtension;
 
@@ -436,8 +446,10 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
     const QString& targetName = target->targetName();
     //qDebug() << "----> applyInferenceRule for" << targetName;
 
-    FileInfo fi(targetName);
-    QString inferredDependent = fi.baseName() + rule->m_fromExtension;
+    QString inferredDependent = FileInfo(targetName).fileName();
+    inferredDependent.chop(rule->m_toExtension.length());
+    inferredDependent.append(rule->m_fromExtension);
+
     if (rule->m_fromSearchPath != QLatin1String("."))
         inferredDependent.prepend(rule->m_fromSearchPath + QLatin1Char('\\'));
 
