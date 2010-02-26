@@ -79,6 +79,11 @@ DescriptionBlock::DescriptionBlock()
 void DescriptionBlock::setTargetName(const QString& name)
 {
     m_targetName = name;
+    m_targetFilePath = name;
+    if (m_targetFilePath.startsWith(QLatin1Char('"')) && m_targetFilePath.endsWith(QLatin1Char('"'))) {
+        m_targetFilePath.remove(0, 1);
+        m_targetFilePath.chop(1);
+    }
 }
 
 void DescriptionBlock::expandFileNameMacros()
