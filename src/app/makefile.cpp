@@ -173,7 +173,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
     switch (str.at(0).toLatin1()) {
         case '@':
             replacementLength = 1;
-            result = targetName();
+            result = targetFilePath();
             break;
         case '*':
             {
@@ -182,7 +182,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                     result = dependentCandidates.join(QLatin1String(" "));
                 } else {
                     replacementLength = 1;
-                    result = targetName();
+                    result = targetFilePath();
                     int idx = result.lastIndexOf(QLatin1Char('.'));
                     if (idx > -1)
                         result.resize(idx);
@@ -195,7 +195,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                 result = "";
                 bool firstAppend = true;
                 const QDateTime currentTimeStamp = QDateTime::currentDateTime();
-                QDateTime targetTimeStamp = FileInfo(targetName()).lastModified();
+                QDateTime targetTimeStamp = FileInfo(targetFilePath()).lastModified();
                 if (!targetTimeStamp.isValid())
                     targetTimeStamp = currentTimeStamp;
 
