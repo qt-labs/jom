@@ -241,6 +241,8 @@ void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spaw
         m_commandScript.write(QByteArray::number(cmd.m_maxExitCode));
         m_commandScript.write(" EXIT %ERRORLEVEL%\n");
         m_commandScript.write("IF %ERRORLEVEL% LSS 0 EXIT %ERRORLEVEL%\n");
+    } else {
+        m_commandScript.write("cmd /c exit /b 0\n");
     }
 }
 
