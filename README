@@ -7,18 +7,13 @@ This is a Qt program, so the usual steps to compile jom on command line are:
     qmake
     nmake
 
-If you need support for makefile preprocessor expressions, then you will need libantlr.
-More details can be found in in src/app/app.pri
-For qmake generated makefiles you can go ahead without ANTLR.
-
 == How to compile jom with cmake ==
 We assume that everything we do happens in the folder X:\build-jom 
-1. get the C runtime of antlr and unpack the package into the folder X:\build-jom
-2. unpack these sources of jom into X:\build-jom\jom
-3. add a build directory somewhere - this normally either is a directory on the same level as the build directory
+1. unpack these sources of jom into X:\build-jom\jom
+2. add a build directory somewhere - this normally either is a directory on the same level as the build directory
    or a subdirectory of the source root directory.
    !!! Do not try to build from within the source directory !!!
-4. switch into the build directory and run the following commands:
+3. switch into the build directory and run the following commands:
 
      X:\build-jom\build> cmake X:\build-jom\jom -G "NMake Makefiles" -DCMAKE_PREFIX_PATH=X:\build-jom -DCMAKE_INSTALL_PREFIX=X:\build-jom\install
      ...
