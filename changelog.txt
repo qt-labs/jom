@@ -1,0 +1,8 @@
+Changes since jom 0.8.9
+- Reset the ERRORLEVEL to zero, if command's exit code should be ignored.
+  (QTCREATORBUG-837)
+- Command files can be used to pass command line options to jom.
+  Usage: jom @commands.txt
+- ANTLR isn't used anymore. We're using QLALR to generate the parser for
+  preprocessor expressions now. This makes building jom much easier.
+
