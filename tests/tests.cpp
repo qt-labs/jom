@@ -226,7 +226,7 @@ void ParserTest::preprocessorDivideByZero()
         error = e;
     }
     QCOMPARE(exceptionCaught, true);
-    QVERIFY(error.message().endsWith("division by zero"));
+    QVERIFY(error.message().contains("division by zero"));
 }
 
 void ParserTest::preprocessorInvalidExpressions_data()
