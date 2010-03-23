@@ -25,7 +25,6 @@
 #include "macrotable.h"
 #include <QSharedPointer>
 #include <QStringList>
-#include <QVector>
 #include <QDateTime>
 #include <QHash>
 
