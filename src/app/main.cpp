@@ -44,14 +44,16 @@ const int nVersionPatch = 0;
 
 static void showLogo()
 {
-    fprintf(stderr, "jom %d.%d.%d - empower your cores\n\n",
+    fprintf(stderr, "\njom %d.%d.%d - empower your cores\n\n",
         nVersionMajor, nVersionMinor, nVersionPatch);
 }
 
 static void showUsage()
 {
-    showLogo();
-    printf("This is how you do it!\n\n"
+    printf("Usage: jom @commandfile\n"
+           "       jom [options] [/f makefile] [macro definitions] [targets]\n\n"
+           "This tool is meant to be an nmake clone.\n"
+           "Please see the Microsoft nmake documentation for more options.\n"
            "/DUMPGRAPH show the generated dependency graph\n"
            "/DUMPGRAPHDOT dump dependency graph in dot format\n");
 }
@@ -144,6 +146,8 @@ int main(int argc, char* argv[])
         return 128;
     }
     if (g_options.showUsageAndExit) {
+        if (g_options.showLogo)
+            showLogo();
         showUsage();
         return 0;
     } else if (g_options.showVersionAndExit) {
