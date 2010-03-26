@@ -334,7 +334,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
             if (canAddCommands == DescriptionBlock::ACSEnabled || descblock->m_commands.isEmpty())
                 descblock->m_commands.append(commands);
             else
-                error(QString("Cannot add commands to previously defined target %1.").arg(t));
+                qWarning("Cannot add commands to previously defined target %s.", qPrintable(t));
         }
 
         QList<Command>::iterator it = descblock->m_commands.begin();
