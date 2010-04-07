@@ -88,8 +88,8 @@ static int yywrap()
                 yylval.str = new QByteArray();
             }
 
-"DEFINED"   BEGIN(STATE_DEFINED);
-"EXIST"     BEGIN(STATE_EXIST);
+(?i:DEFINED)    BEGIN(STATE_DEFINED);
+(?i:EXIST)      BEGIN(STATE_EXIST);
 
 <STATE_DEFINED>{
     [:blank:]+     /* eat whitespace */

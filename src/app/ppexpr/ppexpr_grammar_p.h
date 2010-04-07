@@ -5,7 +5,7 @@
 class ppexpr_grammar
 {
 public:
-  enum {
+  enum VariousConstants {
     EOF_SYMBOL = 0,
     T_BIT_AND = 5,
     T_BIT_NOT = 20,
