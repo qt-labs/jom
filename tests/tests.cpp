@@ -159,13 +159,13 @@ void ParserTest::preprocessorExpressions_data()
      QTest::newRow("max number") << QByteArray("2147483647") << 2147483647;
      QTest::newRow("min number") << QByteArray("-2147483647") << -2147483647;
      QTest::newRow("file exists 1") << QByteArray("EXIST(include_test.mk)") << 1;
-     QTest::newRow("file exists 2") << QByteArray("EXIST( \"include_test.mk\" )") << 1;
+     QTest::newRow("file exists 2") << QByteArray("eXiSt( \"include_test.mk\" )") << 1;
      QTest::newRow("file exists 3") << QByteArray("EXIST  ( include_test.mk\t)") << 1;
      QTest::newRow("file not exists") << QByteArray("EXIST(\"no such file\")") << 0;
      QTest::newRow("macro defined 1") << QByteArray("DEFINED ( ThisIsDefined\t)") << 1;
-     QTest::newRow("macro defined 2") << QByteArray("DEFINED(\"ThisIsDefined\")") << 1;
+     QTest::newRow("macro defined 2") << QByteArray("DeFiNeD(\"ThisIsDefined\")") << 1;
      QTest::newRow("macro defined 3") << QByteArray("DEFINED\t(ThisIsDefinedButEmpty)") << 1;
-     QTest::newRow("macro defined 4") << QByteArray("DEFINED (   ThisIsUnfortunatelyNotDefined    )") << 0;
+     QTest::newRow("macro defined 4") << QByteArray("defined (   ThisIsUnfortunatelyNotDefined    )") << 0;
      QTest::newRow("shellcommand") << QByteArray("[ cmd /c exit 12 ]") << 12;
      QTest::newRow("ops +*") << QByteArray("2+3*5") << 17;
      QTest::newRow("ops (+)*") << QByteArray("(2+3)*5") << 25;
