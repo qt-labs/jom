@@ -1,3 +1,10 @@
+This is the changelog for jom, the parallel build tool.
+
+Changes since jom 0.9.0
+- Having too many rules for a target is now a warning and not an error.
+- Fixed several bugs in the preprocessor expression parser, e.g.
+  QTCREATORBUG-1056.
+
 Changes since jom 0.8.9
 - Reset the ERRORLEVEL to zero, if command's exit code should be ignored.
   (QTCREATORBUG-837)
