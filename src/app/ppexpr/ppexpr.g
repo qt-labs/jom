@@ -386,21 +386,21 @@ term6 ::= primary;
 term6 ::= MINUS primary;
 /.
     case $rule_number: // $rule
-        sym(1).num = -sym(1).num;
+        sym(1).num = -sym(2).num;
         break;
 ./
 
 term6 ::= BIT_NOT primary;
 /.
     case $rule_number: // $rule
-        sym(1).num = ~sym(1).num;
+        sym(1).num = ~sym(2).num;
         break;
 ./
 
 term6 ::= BOOL_NOT primary;
 /.
     case $rule_number: // $rule
-        sym(1).num = (sym(1).num == 0) ? 1 : 0;
+        sym(1).num = (sym(2).num == 0) ? 1 : 0;
         break;
 ./
 

@@ -196,15 +196,15 @@ bool PPExprParser::parse(const char* str)
         break;
 
     case 28: // term6
-        sym(1).num = -sym(1).num;
+        sym(1).num = -sym(2).num;
         break;
 
     case 29: // term6
-        sym(1).num = ~sym(1).num;
+        sym(1).num = ~sym(2).num;
         break;
 
     case 30: // term6
-        sym(1).num = (sym(1).num == 0) ? 1 : 0;
+        sym(1).num = (sym(2).num == 0) ? 1 : 0;
         break;
 
     case 32: // primary
