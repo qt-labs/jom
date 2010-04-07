@@ -197,6 +197,7 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
         error("ERROR: " + value);
     } else if (directive == "MESSAGE") {
         printf(qPrintable(value));
+        printf("\n");
     } else if (directive == "INCLUDE") {
         internalOpenFile(value);
     } else if (directive == "IF") {
