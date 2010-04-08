@@ -154,6 +154,11 @@ QString Preprocessor::currentFileName() const
 
 void Preprocessor::basicReadLine(QString& line)
 {
+    if (!m_linesPutBack.isEmpty()) {
+        line = m_linesPutBack.takeFirst();
+        return;
+    }
+
     if (m_fileStack.isEmpty()) {
         line = QString();
         return;
@@ -205,21 +210,18 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
         enterConditional(followElseBranch);
         if (followElseBranch) {
             skipUntilNextMatchingConditional();
-            return true;
         }
     } else if (directive == "IFDEF") {
         bool followElseBranch = !m_macroTable->isMacroDefined(value);
         enterConditional(followElseBranch);
         if (followElseBranch) {
             skipUntilNextMatchingConditional();
-            return true;
         }
     } else if (directive == "IFNDEF") {
         bool followElseBranch = m_macroTable->isMacroDefined(value);
         enterConditional(followElseBranch);
         if (followElseBranch) {
             skipUntilNextMatchingConditional();
-            return true;
         }
     } else if (directive == "ELSE") {
         if (conditionalDepth() == 0) {
@@ -228,7 +230,6 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
         }
         if (!m_conditionalStack.top()) {
             skipUntilNextMatchingConditional();
-            return true;
         }
     } else if (directive == "ELSEIF") {
         if (conditionalDepth() == 0) {
@@ -237,7 +238,9 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
         }
         if (!m_conditionalStack.top() || evaluateExpression(value) == 0) {
             skipUntilNextMatchingConditional();
-            return true;
+        } else {
+            m_conditionalStack.pop();
+            m_conditionalStack.push(false);
         }
     } else if (directive == "ELSEIFDEF") {
         if (conditionalDepth() == 0) {
@@ -246,7 +249,9 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
         }
         if (!m_conditionalStack.top() || !m_macroTable->isMacroDefined(value)) {
             skipUntilNextMatchingConditional();
-            return true;
+        } else {
+            m_conditionalStack.pop();
+            m_conditionalStack.push(false);
         }
     } else if (directive == "ELSEIFNDEF") {
         if (conditionalDepth() == 0) {
@@ -255,7 +260,9 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
         }
         if (!m_conditionalStack.top() || m_macroTable->isMacroDefined(value)) {
             skipUntilNextMatchingConditional();
-            return true;
+        } else {
+            m_conditionalStack.pop();
+            m_conditionalStack.push(false);
         }
     } else if (directive == "ENDIF") {
         exitConditional();
@@ -332,8 +339,10 @@ void Preprocessor::skipUntilNextMatchingConditional()
             continue;
 
         if (depth == 0) {
-            if (token == TOK_ELSE)
+            if (token == TOK_ELSE) {
+                m_linesPutBack.append(line);
                 return;  // found the next matching ELSE
+            }
             if (token == TOK_ENDIF) {
                 exitConditional();
                 return;  // found the next matching ENDIF

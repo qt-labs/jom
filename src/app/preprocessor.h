@@ -24,6 +24,7 @@
 
 #include <QRegExp>
 #include <QStack>
+#include <QStringList>
 
 class PPExprParser;
 
@@ -88,6 +89,7 @@ private:
     QRegExp             m_rexPreprocessingDirective;
     QStack<bool>        m_conditionalStack;
     PPExprParser*       m_expressionParser;
+    QStringList         m_linesPutBack;
 };
 
 } //namespace NMakeFile

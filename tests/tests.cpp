@@ -47,6 +47,7 @@ private slots:
     void preprocessorDivideByZero();
     void preprocessorInvalidExpressions_data();
     void preprocessorInvalidExpressions();
+    void conditionals();
 
     // parser tests
     void descriptionBlocks();
@@ -288,6 +289,34 @@ void ParserTest::preprocessorInvalidExpressions()
 
     QVERIFY(exceptionCaught);
     QVERIFY(!error.message().isEmpty());
+}
+
+void ParserTest::conditionals()
+{
+    if (!m_preprocessor)
+        m_preprocessor = new Preprocessor;
+    MacroTable* macroTable = new MacroTable;
+    m_preprocessor->setMacroTable(macroTable);
+    QVERIFY( m_preprocessor->openFile(QLatin1String("conditionals.mk")) );
+
+    Parser parser;
+    bool exceptionThrown = false;
+    try {
+        parser.apply(m_preprocessor);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+
+    QCOMPARE(macroTable->macroValue("TEST1"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST2"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST3"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST4"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST5"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST6"), QLatin1String("true"));
+
+    m_preprocessor->setMacroTable(0);
+    delete macroTable;
 }
 
 void ParserTest::descriptionBlocks()
