@@ -184,29 +184,17 @@ int main(int argc, char* argv[])
         macroTable.setMacroValue("RCFLAGS", QString::null);
     }
 
-    Preprocessor preprocessor;
-    preprocessor.setMacroTable(&macroTable);
+    QSharedPointer<Makefile> mkfile;
     try {
+        Preprocessor preprocessor;
+        preprocessor.setMacroTable(&macroTable);
         preprocessor.openFile(filename);
-    }
-    catch (Exception e) {
-        fprintf(stderr, qPrintable(e.message()));
-        fprintf(stderr, "\n");
-        return 128;
-    }
-
-    Parser parser;
-    Makefile* mkfile;
-    try {
+        Parser parser;
         mkfile = parser.apply(&preprocessor, targets);
     } catch (Exception e) {
-        QString output;
-        if (e.line() != 0)
-            output = QString("ERROR in line %1: %2\n").arg(e.line()).arg(e.message());
-        else
-            output = QString("ERROR: %1\n").arg(e.message());
-
-        fprintf(stderr, qPrintable(output));
+        fprintf(stderr, "ERROR: ");
+        fprintf(stderr, qPrintable(e.toString()));
+        fprintf(stderr, "\n");
         return 2;
     }
 
@@ -222,7 +210,7 @@ int main(int argc, char* argv[])
     TargetExecutor executor(systemEnvironment);
     g_pTargetExecutor = &executor;
     try {
-        executor.apply(mkfile, targets);
+        executor.apply(mkfile.data(), targets);
     }
     catch (Exception e) {
         QString msg = "Error in executor: " + e.message() + "\n";

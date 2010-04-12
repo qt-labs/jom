@@ -42,11 +42,8 @@ public:
     Parser();
     virtual ~Parser();
 
-    Makefile* apply(Preprocessor* pp, const QStringList& activeTargets = QStringList());
+    QSharedPointer<Makefile> apply(Preprocessor* pp, const QStringList& activeTargets = QStringList());
     MacroTable* macroTable();
-
-protected:
-    void clear();
 
 private:
     void readLine();
@@ -80,7 +77,7 @@ private:
     QRegExp                 m_rexSingleWhiteSpace;
     QRegExp                 m_rexInlineMarkerOption;
 
-    Makefile                m_makefile;
+    QSharedPointer<Makefile>    m_makefile;
     QSharedPointer<QStringList> m_suffixes;
     QStringList             m_activeTargets;
 

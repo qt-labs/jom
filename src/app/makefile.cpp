@@ -242,6 +242,12 @@ bool InferenceRule::operator == (const InferenceRule& rhs) const
            m_toSearchPath == rhs.m_toSearchPath;
 }
 
+Makefile::Makefile()
+:   m_macroTable(0),
+    m_firstTarget(0)
+{
+}
+
 void Makefile::clear()
 {
     QHash<QString, DescriptionBlock*>::iterator it = m_targets.begin();

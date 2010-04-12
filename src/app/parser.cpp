@@ -42,14 +42,17 @@ Parser::Parser()
 
 Parser::~Parser()
 {
-    clear();
 }
 
-Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
+/**
+ * Parses the content, provided by the Preprocessor object and
+ * creates a new Makefile object.
+ */
+QSharedPointer<Makefile> Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
 {
-    clear();
+    m_makefile = QSharedPointer<Makefile>(new Makefile);
     m_activeTargets = activeTargets;
-    m_makefile.setMacroTable(pp->macroTable());
+    m_makefile->setMacroTable(pp->macroTable());
     m_preprocessor = pp;
     m_conditionalDepth = 0;
     m_silentCommands = g_options.suppressOutputMessages;
@@ -73,41 +76,36 @@ Makefile* Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
         } else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos)) {
             parseDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos);
         } else {
-            error("don't know what to do");
+            error("syntax error");
             readLine();
         }
     }
 
     // if the makefile doesn't contain target, we can stop here
-    if (m_makefile.targets().isEmpty())
-        return &m_makefile;
+    if (m_makefile->targets().isEmpty())
+        return m_makefile;
 
     // make sure that all active targets exist
     foreach (const QString& targetName, m_activeTargets)
-        if (!m_makefile.target(targetName))
+        if (!m_makefile->target(targetName))
             throw Exception(QString("Target %1 doesn't exist.").arg(targetName));
 
     // if no active target is defined, use the first one
     if (m_activeTargets.isEmpty()) {
-        m_activeTargets.append(m_makefile.firstTarget()->targetName());
+        m_activeTargets.append(m_makefile->firstTarget()->targetName());
     }
 
     // check for cycles in active targets
     foreach (const QString& targetName, m_activeTargets)
-        checkForCycles(m_makefile.target(targetName));
+        checkForCycles(m_makefile->target(targetName));
 
     preselectInferenceRules();
-    return &m_makefile;
+    return m_makefile;
 }
 
 MacroTable* Parser::macroTable()
 {
     return m_preprocessor->macroTable();
-}
-
-void Parser::clear()
-{
-    m_makefile.clear();
 }
 
 void Parser::readLine()
@@ -236,7 +234,7 @@ DescriptionBlock* Parser::createTarget(const QString& targetName)
     DescriptionBlock* target = new DescriptionBlock();
     target->setTargetName(targetName);
     target->m_suffixes = m_suffixes;
-    m_makefile.append(target);
+    m_makefile->append(target);
     return target;
 }
 
@@ -305,7 +303,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
     const QStringList targets = splitTargetNames(target);
     const QStringList dependents = splitTargetNames(value);
     foreach (const QString& t, targets) {
-        DescriptionBlock* descblock = m_makefile.target(t);
+        DescriptionBlock* descblock = m_makefile->target(t);
         DescriptionBlock::AddCommandsState canAddCommands = separatorLength > 1 ? DescriptionBlock::ACSEnabled : DescriptionBlock::ACSDisabled;
         if (descblock) {
             if (canAddCommands != descblock->m_canAddCommands &&
@@ -459,7 +457,7 @@ void Parser::parseInferenceRule()
     while (parseCommand(rule.m_commands, true))
         readLine();
 
-    m_makefile.addInferenceRule(rule);
+    m_makefile->addInferenceRule(rule);
 }
 
 void Parser::parseDotDirective()
@@ -482,7 +480,7 @@ void Parser::parseDotDirective()
         const QStringList& splitvalues = value.split(m_rexSingleWhiteSpace);
         foreach (QString str, splitvalues)
             if (!str.isEmpty())
-                m_makefile.addPreciousTarget(str);
+                m_makefile->addPreciousTarget(str);
     } else if (directive == "SILENT") {
         m_silentCommands = true;
     }
@@ -502,14 +500,14 @@ void Parser::checkForCycles(DescriptionBlock* target)
 
     target->m_bVisitedByCycleCheck = true;
     foreach (const QString& depname, target->m_dependents)
-        checkForCycles(m_makefile.target(depname));
+        checkForCycles(m_makefile->target(depname));
     target->m_bVisitedByCycleCheck = false;
 }
 
 QList<InferenceRule*> Parser::findRulesByTargetExtension(const QString& targetFileName)
 {
     QList<InferenceRule*> result;
-    foreach (const InferenceRule& rule, m_makefile.inferenceRules())
+    foreach (const InferenceRule& rule, m_makefile->inferenceRules())
         if (targetFileName.endsWith(rule.m_toExtension))
             result.append(const_cast<InferenceRule*>(&rule));
     return result;
@@ -541,7 +539,7 @@ void Parser::filterRulesByTargetName(QList<InferenceRule*>& rules, const QString
 void Parser::preselectInferenceRules()
 {
     foreach (const QString targetName, m_activeTargets) {
-        DescriptionBlock* target = m_makefile.target(targetName);
+        DescriptionBlock* target = m_makefile->target(targetName);
         if (target->m_commands.isEmpty())
             preselectInferenceRules(target->targetFilePath(), target->m_inferenceRules, *(target->m_suffixes));
         preselectInferenceRulesRecursive(target);
@@ -570,7 +568,7 @@ void Parser::preselectInferenceRules(const QString& targetFileName,
 void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
 {
     foreach (const QString& dependentName, target->m_dependents) {
-        DescriptionBlock* dependent = m_makefile.target(dependentName);
+        DescriptionBlock* dependent = m_makefile->target(dependentName);
         QSharedPointer<QStringList> suffixes;
         QString dependentFileName = dependentName;
         if (dependent) {

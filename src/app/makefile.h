@@ -131,13 +131,10 @@ public:
     QString m_toExtension;
 };
 
-class Makefile {
+class Makefile
+{
 public:
-    Makefile()
-        : m_macroTable(0)
-    {
-    }
-
+    Makefile();
     ~Makefile()
     {
     }

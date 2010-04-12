@@ -35,4 +35,20 @@ Exception::~Exception()
 {
 }
 
+const QString Exception::toString() const
+{
+    QString output = m_message;
+    if (!m_fileName.isEmpty()) {
+        output += QLatin1String(" in ");
+        output += m_fileName;
+        output += QLatin1String(" ");
+    }
+
+    if (m_line > 0) {
+        output += QString("line %1").arg(m_line);
+    }
+
+    return output;
+}
+
 } // namespace NMakeFile

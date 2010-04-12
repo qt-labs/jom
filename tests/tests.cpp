@@ -327,7 +327,7 @@ void ParserTest::descriptionBlocks()
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("descriptionBlocks.mk")) );
 
-    Makefile* mkfile = 0;
+    QSharedPointer<Makefile> mkfile;
     bool exceptionThrown = false;
     try {
         mkfile = parser.apply(&pp);
@@ -397,7 +397,7 @@ void ParserTest::inferenceRules()
     static MacroTable* macroTable = 0;
     static Preprocessor* pp = 0;
     static Parser* parser = 0;
-    static Makefile* mkfile = 0;
+    static QSharedPointer<Makefile> mkfile;
 
     QFETCH(char, mode);
     QFETCH(QString, targetName);
@@ -464,7 +464,7 @@ void ParserTest::dependentsWithSpace()
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("depswithspace.mk")) );
 
-    Makefile* mkfile = 0;
+    QSharedPointer<Makefile> mkfile;
     bool exceptionThrown = false;
     try {
         mkfile = parser.apply(&pp);
@@ -490,7 +490,7 @@ void ParserTest::multipleTargets()
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("targetmultidef.mk")) );
 
-    Makefile* mkfile = 0;
+    QSharedPointer<Makefile> mkfile;
     bool exceptionThrown = false;
     try {
         mkfile = parser.apply(&pp);
@@ -525,7 +525,7 @@ void ParserTest::comments()
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("comments.mk")) );
 
-    Makefile* mkfile = 0;
+    QSharedPointer<Makefile> mkfile;
     bool exceptionThrown = false;
     try {
         mkfile = parser.apply(&pp);
@@ -572,7 +572,7 @@ void ParserTest::fileNameMacros()
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("filenamemacros.mk")) );
 
-    Makefile* mkfile = 0;
+    QSharedPointer<Makefile> mkfile;
     bool exceptionThrown = false;
     try {
         mkfile = parser.apply(&pp);
@@ -680,7 +680,7 @@ void ParserTest::windowsPathsInTargetName()
     pp.setMacroTable(&macroTable);
     QVERIFY( pp.openFile(QLatin1String("windowspaths.mk")) );
 
-    Makefile* mkfile = 0;
+    QSharedPointer<Makefile> mkfile;
     bool exceptionThrown = false;
     try {
         mkfile = parser.apply(&pp);

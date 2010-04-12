@@ -33,7 +33,9 @@ public:
     ~Exception();
 
     const QString& message() const { return m_message; }
+    const QString& fileName() const { return m_fileName; }
     int line() const { return m_line; }
+    const QString toString() const;
 
 private:
     QString m_message;
