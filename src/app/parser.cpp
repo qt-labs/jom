@@ -272,12 +272,11 @@ static QStringList splitTargetNames(const QString& str)
 
 void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int commandSeparatorPos)
 {
-    QString target = m_preprocessor->macroTable()->expandMacros(m_line.left(separatorPos).trimmed());
-    //QString value  = m_preprocessor->macroTable()->expandMacros(m_line.right(m_line.length() - separatorPos - separatorLength).trimmed());
+    QString target = m_line.left(separatorPos).trimmed();
     QString value = m_line;
     if (commandSeparatorPos >= 0) value.truncate(commandSeparatorPos);
     value.remove(0, separatorPos + separatorLength);
-    value = m_preprocessor->macroTable()->expandMacros(value.trimmed());
+    value = value.trimmed();
     target.replace(QLatin1Char('/'), QLatin1Char('\\'));
     value.replace(QLatin1Char('/'), QLatin1Char('\\'));
 
