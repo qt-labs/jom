@@ -57,7 +57,7 @@ private:
     void parseDotDirective();
     bool parseCommand(QList<Command>& commands, bool inferenceRule);
     void parseCommandLine(const QString& cmdLine, QList<Command>& commands, bool inferenceRule);
-    void parseInlineFile(Command& cmd);
+    void parseInlineFiles(Command& cmd);
     void checkForCycles(DescriptionBlock* target);
     QList<InferenceRule*> findRulesByTargetExtension(const QString& suffixes);
     void filterRulesByTargetName(QList<InferenceRule*>& rules, const QString& targetName);
@@ -75,7 +75,6 @@ private:
     QRegExp                 m_rexDotDirective;
     QRegExp                 m_rexInferenceRule;
     QRegExp                 m_rexSingleWhiteSpace;
-    QRegExp                 m_rexInlineMarkerOption;
 
     QSharedPointer<Makefile>    m_makefile;
     QSharedPointer<QStringList> m_suffixes;

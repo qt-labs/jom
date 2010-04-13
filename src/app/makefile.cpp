@@ -43,8 +43,7 @@ InlineFile::InlineFile(const InlineFile& rhs)
 }
 
 Command::Command()
-:   m_inlineFile(0),
-    m_maxExitCode(0),
+:   m_maxExitCode(0),
     m_silent(false),
     m_singleExecution(false)
 {
@@ -56,15 +55,13 @@ Command::Command(const Command& rhs)
     m_silent(rhs.m_silent),
     m_singleExecution(rhs.m_singleExecution)
 {
-    if (rhs.m_inlineFile)
-        m_inlineFile = new InlineFile(*rhs.m_inlineFile);
-    else
-        m_inlineFile = 0;
+    foreach (InlineFile* inlineFile, rhs.m_inlineFiles)
+        m_inlineFiles.append(new InlineFile(*inlineFile));
 }
 
 Command::~Command()
 {
-    delete m_inlineFile;
+    qDeleteAll(m_inlineFiles);
 }
 
 DescriptionBlock::DescriptionBlock()
@@ -469,9 +466,9 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
     QList<Command>::iterator itEnd = target->m_commands.end();
     for (; it != itEnd; ++it) {
         Command& command = *it;
-        if (command.m_inlineFile) {
-            replaceFileMacros(command.m_inlineFile->m_content, inferredDependent);
-            command.m_inlineFile->m_content = m_macroTable->expandMacros(command.m_inlineFile->m_content);
+        foreach (InlineFile* inlineFile, command.m_inlineFiles) {
+            replaceFileMacros(inlineFile->m_content, inferredDependent);
+            inlineFile->m_content = m_macroTable->expandMacros(inlineFile->m_content);
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
         replaceFileMacros(command.m_commandLine, inferredDependent);

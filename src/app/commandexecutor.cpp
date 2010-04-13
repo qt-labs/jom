@@ -25,7 +25,6 @@
 #include "exception.h"
 #include "helperfunctions.h"
 
-#include <QTextStream>
 #include <QTemporaryFile>
 #include <QDebug>
 #include <windows.h>
@@ -252,47 +251,50 @@ void CommandExecutor::createTempFiles()
     QList<Command>::iterator itEnd = m_pTarget->m_commands.end();
     for (; it != itEnd; ++it) {
         Command& cmd = *it;
-        if (!cmd.m_inlineFile)
-            continue;
+        foreach (InlineFile* inlineFile, cmd.m_inlineFiles) {
+            QString fileName;
+            if (inlineFile->m_filename.isEmpty()) {
+                do {
+                    QString simplifiedTargetName = m_pTarget->targetFilePath();
+                    simplifiedTargetName = fileNameFromFilePath(simplifiedTargetName);
+                    fileName = m_tempPath + QString("%1.%2.%3.jom").arg(simplifiedTargetName)
+                                                                   .arg(GetCurrentProcessId())
+                                                                   .arg(GetTickCount() - m_startUpTickCount);
+                } while (QFile::exists(fileName));
+            } else
+                fileName = inlineFile->m_filename;
 
-        QString fileName;
-        if (cmd.m_inlineFile->m_filename.isEmpty()) {
-            do {
-                QString simplifiedTargetName = m_pTarget->targetFilePath();
-                simplifiedTargetName = fileNameFromFilePath(simplifiedTargetName);
-                fileName = m_tempPath + QString("%1.%2.%3.jom").arg(simplifiedTargetName)
-                                                               .arg(GetCurrentProcessId())
-                                                               .arg(GetTickCount() - m_startUpTickCount);
-            } while (QFile::exists(fileName));
-        } else
-            fileName = cmd.m_inlineFile->m_filename;
+            TempFile tempFile;
+            tempFile.file = new QFile(fileName);
+            if (!tempFile.file->open(QFile::WriteOnly)) {
+                delete tempFile.file;
+                throw Exception(QString("cannot open %1 for write").arg(fileName));
+            }
 
-        TempFile tempFile;
-        tempFile.file = new QFile(fileName);
-        if (!tempFile.file->open(QFile::WriteOnly)) {
-            delete tempFile.file;
-            throw Exception(QString("cannot open %1 for write").arg(fileName));
+            tempFile.keep = inlineFile->m_keep;
+
+            QString content = inlineFile->m_content;
+            if (content.contains("$<")) {
+                // TODO: handle more file macros here
+                content.replace("$<", m_pTarget->m_dependents.join(" "));
+            }
+
+            // TODO: do something with inlineFile->m_unicode;
+            tempFile.file->write(content.toLocal8Bit());
+            tempFile.file->close();
+
+            QString replacement = QString(tempFile.file->fileName()).replace('/', '\\');
+            if (replacement.contains(' ') || replacement.contains('\t')) {
+                replacement.prepend("\"");
+                replacement.append("\"");
+            }
+
+            int idx = cmd.m_commandLine.indexOf(QLatin1String("<<"));
+            if (idx > 0)
+                cmd.m_commandLine.replace(idx, 2, replacement);
+
+            m_tempFiles.append(tempFile);
         }
-
-        tempFile.keep = cmd.m_inlineFile->m_keep;
-
-        QString content = cmd.m_inlineFile->m_content;
-        if (content.contains("$<")) {
-            // TODO: handle more file macros here
-            content.replace("$<", m_pTarget->m_dependents.join(" "));
-        }
-
-        QTextStream textstream(tempFile.file);
-        textstream << content;
-        tempFile.file->close();
-
-        QString replacement = QString(tempFile.file->fileName()).replace('/', '\\');
-        if (replacement.contains(' ') || replacement.contains('\t')) {
-            replacement.prepend("\"");
-            replacement.append("\"");
-        }
-        cmd.m_commandLine.replace("<<", replacement);
-        m_tempFiles.append(tempFile);
     }
 }
 

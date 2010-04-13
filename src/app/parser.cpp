@@ -37,7 +37,6 @@ Parser::Parser()
     m_rexDotDirective.setPattern("^\\.(IGNORE|PRECIOUS|SILENT|SUFFIXES)\\s*:(.*)");
     m_rexInferenceRule.setPattern("^(\\{.*\\})?(\\.\\w+)(\\{.*\\})?(\\.\\w+)(:{1,2})");
     m_rexSingleWhiteSpace.setPattern("\\s");
-    m_rexInlineMarkerOption.setPattern("(<<\\s*)(\\S*)");
 }
 
 Parser::~Parser()
@@ -397,29 +396,56 @@ void Parser::parseCommandLine(const QString& cmdLine, QList<Command>& commands, 
         }
     } while (!noCommandModifiersFound);
 
-    if (m_rexInlineMarkerOption.indexIn(cmdLine) != -1) {
-        parseInlineFile(cmd);
-    }
+    parseInlineFiles(cmd);
 }
 
-void Parser::parseInlineFile(Command& cmd)
+void Parser::parseInlineFiles(Command& cmd)
 {
-    InlineFile* inlineFile = new InlineFile();
-    cmd.m_inlineFile = inlineFile;
-    inlineFile->m_filename = m_rexInlineMarkerOption.cap(2);
+    // First, create the InlineFile objects from the command line.
+    int fileNamePos = 0;
+    while ((fileNamePos = cmd.m_commandLine.indexOf(QLatin1String("<<"), fileNamePos)) >= 0) {
+        fileNamePos += 2;
+        InlineFile* inlineFile = new InlineFile();
+        cmd.m_inlineFiles.append(inlineFile);
 
-    readLine();
-    while (!m_line.isNull()) {
-        if (m_line.startsWith("<<")) {
-            QStringList options = m_line.right(m_line.length() - 2).split(m_rexSingleWhiteSpace);
-            if (options.contains("KEEP"))
-                inlineFile->m_keep = true;
-            if (options.contains("UNICODE"))
-                inlineFile->m_unicode = true;
-            return;
+        // Determine the inline file name, if given.
+        if (cmd.m_commandLine.count() > fileNamePos && !cmd.m_commandLine.at(fileNamePos).isSpace()) {
+            if (cmd.m_commandLine.at(fileNamePos) == QLatin1Char('"')) {
+                // quoted file name
+                int idx = cmd.m_commandLine.indexOf(QLatin1Char('"'), fileNamePos + 1);
+                if (idx == -1) {
+                    QString msg = QLatin1String("missing quote for inline file name in %0, line %1");
+                    qWarning(qPrintable(msg.arg(m_preprocessor->currentFileName()).arg(m_preprocessor->lineNumber())));
+                } else {
+                    inlineFile->m_filename = cmd.m_commandLine.mid(fileNamePos + 1, idx - fileNamePos - 1);
+                    cmd.m_commandLine.remove(fileNamePos, idx - fileNamePos + 1);
+                }
+            } else {
+                // unquoted file name
+                int idx = fileNamePos + 1;
+                while (idx < cmd.m_commandLine.count() && !cmd.m_commandLine.at(idx).isSpace())
+                    ++idx;
+                inlineFile->m_filename = cmd.m_commandLine.mid(fileNamePos, idx - fileNamePos);
+                cmd.m_commandLine.remove(fileNamePos, idx - fileNamePos);
+            }
         }
-        inlineFile->m_content.append(m_preprocessor->macroTable()->expandMacros(m_line.trimmed()) + "\n");
+    }
+
+    // Read the content for each inline file.
+    foreach (InlineFile* inlineFile, cmd.m_inlineFiles) {
         readLine();
+        while (!m_line.isNull()) {
+            if (m_line.startsWith("<<")) {
+                QStringList options = m_line.right(m_line.length() - 2).split(m_rexSingleWhiteSpace);
+                if (options.contains("KEEP"))
+                    inlineFile->m_keep = true;
+                if (options.contains("UNICODE"))
+                    inlineFile->m_unicode = true;
+                break;
+            }
+            inlineFile->m_content.append(m_preprocessor->macroTable()->expandMacros(m_line) + "\n");
+            readLine();
+        }
     }
 }
 
