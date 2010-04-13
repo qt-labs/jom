@@ -11,3 +11,14 @@ c :
 "a;b":
     @echo X
 
+DIRECTORYNAME=.
+$(DIRECTORYNAME):
+    @echo directory $(DIRECTORYNAME) doesn't exist. That's strange.
+"$(DIRECTORYNAME)":
+    @echo directory "$(DIRECTORYNAME)" doesn't exist. That's strange.
+
+DIRECTORYNAME=..
+$(DIRECTORYNAME):
+    @echo directory $(DIRECTORYNAME) doesn't exist. That's strange.
+"$(DIRECTORYNAME)":
+    @echo directory "$(DIRECTORYNAME)" doesn't exist. That's strange.

@@ -191,7 +191,7 @@ bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength, int& co
         i = m_line.indexOf(QLatin1Char(':'), i+1);
         if (i <= 0)
             break;
-        if (i == 1)
+        if (i == 1 && firstChar.isLetter())
             continue;
 
         int k = i-1;
