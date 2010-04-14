@@ -392,12 +392,6 @@ void Makefile::addPreciousTarget(const QString& targetName)
         m_preciousTargets.append(targetName);
 }
 
-static void replaceFileMacros(QString& str, const QString& dependent)
-{
-    // TODO: handle more file macros here
-    str.replace("$<", dependent);
-}
-
 void Makefile::invalidateTimeStamps()
 {
     QHash<QString, DescriptionBlock*>::iterator it = m_targets.begin();
@@ -467,11 +461,11 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
     for (; it != itEnd; ++it) {
         Command& command = *it;
         foreach (InlineFile* inlineFile, command.m_inlineFiles) {
-            replaceFileMacros(inlineFile->m_content, inferredDependent);
+            inlineFile->m_content.replace(QLatin1String("$<"), inferredDependent);
             inlineFile->m_content = m_macroTable->expandMacros(inlineFile->m_content);
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
-        replaceFileMacros(command.m_commandLine, inferredDependent);
+        command.m_commandLine.replace(QLatin1String("$<"), inferredDependent);
     }
 }
 
