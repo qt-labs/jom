@@ -104,26 +104,34 @@ void DescriptionBlock::expandFileNameMacros()
     }
 }
 
+void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
+{
+    expandFileNameMacros(command.m_commandLine, depIdx);
+    foreach (InlineFile* inlineFile, command.m_inlineFiles) {
+        expandFileNameMacros(inlineFile->m_filename, depIdx);
+    }
+}
+
 /**
- * Expands the filename macros for a given command.
+ * Expands the filename macros in a given string.
  *
  * If parameter depIdx == -1, then all dependents are considered.
  * Otherwise depIdx is the index of the dependent we want to put into the command.
  * This is used for commands with the ! specifier.
  */
-void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
+void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx)
 {
-    int idx = command.m_commandLine.indexOf(QLatin1Char('$'));
-    if (idx == -1 || ++idx >= command.m_commandLine.count())
+    int idx = str.indexOf(QLatin1Char('$'));
+    if (idx == -1 || ++idx >= str.count())
         return;
 
     int replacementLength = 0;
-    char ch = command.m_commandLine.at(idx).toLatin1();
+    char ch = str.at(idx).toLatin1();
     if (ch == '(') {
-        QString macroValue = getFileNameMacroValue(command.m_commandLine.midRef(idx+1), replacementLength, depIdx);
+        QString macroValue = getFileNameMacroValue(str.midRef(idx+1), replacementLength, depIdx);
         if (!macroValue.isNull()) {
             int k;
-            ch = command.m_commandLine.at(idx+2).toLatin1();
+            ch = str.at(idx+2).toLatin1();
             switch (ch)
             {
             case 'D':
@@ -149,12 +157,12 @@ void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
                 return;
             }
 
-            command.m_commandLine.replace(idx - 1, replacementLength + 4, macroValue);
+            str.replace(idx - 1, replacementLength + 4, macroValue);
         }
     } else {
-        QString macroValue = getFileNameMacroValue(command.m_commandLine.midRef(idx), replacementLength, depIdx);
+        QString macroValue = getFileNameMacroValue(str.midRef(idx), replacementLength, depIdx);
         if (!macroValue.isNull()) {
-            command.m_commandLine.replace(idx - 1, replacementLength + 1, macroValue);
+            str.replace(idx - 1, replacementLength + 1, macroValue);
         }
     }
 }
