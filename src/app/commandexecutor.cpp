@@ -265,22 +265,15 @@ void CommandExecutor::createTempFiles()
                 fileName = inlineFile->m_filename;
 
             TempFile tempFile;
+            tempFile.keep = inlineFile->m_keep;
             tempFile.file = new QFile(fileName);
             if (!tempFile.file->open(QFile::WriteOnly)) {
                 delete tempFile.file;
                 throw Exception(QString("cannot open %1 for write").arg(fileName));
             }
 
-            tempFile.keep = inlineFile->m_keep;
-
-            QString content = inlineFile->m_content;
-            if (content.contains("$<")) {
-                // TODO: handle more file macros here
-                content.replace("$<", m_pTarget->m_dependents.join(" "));
-            }
-
             // TODO: do something with inlineFile->m_unicode;
-            tempFile.file->write(content.toLocal8Bit());
+            tempFile.file->write(inlineFile->m_content.toLocal8Bit());
             tempFile.file->close();
 
             QString replacement = QString(tempFile.file->fileName()).replace('/', '\\');
