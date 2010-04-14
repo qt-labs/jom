@@ -121,48 +121,51 @@ void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
  */
 void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx)
 {
-    int idx = str.indexOf(QLatin1Char('$'));
-    if (idx == -1 || ++idx >= str.count())
-        return;
+    int idx = 0;
+    forever {
+        idx = str.indexOf(QLatin1Char('$'), idx);
+        if (idx == -1 || ++idx >= str.count())
+            return;
 
-    int replacementLength = 0;
-    char ch = str.at(idx).toLatin1();
-    if (ch == '(') {
-        QString macroValue = getFileNameMacroValue(str.midRef(idx+1), replacementLength, depIdx);
-        if (!macroValue.isNull()) {
-            int k;
-            ch = str.at(idx+2).toLatin1();
-            switch (ch)
-            {
-            case 'D':
-                k = macroValue.lastIndexOf(QLatin1Char('\\'));
-                if (k == -1)
-                    macroValue = QLatin1String(".");
-                else
-                    macroValue = macroValue.left(k);
-                break;
-            case 'B':
-                macroValue = FileInfo(macroValue).baseName();
-                break;
-            case 'F':
-                macroValue = FileInfo(macroValue).fileName();
-                break;
-            case 'R':
-                k = macroValue.lastIndexOf(QLatin1Char('.'));
-                if (k > -1)
-                    macroValue = macroValue.left(k);
-                break;
-            default:
-                // TODO: yield error? ignore for now
-                return;
+        int replacementLength = 0;
+        char ch = str.at(idx).toLatin1();
+        if (ch == '(') {
+            QString macroValue = getFileNameMacroValue(str.midRef(idx+1), replacementLength, depIdx);
+            if (!macroValue.isNull()) {
+                int k;
+                ch = str.at(idx+2).toLatin1();
+                switch (ch)
+                {
+                case 'D':
+                    k = macroValue.lastIndexOf(QLatin1Char('\\'));
+                    if (k == -1)
+                        macroValue = QLatin1String(".");
+                    else
+                        macroValue = macroValue.left(k);
+                    break;
+                case 'B':
+                    macroValue = FileInfo(macroValue).baseName();
+                    break;
+                case 'F':
+                    macroValue = FileInfo(macroValue).fileName();
+                    break;
+                case 'R':
+                    k = macroValue.lastIndexOf(QLatin1Char('.'));
+                    if (k > -1)
+                        macroValue = macroValue.left(k);
+                    break;
+                default:
+                    // TODO: yield error? ignore for now
+                    continue;
+                }
+
+                str.replace(idx - 1, replacementLength + 4, macroValue);
             }
-
-            str.replace(idx - 1, replacementLength + 4, macroValue);
-        }
-    } else {
-        QString macroValue = getFileNameMacroValue(str.midRef(idx), replacementLength, depIdx);
-        if (!macroValue.isNull()) {
-            str.replace(idx - 1, replacementLength + 1, macroValue);
+        } else {
+            QString macroValue = getFileNameMacroValue(str.midRef(idx), replacementLength, depIdx);
+            if (!macroValue.isNull()) {
+                str.replace(idx - 1, replacementLength + 1, macroValue);
+            }
         }
     }
 }

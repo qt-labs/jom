@@ -606,7 +606,7 @@ void ParserTest::fileNameMacros()
     target->expandFileNameMacros();
     QVERIFY(!target->m_commands.isEmpty());
     command = target->m_commands.first();
-    QCOMPARE(command.m_commandLine, QLatin1String("echo Football"));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo Football Football"));
 
     target = mkfile->target(QLatin1String("LolCatExtractorManager.tar.gz"));
     QVERIFY(target);
