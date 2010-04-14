@@ -92,6 +92,7 @@ void DescriptionBlock::expandFileNameMacros()
             it = m_commands.erase(it);
             for (int i=0; i < m_dependents.count(); ++i) {
                 Command newCommand = origCommand;
+                newCommand.m_singleExecution = false;
                 expandFileNameMacros(newCommand, i);
                 it = m_commands.insert(it, newCommand);
                 ++it;
