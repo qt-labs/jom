@@ -22,7 +22,7 @@
  ****************************************************************************/
 #pragma once
 
-#include <QHash>
+#include <QtCore/QSet>
 
 namespace NMakeFile {
 
@@ -38,7 +38,7 @@ public:
     void defineEnvironmentMacroValue(const QString& name, const QString& value, bool forceReadOnly = false);
     void setMacroValue(const QString& name, const QString& value);
     void undefineMacro(const QString& name);
-    QString expandMacros(QString str) const;
+    QString expandMacros(const QString& str) const;
     void dump();
 
 private:
@@ -55,6 +55,8 @@ private:
 
     MacroData* internalSetMacroValue(const QString& name, const QString& value);
     void setEnvironmentVariable(const QString& name, const QString& value);
+    QString expandMacros(const QString& str, QSet<QString>& usedMacros) const;
+    QString cycleCheckedMacroValue(const QString& macroName, QSet<QString>& usedMacros) const;
 
     QHash<QString, MacroData> m_macros;
     QStringList* m_environment;

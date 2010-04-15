@@ -144,24 +144,90 @@ void MacroTable::undefineMacro(const QString& name)
     m_macros.remove(name);
 }
 
-QString MacroTable::expandMacros(QString str) const
+QString MacroTable::expandMacros(const QString& str) const
 {
-    int i;
-    while ((i = str.indexOf("$(")) != -1) {
-        const int strLength = str.length();
-        if (strLength <= i+2)
-            throw Exception("single $( at end of line found");
+    QSet<QString> usedMacros;
+    return expandMacros(str, usedMacros);
+}
 
-        if (str.at(i+2) == QLatin1Char('@'))    // we don't handle filename macros here
-            return str;
+QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) const
+{
+    QString ret;
+    ret.reserve(str.count());
 
-        int j = str.indexOf(')', i);
-        if (j == -1)
-            throw Exception("found $( without matching )");
+    int i = 0;
+    while (i < str.count()) {
+        if (str.at(i) == QLatin1Char('$')) {
+            ++i;
+            if (i >= str.count()) {
+                qWarning("Single $ at end of line found while expanding macro.");
+            } else if (str.at(i) == QLatin1Char('(')) {
+                // found standard macro invokation a la $(MAKE)
+                int k = str.indexOf(QLatin1Char(')'), i);
+                if (k < 0) {
+                    qWarning("Macro invokation $( without closing ) found.");
+                } else {
+                    const QString macroName = str.mid(i + 1, k - i - 1);
+                    if (macroName.at(0) == QLatin1Char('@')) {
+                        ret.append(QLatin1String("$("));
+                        ret.append(macroName);
+                        ret.append(QLatin1String(")"));
+                    } else {
+                        QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
+                        macroValue = expandMacros(macroValue, usedMacros);
+                        usedMacros.remove(macroName);
+                        ret.append(macroValue);
+                    }
+                }
+                i = k;
+            } else if (str.at(i) == QLatin1Char('$')) {
+                // found escaped $ char
+                ret.append(QLatin1Char('$'));
 
-        str = str.left(i) + macroValue(str.mid(i+2, j-i-2)) + str.right(strLength - j - 1);
+                // handle special case $$@ - don't escape!
+                int j = i+1;
+                if (j < str.count() && str.at(j) == QLatin1Char('@')) {
+                    ret.append(QLatin1Char('$'));
+                }
+            } else if (str.at(i).isLetterOrNumber()) {
+                // found single character macro invokation a la $X
+                const QString macroName = str.at(i);
+                QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
+                macroValue = expandMacros(macroValue, usedMacros);
+                usedMacros.remove(macroName);
+                ret.append(macroValue);
+            } else {
+                switch (str.at(i).toLatin1())
+                {
+                case '<':
+                case '*':
+                case '@':
+                case '?':
+                    ret.append(QLatin1Char('$'));
+                    ret.append(str.at(i));
+                    break;
+                default:
+                    qWarning("Invalid macro invokation found.");
+                }
+            }
+        } else {
+            ret.append(str.at(i));
+        }
+        ++i;
     }
-    return str;
+
+    ret.squeeze();
+    return ret;
+}
+
+QString MacroTable::cycleCheckedMacroValue(const QString& macroName, QSet<QString>& usedMacros) const
+{
+    if (usedMacros.contains(macroName)) {
+        QString msg = QLatin1String("Cycle in macro detected when trying to invoke $(%1).");
+        throw Exception(msg.arg(macroName));
+    }
+    usedMacros.insert(macroName);
+    return macroValue(macroName);
 }
 
 void MacroTable::dump()
