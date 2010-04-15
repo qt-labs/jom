@@ -171,9 +171,6 @@ void Preprocessor::basicReadLine(QString& line)
             return;
         line = m_fileStack.top().reader->readLine();
     }
-
-    line.replace("$$", "$");
-    line.replace("^\\", "\\");
 }
 
 bool Preprocessor::parseMacro(const QString& line)
