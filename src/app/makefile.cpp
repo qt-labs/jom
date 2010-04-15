@@ -122,10 +122,28 @@ void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
 void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx)
 {
     int idx = 0;
+    int lastEscapedIdx = -1;
     forever {
         idx = str.indexOf(QLatin1Char('$'), idx);
-        if (idx == -1 || ++idx >= str.count())
+        if (idx == -1 || ++idx >= str.count() + 1)
             return;
+
+        if (lastEscapedIdx == idx - 1)
+            continue;
+
+        if (idx - 2 > 0) {
+            char chBefore = str.at(idx - 2).toLatin1();
+            if (chBefore == '^') {
+                lastEscapedIdx = idx - 1;
+                continue;
+            }
+            if (chBefore == '$' && lastEscapedIdx < idx - 2) {
+                idx -= 2;
+                lastEscapedIdx = idx;
+                str.remove(idx, 1);
+                continue;
+            }
+        }
 
         int replacementLength = 0;
         char ch = str.at(idx).toLatin1();

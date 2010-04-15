@@ -320,10 +320,13 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
         descblock->m_suffixes = m_suffixes;
 
         {
+            // TODO: correctly support filename macros $$@, $@, $* here, incl. modifiers D,B,F,R!
             QStringList::iterator it = descblock->m_dependents.begin();
             QStringList::iterator itEnd = descblock->m_dependents.end();
-            for (; it != itEnd; ++it)
+            for (; it != itEnd; ++it) {
+                (*it).replace(QLatin1String("$$@"), t);
                 (*it).replace(QLatin1String("$@"), t);
+            }
         }
 
         if (!commands.isEmpty()) {
