@@ -141,7 +141,8 @@ void ParserTest::macros()
     QVERIFY(macroTable.isMacroDefined("NoContent"));
     QCOMPARE(macroTable.macroValue("NoContent"), QLatin1String(""));
     QCOMPARE(macroTable.macroValue("Literal1"), QLatin1String("# who does that anyway? #"));
-    QCOMPARE(macroTable.macroValue("Literal2"), QLatin1String("thi$ i$ pricele$$"));
+    QCOMPARE(macroTable.macroValue("Literal2"), QLatin1String("thi$$ i$$ pricele$$$$"));
+    QCOMPARE(macroTable.expandMacros("$(Literal2)"), QLatin1String("thi$ i$ pricele$$"));
     QCOMPARE(macroTable.macroValue("Literal3"), QLatin1String("schnupsi\nwupsi\ndupsi"));
     QCOMPARE(macroTable.macroValue("Literal4"), QLatin1String("backslash at the end\\"));
     QCOMPARE(macroTable.macroValue("Literal5"), QLatin1String("backslash at the end\\"));
@@ -150,6 +151,11 @@ void ParserTest::macros()
     QCOMPARE(macroTable.macroValue("Incremental"), QLatin1String("one two"));
     QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
              QLatin1String("_thi$ i$ pricele$$_"));
+    QCOMPARE(macroTable.expandMacros("$B"), QLatin1String("B"));
+    QCOMPARE(macroTable.expandMacros("$y"), QLatin1String("y"));
+    QCOMPARE(macroTable.expandMacros("$(BANANA)"), QLatin1String("yellow"));
+    QCOMPARE(macroTable.expandMacros("$1"), QLatin1String("x"));
+    QCOMPARE(macroTable.expandMacros("$(XXX)"), QLatin1String("xxx"));
     QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
 }
 

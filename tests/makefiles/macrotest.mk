@@ -24,3 +24,9 @@ SplitOverLines= \
 Incremental = one
 Incremental = $(Incremental) two
 
+B=B
+y=y
+$BANANA=$yellow
+
+1=x
+XXX=$1$(1)$1
