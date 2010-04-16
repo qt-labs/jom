@@ -188,9 +188,6 @@ void CommandExecutor::handleSetCommand(const QString& commandLine)
 void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spawnJOM)
 {
     QString commandLine = cmd.m_commandLine;
-    if (commandLine.startsWith('@'))
-        commandLine = commandLine.right(commandLine.length() - 1);
-
     if (g_options.maxNumberOfJobs > 1) {
         int idx = commandLine.indexOf(g_options.fullAppPath);
         if (idx > -1) {
