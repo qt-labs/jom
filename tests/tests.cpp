@@ -58,6 +58,7 @@ private slots:
     void multipleTargets();
     void comments();
     void fileNameMacros();
+    void fileNameMacrosInDependents();
     void windowsPathsInTargetName();
 
 private:
@@ -689,6 +690,97 @@ void ParserTest::fileNameMacros()
     QCOMPARE(command.m_commandLine, QLatin1String("echo infrules.mk"));
     command = target->m_commands.at(3);
     QCOMPARE(command.m_commandLine, QLatin1String("echo ") + currentPath + QLatin1String("\\infrules"));
+}
+
+void ParserTest::fileNameMacrosInDependents()
+{
+    MacroTable macroTable;
+    Preprocessor pp;
+    Parser parser;
+    pp.setMacroTable(&macroTable);
+    QVERIFY( pp.openFile(QLatin1String("fileNameMacrosInDependents.mk")) );
+
+    QSharedPointer<Makefile> mkfile;
+    bool exceptionThrown = false;
+    try {
+        mkfile = parser.apply(&pp);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+
+    DescriptionBlock* target;
+    target = mkfile->target(QLatin1String("foo"));
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $@
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$@
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $*
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("."));                                 // $(@D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("."));                                 // $$(@D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("."));                                 // $(*D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(@B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$(@B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(@F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$(@F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(@R)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$(@R)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*R)
+
+    target = mkfile->target(QLatin1String("foo.obj"));
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $@
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $$@
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $*
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("."));                                 // $(@D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("."));                                 // $$(@D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("."));                                 // $(*D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(@B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$(@B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $(@F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $$(@F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(@R)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$(@R)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*R)
+
+    target = mkfile->target(QLatin1String("C:\\MyProject\\tmp\\foo.obj"));
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo.obj"));       // $@
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo.obj"));       // $$@
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $*
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp"));                // $(@D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp"));                // $$(@D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp"));                // $(*D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(@B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$(@B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $(@F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $$(@F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $(@R)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $$(@R)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $(*R)
+
+    target = mkfile->target(QLatin1String("\"C:\\My Project\\tmp\\foo.obj\""));
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo.obj\""));  // $@
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo.obj\""));  // $$@
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo\""));      // $*
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\""));           // $(@D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\""));           // $$(@D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\""));           // $(*D)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(@B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$(@B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*B)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $(@F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $$(@F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*F)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo\""));      // $(@R)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo\""));      // $$(@R)
+    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo\""));      // $(*R)
 }
 
 void ParserTest::windowsPathsInTargetName()
