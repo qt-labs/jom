@@ -347,6 +347,9 @@ void ParserTest::descriptionBlocks()
     DescriptionBlock* target = mkfile->target("one");
     QVERIFY(target != 0);
     QCOMPARE(target->m_dependents.count(), 3);
+    QCOMPARE(target->m_dependents.at(0), QLatin1String("a"));
+    QCOMPARE(target->m_dependents.at(1), QLatin1String("b"));
+    QCOMPARE(target->m_dependents.at(2), QLatin1String("c"));
     QCOMPARE(target->m_commands.count(), 1);
     
     Command cmd = target->m_commands.first();

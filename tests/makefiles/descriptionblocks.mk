@@ -1,6 +1,8 @@
 all : one two three
 
-one: a b c
+DEPENDENT_C=c
+
+one: a b $(DEPENDENT_C)
     @echo one
 two:; @echo two
 three : "a;b" ;@echo three; @echo end of three
