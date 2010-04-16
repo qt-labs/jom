@@ -384,6 +384,13 @@ void ParserTest::descriptionBlocks()
     QCOMPARE(target->m_commands.count(), 1);
     cmd = target->m_commands.first();
     QCOMPARE(cmd.m_commandLine, QLatin1String("echo directory .. doesn't exist. That's strange."));
+
+    target = mkfile->target(QLatin1String("dollarSigns"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_dependents.count(), 0);
+    QCOMPARE(target->m_commands.count(), 1);
+    cmd = target->m_commands.first();
+    QCOMPARE(cmd.m_commandLine, QLatin1String("echo ($dollar-signs$)"));
 }
 
 // inferenceRules test mode

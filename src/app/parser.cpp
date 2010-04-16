@@ -328,11 +328,6 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
                 qWarning("Cannot add commands to previously defined target %s.", qPrintable(t));
         }
 
-        QList<Command>::iterator it = descblock->m_commands.begin();
-        QList<Command>::iterator itEnd = descblock->m_commands.end();
-        for (; it != itEnd; ++it)
-            (*it).m_commandLine = m_preprocessor->macroTable()->expandMacros((*it).m_commandLine);
-
         //qDebug() << "parseDescriptionBlock" << descblock->m_targetName << descblock->m_dependents;
     }
 }

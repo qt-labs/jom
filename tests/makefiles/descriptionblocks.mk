@@ -1,4 +1,4 @@
-all : one two three
+all : one two three dollarSigns
 
 DEPENDENT_C=c
 
@@ -24,3 +24,6 @@ $(DIRECTORYNAME):
     @echo directory $(DIRECTORYNAME) doesn't exist. That's strange.
 "$(DIRECTORYNAME)":
     @echo directory "$(DIRECTORYNAME)" doesn't exist. That's strange.
+
+dollarSigns:
+    @echo ($$dollar-signs$$)
