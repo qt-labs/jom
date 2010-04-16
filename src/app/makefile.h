@@ -74,6 +74,7 @@ public:
     size_t id() const { return m_id; }
     bool isExecuting() const { return m_bExecuting; }
     void setExecuting() { m_bExecuting = true; }
+    void expandFileNameMacrosForDependents();
     void expandFileNameMacros();
 
     void setTargetName(const QString& name);
@@ -107,8 +108,9 @@ public:
 
 private:
     void expandFileNameMacros(Command& command, int depIdx);
-    void expandFileNameMacros(QString& str, int depIdx);
-    QString getFileNameMacroValue(const QStringRef& str, int& replacementLength, int depIdx);
+    void expandFileNameMacros(QString& str, int depIdx, bool dependentsForbidden);
+    QString getFileNameMacroValue(const QStringRef& str, int& replacementLength, int depIdx,
+                                  bool dependentsForbidden, bool& returnsFileName);
 
 private:
     static size_t m_nextId;

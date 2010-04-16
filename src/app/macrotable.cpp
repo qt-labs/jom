@@ -168,27 +168,29 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                     qWarning("Macro invokation $( without closing ) found.");
                 } else {
                     const QString macroName = str.mid(i + 1, k - i - 1);
-                    if (macroName.at(0) == QLatin1Char('@')) {
-                        ret.append(QLatin1String("$("));
-                        ret.append(macroName);
-                        ret.append(QLatin1String(")"));
-                    } else {
-                        QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
-                        macroValue = expandMacros(macroValue, usedMacros);
-                        usedMacros.remove(macroName);
-                        ret.append(macroValue);
+                    switch (macroName.at(0).toLatin1())
+                    {
+                    case '@':
+                    case '*':
+                        {
+                            ret.append(QLatin1String("$("));
+                            ret.append(macroName);
+                            ret.append(QLatin1String(")"));
+                        }
+                        break;
+                    default:
+                        {
+                            QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
+                            macroValue = expandMacros(macroValue, usedMacros);
+                            usedMacros.remove(macroName);
+                            ret.append(macroValue);
+                        }
                     }
                 }
                 i = k;
             } else if (str.at(i) == QLatin1Char('$')) {
                 // found escaped $ char
                 ret.append(QLatin1Char('$'));
-
-                // handle special case $$@ - don't escape!
-                int j = i+1;
-                if (j < str.count() && str.at(j) == QLatin1Char('@')) {
-                    ret.append(QLatin1Char('$'));
-                }
             } else if (str.at(i).isLetterOrNumber()) {
                 // found single character macro invokation a la $X
                 const QString macroName = str.at(i);

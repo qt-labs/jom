@@ -22,6 +22,7 @@
  ****************************************************************************/
 #include "makefile.h"
 #include "fileinfo.h"
+#include "exception.h"
 #include <QDebug>
 
 namespace NMakeFile {
@@ -83,6 +84,18 @@ void DescriptionBlock::setTargetName(const QString& name)
     }
 }
 
+/**
+ * Expands the following macros for the dependents of this target.
+ */
+void DescriptionBlock::expandFileNameMacrosForDependents()
+{
+    QStringList::iterator it = m_dependents.begin();
+    for (; it != m_dependents.end(); ++it) {
+        QString& dependent = *it;
+        expandFileNameMacros(dependent, -1, true);
+    }
+}
+
 void DescriptionBlock::expandFileNameMacros()
 {
     QList<Command>::iterator it = m_commands.begin();
@@ -106,9 +119,17 @@ void DescriptionBlock::expandFileNameMacros()
 
 void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
 {
-    expandFileNameMacros(command.m_commandLine, depIdx);
+    expandFileNameMacros(command.m_commandLine, depIdx, false);
     foreach (InlineFile* inlineFile, command.m_inlineFiles) {
-        expandFileNameMacros(inlineFile->m_filename, depIdx);
+        expandFileNameMacros(inlineFile->m_filename, depIdx, false);
+    }
+}
+
+inline void quoteStringIfNeeded(QString& str)
+{
+    if (str.contains(QLatin1Char(' ')) || str.contains(QLatin1Char('\t'))) {
+        str.prepend(QLatin1Char('"'));
+        str.append(QLatin1Char('"'));
     }
 }
 
@@ -118,15 +139,19 @@ void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
  * If parameter depIdx == -1, then all dependents are considered.
  * Otherwise depIdx is the index of the dependent we want to put into the command.
  * This is used for commands with the ! specifier.
+ *
+ * If dependentsForbidden is true, then only the file name macros that reference
+ * the target name are taken into account. This is used for file name macros in
+ * dependencies.
  */
-void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx)
+void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool dependentsForbidden)
 {
     int idx = 0;
     int lastEscapedIdx = -1;
     forever {
         idx = str.indexOf(QLatin1Char('$'), idx);
         if (idx == -1 || ++idx >= str.count() + 1)
-            return;
+            break;
 
         if (lastEscapedIdx == idx - 1)
             continue;
@@ -148,7 +173,9 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx)
         int replacementLength = 0;
         char ch = str.at(idx).toLatin1();
         if (ch == '(') {
-            QString macroValue = getFileNameMacroValue(str.midRef(idx+1), replacementLength, depIdx);
+            bool fileNameReturned;
+            QString macroValue = getFileNameMacroValue(str.midRef(idx+1), replacementLength,
+                                                       depIdx, dependentsForbidden, fileNameReturned);
             if (!macroValue.isNull()) {
                 int k;
                 ch = str.at(idx+2).toLatin1();
@@ -177,37 +204,52 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx)
                     continue;
                 }
 
+                if (fileNameReturned)
+                    quoteStringIfNeeded(macroValue);
                 str.replace(idx - 1, replacementLength + 4, macroValue);
             }
         } else {
-            QString macroValue = getFileNameMacroValue(str.midRef(idx), replacementLength, depIdx);
+            bool fileNameReturned;
+            QString macroValue = getFileNameMacroValue(str.midRef(idx), replacementLength, depIdx,
+                                                       dependentsForbidden, fileNameReturned);
             if (!macroValue.isNull()) {
+                if (fileNameReturned)
+                    quoteStringIfNeeded(macroValue);
                 str.replace(idx - 1, replacementLength + 1, macroValue);
             }
         }
     }
 }
 
-QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& replacementLength, int depIdx)
+QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& replacementLength,
+                                                int depIdx, bool dependentsForbidden, bool& returnsFileName)
 {
     QString result;
     QStringList dependentCandidates;
-    if (depIdx == -1)
-        dependentCandidates = m_dependents;
-    else
-        dependentCandidates << m_dependents.at(depIdx);
+    returnsFileName = false;
+    if (!dependentsForbidden) {
+        if (depIdx == -1)
+            dependentCandidates = m_dependents;
+        else
+            dependentCandidates << m_dependents.at(depIdx);
+    }
 
     switch (str.at(0).toLatin1()) {
         case '@':
             replacementLength = 1;
             result = targetFilePath();
+            returnsFileName = true;
             break;
         case '*':
             {
                 if (str.length() >= 2 && str.at(1) == QLatin1Char('*')) {
+                    if (dependentsForbidden) {
+                        throw Exception(QLatin1String("Macro $** not allowed here."));
+                    }
                     replacementLength = 2;
                     result = dependentCandidates.join(QLatin1String(" "));
                 } else {
+                    returnsFileName = true;
                     replacementLength = 1;
                     result = targetFilePath();
                     int idx = result.lastIndexOf(QLatin1Char('.'));
@@ -218,8 +260,11 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
             break;
         case '?':
             {
+                if (dependentsForbidden) {
+                    throw Exception(QLatin1String("Macro $** not allowed here."));
+                }
                 replacementLength = 1;
-                result = "";
+                result = QLatin1String("");
                 bool firstAppend = true;
                 const QDateTime currentTimeStamp = QDateTime::currentDateTime();
                 QDateTime targetTimeStamp = FileInfo(targetFilePath()).lastModified();
@@ -243,6 +288,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
             }
             break;
     }
+
     return result;
 }
 

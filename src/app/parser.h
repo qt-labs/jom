@@ -57,7 +57,7 @@ private:
     void parseDotDirective();
     bool parseCommand(QList<Command>& commands, bool inferenceRule);
     void parseCommandLine(const QString& cmdLine, QList<Command>& commands, bool inferenceRule);
-    void parseInlineFiles(Command& cmd);
+    void parseInlineFiles(Command& cmd, bool inferenceRule);
     void checkForCycles(DescriptionBlock* target);
     QList<InferenceRule*> findRulesByTargetExtension(const QString& suffixes);
     void filterRulesByTargetName(QList<InferenceRule*>& rules, const QString& targetName);

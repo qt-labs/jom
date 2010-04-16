@@ -273,10 +273,11 @@ static QStringList splitTargetNames(const QString& str)
 void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int commandSeparatorPos)
 {
     QString target = m_line.left(separatorPos).trimmed();
+    target = m_preprocessor->macroTable()->expandMacros(target);
     QString value = m_line;
     if (commandSeparatorPos >= 0) value.truncate(commandSeparatorPos);
     value.remove(0, separatorPos + separatorLength);
-    value = value.trimmed();
+    value = m_preprocessor->macroTable()->expandMacros(value.trimmed());
     target.replace(QLatin1Char('/'), QLatin1Char('\\'));
     value.replace(QLatin1Char('/'), QLatin1Char('\\'));
 
@@ -318,16 +319,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
         }
         descblock->m_dependents.append(dependents);
         descblock->m_suffixes = m_suffixes;
-
-        {
-            // TODO: correctly support filename macros $$@, $@, $* here, incl. modifiers D,B,F,R!
-            QStringList::iterator it = descblock->m_dependents.begin();
-            QStringList::iterator itEnd = descblock->m_dependents.end();
-            for (; it != itEnd; ++it) {
-                (*it).replace(QLatin1String("$$@"), t);
-                (*it).replace(QLatin1String("$@"), t);
-            }
-        }
+        descblock->expandFileNameMacrosForDependents();
 
         if (!commands.isEmpty()) {
             if (canAddCommands == DescriptionBlock::ACSEnabled || descblock->m_commands.isEmpty())
@@ -398,10 +390,10 @@ void Parser::parseCommandLine(const QString& cmdLine, QList<Command>& commands, 
         }
     } while (!noCommandModifiersFound);
 
-    parseInlineFiles(cmd);
+    parseInlineFiles(cmd, inferenceRule);
 }
 
-void Parser::parseInlineFiles(Command& cmd)
+void Parser::parseInlineFiles(Command& cmd, bool inferenceRule)
 {
     // First, create the InlineFile objects from the command line.
     int fileNamePos = 0;
@@ -445,7 +437,15 @@ void Parser::parseInlineFiles(Command& cmd)
                     inlineFile->m_unicode = true;
                 break;
             }
-            inlineFile->m_content.append(m_preprocessor->macroTable()->expandMacros(m_line) + "\n");
+
+            QString contentLine;
+            if (inferenceRule)
+                contentLine = m_line;
+            else
+                contentLine = m_preprocessor->macroTable()->expandMacros(m_line);
+
+            contentLine.append(QLatin1String("\n"));
+            inlineFile->m_content.append(contentLine);
             readLine();
         }
     }

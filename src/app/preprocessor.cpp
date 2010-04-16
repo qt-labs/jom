@@ -126,15 +126,9 @@ bool Preprocessor::internalOpenFile(QString fileName)
 QString Preprocessor::readLine()
 {
     QString line;
-    basicReadLine(line);
-
-    if (parseMacro(line) || parsePreprocessingDirective(line)) {
-        return readLine();
-    }
-
-    if (!line.isEmpty() && !isSpaceOrTab(line.at(0)))
-        line = m_macroTable->expandMacros(line);
-
+    do {
+        basicReadLine(line);
+    } while (parseMacro(line) || parsePreprocessingDirective(line));
     return line;
 }
 
