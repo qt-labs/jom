@@ -23,7 +23,6 @@
 #pragma once
 
 #include "macrotable.h"
-#include <QSharedPointer>
 #include <QStringList>
 #include <QDateTime>
 #include <QHash>
@@ -98,7 +97,7 @@ public:
 
     QStringList m_dependents;
     QDateTime m_timeStamp;
-    QSharedPointer<QStringList> m_suffixes;
+    QStringList m_suffixes;
     bool m_bFileExists;
     bool m_bVisitedByCycleCheck;
     QList<InferenceRule*> m_inferenceRules;
@@ -183,7 +182,7 @@ public:
         return m_suffixesLists;
     }
 
-    const QStringList& preciousTargets()
+    const QStringList& preciousTargets() const
     {
         return m_preciousTargets;
     }

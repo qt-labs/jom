@@ -77,7 +77,7 @@ private:
     QRegExp                 m_rexSingleWhiteSpace;
 
     QSharedPointer<Makefile>    m_makefile;
-    QSharedPointer<QStringList> m_suffixes;
+    QStringList             m_suffixes;
     QStringList             m_activeTargets;
 
     uint                    m_conditionalDepth;

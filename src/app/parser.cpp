@@ -57,9 +57,9 @@ QSharedPointer<Makefile> Parser::apply(Preprocessor* pp, const QStringList& acti
     m_silentCommands = g_options.suppressOutputMessages;
     m_ignoreExitCodes = !g_options.stopOnErrors;
     m_latestTimeStamp = QDateTime::currentDateTime();
-    m_suffixes = QSharedPointer<QStringList>(new QStringList);
-    *m_suffixes << ".exe" << ".obj" << ".asm" << ".c" << ".cpp" << ".cxx"
-                << ".bas" << ".cbl" << ".for" << ".pas" << ".res" << ".rc";
+    m_suffixes.clear();
+    m_suffixes << ".exe" << ".obj" << ".asm" << ".c" << ".cpp" << ".cxx"
+               << ".bas" << ".cbl" << ".for" << ".pas" << ".res" << ".rc";
     int dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos;
 
     readLine();
@@ -493,10 +493,10 @@ void Parser::parseDotDirective()
         QStringList splitvalues = value.simplified().split(m_rexSingleWhiteSpace, QString::SkipEmptyParts);
         //qDebug() << "splitvalues" << splitvalues;
         if (splitvalues.isEmpty())
-            m_suffixes = QSharedPointer<QStringList>(new QStringList);
+            m_suffixes.clear();
         else
-            m_suffixes = QSharedPointer<QStringList>(new QStringList(*m_suffixes + splitvalues));
-        //qDebug() << ".SUFFIXES" << *m_suffixes;
+            m_suffixes.append(splitvalues);
+        //qDebug() << ".SUFFIXES" << m_suffixes;
     } else if (directive == "IGNORE") {
         m_ignoreExitCodes = true;
     } else if (directive == "PRECIOUS") {
@@ -564,7 +564,7 @@ void Parser::preselectInferenceRules()
     foreach (const QString targetName, m_activeTargets) {
         DescriptionBlock* target = m_makefile->target(targetName);
         if (target->m_commands.isEmpty())
-            preselectInferenceRules(target->targetFilePath(), target->m_inferenceRules, *(target->m_suffixes));
+            preselectInferenceRules(target->targetFilePath(), target->m_inferenceRules, target->m_suffixes);
         preselectInferenceRulesRecursive(target);
     }
 }
@@ -592,7 +592,7 @@ void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
 {
     foreach (const QString& dependentName, target->m_dependents) {
         DescriptionBlock* dependent = m_makefile->target(dependentName);
-        QSharedPointer<QStringList> suffixes;
+        QStringList suffixes;
         QString dependentFileName = dependentName;
         if (dependent) {
             if (!dependent->m_commands.isEmpty()) {
@@ -610,7 +610,7 @@ void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
         }
 
         QList<InferenceRule*> selectedRules;
-        preselectInferenceRules(dependentFileName, selectedRules, *suffixes);
+        preselectInferenceRules(dependentFileName, selectedRules, suffixes);
 
         if (!dependent) {
             if (selectedRules.isEmpty())
