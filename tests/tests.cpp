@@ -48,6 +48,7 @@ private slots:
     void preprocessorInvalidExpressions_data();
     void preprocessorInvalidExpressions();
     void conditionals();
+    void dotDirectives();
 
     // parser tests
     void descriptionBlocks();
@@ -323,6 +324,75 @@ void ParserTest::conditionals()
     QCOMPARE(macroTable->macroValue("TEST6"), QLatin1String("true"));
 
     m_preprocessor->setMacroTable(0);
+    delete macroTable;
+}
+
+void ParserTest::dotDirectives()
+{
+    if (!m_preprocessor)
+        m_preprocessor = new Preprocessor;
+    MacroTable* macroTable = new MacroTable;
+    m_preprocessor->setMacroTable(macroTable);
+    QVERIFY( m_preprocessor->openFile(QLatin1String("dotdirectives.mk")) );
+
+    QSharedPointer<Makefile> mkfile;
+    Parser parser;
+    bool exceptionThrown = false;
+    try {
+        mkfile = parser.apply(m_preprocessor);
+    } catch (...) {
+        exceptionThrown = true;
+    }
+    QVERIFY(!exceptionThrown);
+
+    DescriptionBlock* target;
+    Command cmd;
+
+    target = mkfile->target(QLatin1String("silence_one"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_commands.count(), 1);
+    cmd = target->m_commands.takeFirst();
+    QCOMPARE(cmd.m_silent, false);
+
+    target = mkfile->target(QLatin1String("silence_two"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_commands.count(), 1);
+    cmd = target->m_commands.takeFirst();
+    QCOMPARE(cmd.m_silent, true);
+
+    target = mkfile->target(QLatin1String("silence_three"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_commands.count(), 1);
+    cmd = target->m_commands.takeFirst();
+    //QCOMPARE(cmd.m_silent, false);    // TODO: implement !CMDSWITCHES
+
+    target = mkfile->target(QLatin1String("ignorance_one"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_commands.count(), 1);
+    cmd = target->m_commands.takeFirst();
+    QCOMPARE(int(cmd.m_maxExitCode), 0);
+
+    target = mkfile->target(QLatin1String("ignorance_two"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_commands.count(), 2);
+    cmd = target->m_commands.takeFirst();
+    QCOMPARE(int(cmd.m_maxExitCode), 255);
+
+    target = mkfile->target(QLatin1String("ignorance_three"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_commands.count(), 1);
+    cmd = target->m_commands.takeFirst();
+    //QCOMPARE(int(cmd.m_maxExitCode), 0);   // TODO: implement !CMDSWITCHES
+
+    QCOMPARE(mkfile->preciousTargets().count(), 3);
+    QCOMPARE(mkfile->preciousTargets().at(0), QLatin1String("preciousness_one"));
+    QCOMPARE(mkfile->preciousTargets().at(1), QLatin1String("preciousness_two"));
+    QCOMPARE(mkfile->preciousTargets().at(2), QLatin1String("preciousness_three"));
+
+    DescriptionBlock* suffixTarget = mkfile->target(QLatin1String("suffixes"));
+    QVERIFY(suffixTarget != 0);
+    QVERIFY(target->m_suffixes != suffixTarget->m_suffixes);
+
     delete macroTable;
 }
 
