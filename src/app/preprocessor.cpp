@@ -185,7 +185,8 @@ bool Preprocessor::parseMacro(const QString& line)
 bool Preprocessor::parsePreprocessingDirective(const QString& line)
 {
     QString directive, value;
-    if (!isPreprocessingDirective(line, directive, value))
+    QString expandedLine = m_macroTable->expandMacros(line);
+    if (!isPreprocessingDirective(expandedLine, directive, value))
         return false;
 
     if (directive == "CMDSWITCHES") {
@@ -314,7 +315,8 @@ void Preprocessor::skipUntilNextMatchingConditional()
         if (line.isNull())
             return;
 
-        if (!isPreprocessingDirective(line, directive, value))
+        QString expandedLine = m_macroTable->expandMacros(line);
+        if (!isPreprocessingDirective(expandedLine, directive, value))
             continue;
 
         if (directive == "ENDIF")
@@ -331,7 +333,7 @@ void Preprocessor::skipUntilNextMatchingConditional()
 
         if (depth == 0) {
             if (token == TOK_ELSE) {
-                m_linesPutBack.append(line);
+                m_linesPutBack.append(expandedLine);
                 return;  // found the next matching ELSE
             }
             if (token == TOK_ENDIF) {

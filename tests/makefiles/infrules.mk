@@ -1,6 +1,6 @@
 DEPNAME=($<)
 
-.cpp.obj:
+$(NOT_DEFINED).cpp$(NOT_DEFINED).obj:
 	@echo .cpp.obj $(DEPNAME)
 
 {subdir}.cpp.obj:

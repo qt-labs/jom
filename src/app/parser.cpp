@@ -64,12 +64,15 @@ QSharedPointer<Makefile> Parser::apply(Preprocessor* pp, const QStringList& acti
 
     readLine();
     while (!m_line.isNull()) {
-        if (isEmptyLine()) {
+        QString expandedLine = m_preprocessor->macroTable()->expandMacros(m_line);
+        if (isEmptyLine(expandedLine)) {
             readLine();
-        } else if (isDotDirective()) {
+        } else if (isDotDirective(expandedLine)) {
+            m_line = expandedLine;
             Preprocessor::removeInlineComments(m_line);
             parseDotDirective();
-        } else if (isInferenceRule()) {
+        } else if (isInferenceRule(expandedLine)) {
+            m_line = expandedLine;
             Preprocessor::removeInlineComments(m_line);
             parseInferenceRule();
         } else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos)) {
@@ -112,9 +115,9 @@ void Parser::readLine()
     m_line = m_preprocessor->readLine();
 }
 
-bool Parser::isEmptyLine()
+bool Parser::isEmptyLine(const QString& line)
 {
-    return m_line.trimmed().isEmpty();
+    return line.trimmed().isEmpty();
 }
 
 /**
@@ -218,14 +221,14 @@ bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength, int& co
     return true;
 }
 
-bool Parser::isInferenceRule()
+bool Parser::isInferenceRule(const QString& line)
 {
-    return m_rexInferenceRule.exactMatch(m_line);
+    return m_rexInferenceRule.exactMatch(line);
 }
 
-bool Parser::isDotDirective()
+bool Parser::isDotDirective(const QString& line)
 {
-    return m_rexDotDirective.exactMatch(m_line);
+    return m_rexDotDirective.exactMatch(line);
 }
 
 DescriptionBlock* Parser::createTarget(const QString& targetName)

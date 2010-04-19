@@ -47,10 +47,10 @@ public:
 
 private:
     void readLine();
-    bool isEmptyLine();
+    bool isEmptyLine(const QString& line);
     bool isDescriptionBlock(int& separatorPos, int& separatorLength, int& commandSeparatorPos);
-    bool isInferenceRule();
-    bool isDotDirective();
+    bool isInferenceRule(const QString& line);
+    bool isDotDirective(const QString& line);
     DescriptionBlock* createTarget(const QString& targetName);
     void parseDescriptionBlock(int separatorPos, int separatorLength, int commandSeparatorPos);
     void parseInferenceRule();
