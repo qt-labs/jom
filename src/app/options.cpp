@@ -23,6 +23,7 @@
 #include "options.h"
 #include "macrotable.h"
 #include "exception.h"
+#include "helperfunctions.h"
 
 #include <QThread>
 #include <QFile>
@@ -108,42 +109,6 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
         makefile = QLatin1String("Makefile");
 
     return true;
-}
-
-/**
- * Splits the string, respects "foo bar" and "foo ""knuffi"" bar".
- */
-static QStringList splitCommandLine(QString commandLine)
-{
-    QString str;
-    QStringList arguments;
-    commandLine.append(QLatin1Char(' '));   // append artificial space
-    bool escapedQuote = false;
-    bool insideQuotes = false;
-    for (int i=0; i < commandLine.count(); ++i) {
-        if (commandLine.at(i).isSpace() && !insideQuotes) {
-            escapedQuote = false;
-            str = str.trimmed();
-            if (!str.isEmpty()) {
-                arguments.append(str);
-                str.clear();
-            }
-        } else {
-            if (commandLine.at(i) == QLatin1Char('"')) {
-                if (escapedQuote)  {
-                    str.append(QLatin1Char('"'));
-                    escapedQuote = false;
-                } else {
-                    escapedQuote = true;
-                }
-                insideQuotes = !insideQuotes;
-            } else {
-                str.append(commandLine.at(i));
-                escapedQuote = false;
-            }
-        }
-    }
-    return arguments;
 }
 
 bool Options::expandCommandFiles(QStringList& arguments)

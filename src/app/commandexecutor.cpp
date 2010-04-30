@@ -24,6 +24,7 @@
 #include "options.h"
 #include "exception.h"
 #include "helperfunctions.h"
+#include "fileinfo.h"
 
 #include <QTemporaryFile>
 #include <QDebug>
@@ -32,7 +33,6 @@
 namespace NMakeFile {
 
 ulong CommandExecutor::m_startUpTickCount = 0;
-QByteArray CommandExecutor::m_globalCommandLines;
 QString CommandExecutor::m_tempPath;
 
 CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
@@ -54,14 +54,12 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
     m_process.setEnvironment(environment);
     connect(&m_process, SIGNAL(error(QProcess::ProcessError)), SLOT(onProcessError(QProcess::ProcessError)));
     connect(&m_process, SIGNAL(finished(int, QProcess::ExitStatus)), SLOT(onProcessFinished(int, QProcess::ExitStatus)));
-    connect(&m_process, SIGNAL(readyReadStandardError()), SLOT(processReadyReadStandardError()));
-    connect(&m_process, SIGNAL(readyReadStandardOutput()), SLOT(processReadyReadStandardOutput()));
+    connect(&m_process, SIGNAL(readyReadStandardError()), SLOT(onProcessReadyReadStandardError()));
+    connect(&m_process, SIGNAL(readyReadStandardOutput()), SLOT(onProcessReadyReadStandardOutput()));
 }
 
 CommandExecutor::~CommandExecutor()
 {
-    if (!g_options.debugMode && !m_commandScript.fileName().isEmpty())
-        m_commandScript.remove();
     cleanupTempFiles();
 }
 
@@ -77,23 +75,9 @@ void CommandExecutor::start(DescriptionBlock* target)
     target->expandFileNameMacros();
     cleanupTempFiles();
     createTempFiles();
-    openCommandScript();
-    bool spawnJOM = false;
-    fillCommandScript(spawnJOM);
 
-    QString commandScriptFileName = m_commandScript.fileName().replace("/", "\\");
-    if (g_options.debugMode)
-        qDebug() << "--- executing batch file" << commandScriptFileName;
-
-    if (spawnJOM) {
-        QByteArray cmdLine = "cmd /C \"";
-        cmdLine += commandScriptFileName;
-        cmdLine += "\"";
-        int exitCode = system(cmdLine);
-        onProcessFinished(exitCode, QProcess::NormalExit);
-    } else {
-        m_process.start("cmd", QStringList() << "/C" << commandScriptFileName);
-    }
+    m_currentCommandIdx = 0;
+    executeCurrentCommandLine();
 }
 
 void CommandExecutor::onProcessError(QProcess::ProcessError error)
@@ -109,25 +93,31 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
     if (exitStatus != QProcess::NormalExit)
         exitCode = 2;
     if (exitCode != 0) {
-        fprintf(stderr, "command failed with exit code %d\n", exitCode);
+        QByteArray msg = "command failed with exit code ";
+        msg += QByteArray::number(exitCode);
+        msg += "\n";
+        writeToStandardError(msg);
         bool abortMakeProcess = !g_options.buildUnrelatedTargetsOnError;
         emit finished(this, abortMakeProcess);
         return;
     }
 
-    emit finished(this, false);
+    ++m_currentCommandIdx;
+    if (m_currentCommandIdx < m_pTarget->m_commands.count()) {
+        executeCurrentCommandLine();
+    } else {
+        emit finished(this, false);
+    }
 }
 
-void CommandExecutor::processReadyReadStandardError()
+void CommandExecutor::onProcessReadyReadStandardError()
 {
-    fprintf(stderr, m_process.readAllStandardError().data());
-    //printf("\n");
+    writeToStandardError(m_process.readAllStandardError());
 }
 
-void CommandExecutor::processReadyReadStandardOutput()
+void CommandExecutor::onProcessReadyReadStandardOutput()
 {
-    printf(m_process.readAllStandardOutput().data());
-    //printf("\n");
+    writeToStandardOutput(m_process.readAllStandardOutput());
 }
 
 void CommandExecutor::waitForFinished()
@@ -135,59 +125,11 @@ void CommandExecutor::waitForFinished()
     m_process.waitForFinished();
 }
 
-void CommandExecutor::openCommandScript()
+void CommandExecutor::executeCurrentCommandLine()
 {
-    if (!m_commandScript.exists()) {
-        // create an unique temp file
-        QTemporaryFile* tempFile = new QTemporaryFile(this);
-        tempFile->setFileTemplate(m_tempPath + "jomex");
-        tempFile->open();
-        QString fileName = tempFile->fileName() + ".cmd";
-        m_commandScript.setFileName(fileName);
-    }
-
-    if (!m_commandScript.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        const QString msg = "Can't create command script file %1.";
-        throw Exception(msg.arg(m_commandScript.fileName()));
-    }
-
-    Q_ASSERT(m_commandScript.isOpen());
-    Q_ASSERT(m_commandScript.isWritable());
-    m_commandScript.resize(0);
-}
-
-void CommandExecutor::fillCommandScript(bool& spawnJOM)
-{
-    Q_ASSERT(!m_pTarget->m_commands.isEmpty());
-
-    spawnJOM = false;
-    m_commandScript.write("@echo off\n");
-    if (!m_globalCommandLines.isEmpty())
-        m_commandScript.write(m_globalCommandLines);
-    foreach (const Command& cmd, m_pTarget->m_commands)
-        writeCommandToCommandScript(cmd, spawnJOM);
-    m_commandScript.write("exit 0\n");
-    m_commandScript.close();
-}
-
-void CommandExecutor::handleSetCommand(const QString& commandLine)
-{
-    if (commandLine.length() < 4)
-        return;
-
-    if (!commandLine.startsWith("set", Qt::CaseInsensitive))
-        return;
-
-    if (!commandLine.at(3).isSpace())
-        return;
-
-    m_globalCommandLines.append(commandLine);
-    m_globalCommandLines.append("\n");
-}
-
-void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spawnJOM)
-{
+    const Command& cmd = m_pTarget->m_commands.at(m_currentCommandIdx);
     QString commandLine = cmd.m_commandLine;
+    bool spawnJOM = false;
     if (g_options.maxNumberOfJobs > 1) {
         int idx = commandLine.indexOf(g_options.fullAppPath);
         if (idx > -1) {
@@ -209,36 +151,37 @@ void CommandExecutor::writeCommandToCommandScript(const Command& cmd, bool& spaw
         }
     }
 
-    handleSetCommand(commandLine);
+    // ### handle SET and CD here...
 
     if (!cmd.m_silent && !g_options.suppressExecutedCommandsDisplay) {
-        QByteArray echoLine = commandLine.toLocal8Bit();
-        // we must quote all special characters properly
-        echoLine.replace("^", "^^");
-        echoLine.replace("&", "^&");
-        echoLine.replace("|", "^|");
-        echoLine.replace("<", "^<");
-        echoLine.replace(">", "^>");
-        m_commandScript.write("echo ");
-        m_commandScript.write(echoLine);
-        m_commandScript.write("\n");
+        QByteArray output = commandLine.toLocal8Bit();
+        output.append('\n');
+        writeToStandardOutput(output);
     }
 
     if (g_options.dryRun)
         return;
 
-    // write the actual command
-    m_commandScript.write(commandLine.toLocal8Bit());
-    m_commandScript.write("\n");
-
-    // write the exit code check
-    if (cmd.m_maxExitCode < 255) {
-        m_commandScript.write("IF %ERRORLEVEL% GTR ");
-        m_commandScript.write(QByteArray::number(cmd.m_maxExitCode));
-        m_commandScript.write(" EXIT %ERRORLEVEL%\n");
-        m_commandScript.write("IF %ERRORLEVEL% LSS 0 EXIT %ERRORLEVEL%\n");
+    QStringList args = splitCommandLine(commandLine);
+    QString program = args.takeFirst();
+    if (spawnJOM) {
+        m_process.start(program, args);
+        if (!m_process.waitForStarted())
+            qFatal("Can't start jom subprocess.");
+        m_process.waitForFinished();
     } else {
-        m_commandScript.write("cmd /c exit /b 0\n");
+        if (QFile::exists(program)) {
+            m_process.start(program, args);
+        } else {
+            // ### read %ComSpec% and use it instead of cmd
+            // ### write to batch file and exec cmd due to be on the safe side. This won't work with IncrediBuild, I fear.
+            m_process.start(QLatin1String("cmd \"/C ") + commandLine + QLatin1String("\""));
+        }
+
+        //m_process.start("D:\\dev\\personal\\cmdsplit\\a.exe", args);
+
+        if (!m_process.waitForStarted())
+            qFatal("Can't start command.");
     }
 }
 
@@ -295,6 +238,16 @@ void CommandExecutor::cleanupTempFiles()
         if (!tempfile.keep) tempfile.file->remove();
         delete tempfile.file;
     }
+}
+
+void CommandExecutor::writeToStandardOutput(const QByteArray& output)
+{
+    printf(output.data());
+}
+
+void CommandExecutor::writeToStandardError(const QByteArray& output)
+{
+    fprintf(stderr, output.data());
 }
 
 } // namespace NMakeFile

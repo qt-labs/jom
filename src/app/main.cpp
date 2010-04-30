@@ -44,7 +44,7 @@ const int nVersionPatch = 3;
 
 static void showLogo()
 {
-    fprintf(stderr, "\njom %d.%d.%d - empower your cores\n\n",
+    fprintf(stderr, "\njom %d.%d.%d - experimental version\n\n",
         nVersionMajor, nVersionMinor, nVersionPatch);
 }
 

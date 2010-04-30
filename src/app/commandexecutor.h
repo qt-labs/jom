@@ -44,21 +44,19 @@ signals:
     void finished(CommandExecutor* process, bool abortMakeProcess);
 
 private slots:
-    void processReadyReadStandardError();
-    void processReadyReadStandardOutput();
+    void onProcessReadyReadStandardError();
+    void onProcessReadyReadStandardOutput();
     void onProcessError(QProcess::ProcessError error);
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
 private:
-    void openCommandScript();
-    void fillCommandScript(bool& spawnJOM);
-    void handleSetCommand(const QString& commandLine);
-    void writeCommandToCommandScript(const Command& cmd, bool& spawnJOM);
+    void executeCurrentCommandLine();
     void createTempFiles();
+    void writeToStandardOutput(const QByteArray& data);
+    void writeToStandardError(const QByteArray& data);
 
 private:
     static ulong        m_startUpTickCount;
-    static QByteArray   m_globalCommandLines;
     static QString      m_tempPath;
     QProcess            m_process;
     DescriptionBlock*   m_pTarget;
@@ -70,7 +68,7 @@ private:
     };
 
     QList<TempFile>     m_tempFiles;
-    QFile               m_commandScript;
+    int                 m_currentCommandIdx;
 };
 
 } // namespace NMakeFile

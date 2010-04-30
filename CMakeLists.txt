@@ -35,6 +35,7 @@ set(JOM_MOCS src/app/targetexecutor.h
              src/app/commandexecutor.h)
 
 set(JOM_SRCS src/app/fileinfo.cpp
+             src/app/helperfunctions.cpp
              src/app/macrotable.cpp
              src/app/makefile.cpp
              src/app/exception.cpp

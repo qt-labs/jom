@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore/QString>
+#include <QtCore/QStringList>
 
 inline QString fileNameFromFilePath(const QString& filePath)
 {
@@ -28,3 +29,8 @@ inline void removeDirSeparatorAtEnd(QString& directory)
     if (directory.endsWith('/') || directory.endsWith('\\'))
         directory.chop(1);
 }
+
+/**
+ * Splits the string, respects "foo bar" and "foo ""knuffi"" bar".
+ */
+QStringList splitCommandLine(QString commandLine);

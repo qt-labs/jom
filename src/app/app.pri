@@ -14,6 +14,7 @@ HEADERS += fileinfo.h \
            commandexecutor.h
 
 SOURCES += fileinfo.cpp \
+           helperfunctions.cpp \
            macrotable.cpp \
            makefile.cpp \
            makefilelinereader.cpp \
