@@ -1,10 +1,15 @@
 TEMPLATE = app
-TARGET = 
-DEPENDPATH += . ../src/app
-INCLUDEPATH += ../src/app
+DEPENDPATH += . ../src/jomlib
+INCLUDEPATH += ../src/jomlib
+CONFIG += debug
 QT += testlib
 
-SOURCES += tests.cpp
+build_pass:CONFIG(debug, debug|release) {
+    LIBS += ../lib/jomlibd.lib
+}
+build_pass:CONFIG(release, debug|release) {
+    LIBS += ../lib/jomlib.lib
+}
 
-include(../src/app/app.pri)
+SOURCES += tests.cpp
 

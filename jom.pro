@@ -1,3 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS = src/app
+SUBDIRS = src/jomlib src/app tests
 CONFIG += ordered
+

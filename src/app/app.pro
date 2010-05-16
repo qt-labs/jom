@@ -7,11 +7,18 @@ DEPENDPATH += .
 
 build_pass:CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
+    LIBS += ../../lib/jomlibd.lib
+}
+
+build_pass:CONFIG(release, debug|release) {
+    TARGET = $$join(TARGET,,,d)
+    LIBS += ../../lib/jomlib.lib
 }
 
 contains(QMAKE_CXXFLAGS_RELEASE, -MT) {
     QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt
 }
 
+INCLUDEPATH += ../jomlib
 SOURCES = main.cpp
-include(app.pri)
+

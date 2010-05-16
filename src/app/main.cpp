@@ -20,11 +20,11 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#include "options.h"
-#include "parser.h"
-#include "preprocessor.h"
-#include "targetexecutor.h"
-#include "exception.h"
+#include <options.h>
+#include <parser.h>
+#include <preprocessor.h>
+#include <targetexecutor.h>
+#include <exception.h>
 
 #include <QDebug>
 #include <QDir>

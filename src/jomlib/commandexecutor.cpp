@@ -190,7 +190,7 @@ void CommandExecutor::executeCurrentCommandLine()
     if (simpleCmdLine) {
         //qDebug("+++ direct exec");
         QStringList args;
-        foreach (const CmdLexer::Token& t, tokens)
+        foreach (const CmdLexer::Token& t, cmdLineTokens)
             args.append(t.value);
         m_ignoreProcessErrors = true;
         m_process.start(program.value, args);
