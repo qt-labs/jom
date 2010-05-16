@@ -20,6 +20,8 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
+#include "tests.h"
+
 #include <QTest>
 #include <QDir>
 #include <QDebug>
@@ -30,42 +32,6 @@
 #include <exception.h>
 
 using namespace NMakeFile;
-
-class ParserTest : public QObject
-{
-    Q_OBJECT
-private slots:
-    void initTestCase();
-    void cleanupTestCase();
-
-    // preprocessor tests
-    void includeFiles();
-    void includeCycle();
-    void macros();
-    void preprocessorExpressions_data();
-    void preprocessorExpressions();
-    void preprocessorDivideByZero();
-    void preprocessorInvalidExpressions_data();
-    void preprocessorInvalidExpressions();
-    void conditionals();
-    void dotDirectives();
-
-    // parser tests
-    void descriptionBlocks();
-    void inferenceRules_data();
-    void inferenceRules();
-    void cycleInTargets();
-    void dependentsWithSpace();
-    void multipleTargets();
-    void comments();
-    void fileNameMacros();
-    void fileNameMacrosInDependents();
-    void windowsPathsInTargetName();
-
-private:
-    QString m_oldCurrentPath;
-    Preprocessor* m_preprocessor;
-};
 
 void ParserTest::initTestCase()
 {
@@ -901,4 +867,3 @@ void ParserTest::windowsPathsInTargetName()
 }
 
 QTEST_MAIN(ParserTest)
-#include "tests.moc"

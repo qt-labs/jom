@@ -11,5 +11,6 @@ build_pass:CONFIG(release, debug|release) {
     LIBS += ../lib/jomlib.lib
 }
 
+HEADERS += tests.h
 SOURCES += tests.cpp
 
