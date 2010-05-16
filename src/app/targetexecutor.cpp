@@ -132,11 +132,8 @@ void TargetExecutor::startProcesses()
 
 void TargetExecutor::waitForProcesses()
 {
-    foreach (QObject* child, children()) {
-        CommandExecutor* process = qobject_cast<CommandExecutor*>(child);
-        if (process)
+    foreach (CommandExecutor* process, findChildren<CommandExecutor*>())
             process->waitForFinished();
-    }
 }
 
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakeProcess)

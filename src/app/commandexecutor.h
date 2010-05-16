@@ -23,6 +23,7 @@
 #pragma once 
 
 #include "makefile.h"
+#include "cmdlexer.h"
 #include <QProcess>
 #include <QFile>
 
@@ -54,6 +55,9 @@ private:
     void createTempFiles();
     void writeToStandardOutput(const QByteArray& data);
     void writeToStandardError(const QByteArray& data);
+    bool isSimpleCommandLine(const QList<CmdLexer::Token>& tokens);
+    bool findExecutableInPath(QString& fileName);
+    bool exec_cd(const QList<CmdLexer::Token>& args, bool isSimpleCmdLine);
 
 private:
     static ulong        m_startUpTickCount;
@@ -69,6 +73,9 @@ private:
 
     QList<TempFile>     m_tempFiles;
     int                 m_currentCommandIdx;
+    CmdLexer            m_cmdLexer; // ### could be static?
+    QString             m_nextWorkingDir;
+    bool                m_ignoreProcessErrors;
 };
 
 } // namespace NMakeFile

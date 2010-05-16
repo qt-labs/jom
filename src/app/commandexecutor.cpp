@@ -26,6 +26,7 @@
 #include "helperfunctions.h"
 #include "fileinfo.h"
 
+#include <QDir>
 #include <QTemporaryFile>
 #include <QDebug>
 #include <windows.h>
@@ -37,7 +38,8 @@ QString CommandExecutor::m_tempPath;
 
 CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
 :   QObject(parent),
-    m_pTarget(0)
+    m_pTarget(0),
+    m_ignoreProcessErrors(false)
 {
     if (m_startUpTickCount == 0)
         m_startUpTickCount = GetTickCount();
@@ -76,14 +78,18 @@ void CommandExecutor::start(DescriptionBlock* target)
     cleanupTempFiles();
     createTempFiles();
 
+    m_ignoreProcessErrors = false;
     m_currentCommandIdx = 0;
+    m_nextWorkingDir.clear();
+    m_process.setWorkingDirectory(m_nextWorkingDir);
     executeCurrentCommandLine();
 }
 
 void CommandExecutor::onProcessError(QProcess::ProcessError error)
 {
     //qDebug() << "onProcessError" << error;
-    onProcessFinished(2, (error == QProcess::Crashed) ? QProcess::CrashExit : QProcess::NormalExit);
+    if (!m_ignoreProcessErrors)
+        onProcessFinished(2, (error == QProcess::Crashed) ? QProcess::CrashExit : QProcess::NormalExit);
 }
 
 void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
@@ -151,8 +157,6 @@ void CommandExecutor::executeCurrentCommandLine()
         }
     }
 
-    // ### handle SET and CD here...
-
     if (!cmd.m_silent && !g_options.suppressExecutedCommandsDisplay) {
         QByteArray output = commandLine.toLocal8Bit();
         output.append('\n');
@@ -162,27 +166,48 @@ void CommandExecutor::executeCurrentCommandLine()
     if (g_options.dryRun)
         return;
 
-    QStringList args = splitCommandLine(commandLine);
-    QString program = args.takeFirst();
-    if (spawnJOM) {
-        m_process.start(program, args);
-        if (!m_process.waitForStarted())
-            qFatal("Can't start jom subprocess.");
-        m_process.waitForFinished();
-    } else {
-        if (QFile::exists(program)) {
-            m_process.start(program, args);
-        } else {
-            // ### read %ComSpec% and use it instead of cmd
-            // ### write to batch file and exec cmd due to be on the safe side. This won't work with IncrediBuild, I fear.
-            m_process.start(QLatin1String("cmd \"/C ") + commandLine + QLatin1String("\""));
-        }
-
-        //m_process.start("D:\\dev\\personal\\cmdsplit\\a.exe", args);
-
-        if (!m_process.waitForStarted())
-            qFatal("Can't start command.");
+    if (!m_nextWorkingDir.isEmpty()) {
+        m_process.setWorkingDirectory(m_nextWorkingDir);
+        m_nextWorkingDir.clear();
     }
+
+    m_cmdLexer.setInput(commandLine);
+    QList<CmdLexer::Token> cmdLineTokens = m_cmdLexer.lexTokens();
+    const bool simpleCmdLine = isSimpleCommandLine(cmdLineTokens);
+    CmdLexer::Token program = cmdLineTokens.takeFirst();
+
+    if (program.type == CmdLexer::TArgument
+        && program.value.compare(QLatin1String("cd"), Qt::CaseInsensitive) == 0)
+    {
+        bool success = exec_cd(cmdLineTokens, simpleCmdLine);
+        if (simpleCmdLine) {
+            onProcessFinished(success ? 0 : 1, QProcess::NormalExit);
+            return;
+        }
+    }
+
+    bool executionSucceeded = false;
+    if (simpleCmdLine) {
+        //qDebug("+++ direct exec");
+        QStringList args;
+        foreach (const CmdLexer::Token& t, tokens)
+            args.append(t.value);
+        m_ignoreProcessErrors = true;
+        m_process.start(program.value, args);
+        executionSucceeded = m_process.waitForStarted();
+        m_ignoreProcessErrors = false;
+    }
+
+    if (!executionSucceeded) {
+        //qDebug("+++ shell exec");
+        m_process.start(QLatin1String("cmd \"/C ") + commandLine + QLatin1String("\""));
+        executionSucceeded = m_process.waitForStarted();
+    }
+
+    if (!executionSucceeded)
+        qFatal("Can't start command.");
+    if (spawnJOM)
+        m_process.waitForFinished();
 }
 
 void CommandExecutor::createTempFiles()
@@ -248,6 +273,57 @@ void CommandExecutor::writeToStandardOutput(const QByteArray& output)
 void CommandExecutor::writeToStandardError(const QByteArray& output)
 {
     fprintf(stderr, output.data());
+}
+
+bool CommandExecutor::isSimpleCommandLine(const QList<CmdLexer::Token>& tokens)
+{
+    foreach (const CmdLexer::Token& t, tokens)
+        if (t.type != CmdLexer::TArgument)
+            return false;
+    return true;
+}
+
+bool CommandExecutor::findExecutableInPath(QString& fileName) // ### needed?
+{
+    FileInfo fi(fileName);
+    if (fi.isAbsolute() && fi.exists())
+        return true;
+
+    return false;
+}
+
+bool CommandExecutor::exec_cd(const QList<CmdLexer::Token>& args, bool isSimpleCmdLine)
+{
+    QList<CmdLexer::Token>::const_iterator it = args.begin();
+    if (it == args.end() || it->type != CmdLexer::TArgument) {
+        // cd, called without arguments, prints the current working directory.
+        if (isSimpleCmdLine)
+            writeToStandardOutput(QDir::toNativeSeparators(QDir::currentPath()).toLocal8Bit());
+        return true;
+    }
+
+    bool changeDrive = false;
+    if (it->value.compare(QLatin1String("/d"), Qt::CaseInsensitive) == 0) {
+        changeDrive = true;
+        ++it;
+        if (it == args.end() || it->type != CmdLexer::TArgument) {
+            // "cd /d" does nothing.
+            return true;
+        }
+    }
+
+    if (!FileInfo(it->value).exists()) {
+        QString msg = QLatin1String("Couldn't change working directory to %0.");
+        writeToStandardError(msg.arg(it->value).toLocal8Bit());
+        return false;
+    }
+
+    if (!changeDrive) {
+        // ### handle the case where we cd into a dir on a drive != current drive 
+    }
+
+    m_nextWorkingDir = it->value;
+    return true;
 }
 
 } // namespace NMakeFile

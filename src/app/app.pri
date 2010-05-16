@@ -11,6 +11,7 @@ HEADERS += fileinfo.h \
            ppexpr/ppexprparser.h \
            ppexpr/ppexpr_grammar_p.h \
            targetexecutor.h \
+           cmdlexer.h \
            commandexecutor.h
 
 SOURCES += fileinfo.cpp \
@@ -26,5 +27,6 @@ SOURCES += fileinfo.cpp \
            ppexpr/ppexpr_grammar.cpp \
            ppexpr/ppexprparser.cpp \
            targetexecutor.cpp \
+           cmdlexer.cpp \
            commandexecutor.cpp
 
