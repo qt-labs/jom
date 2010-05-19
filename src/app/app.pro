@@ -11,7 +11,6 @@ build_pass:CONFIG(debug, debug|release) {
 }
 
 build_pass:CONFIG(release, debug|release) {
-    TARGET = $$join(TARGET,,,d)
     LIBS += ../../lib/jomlib.lib
 }
 
