@@ -121,12 +121,14 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
 void CommandExecutor::processReadyReadStandardError()
 {
     fprintf(stderr, m_process.readAllStandardError().data());
+    fflush(stderr);
     //printf("\n");
 }
 
 void CommandExecutor::processReadyReadStandardOutput()
 {
     printf(m_process.readAllStandardOutput().data());
+    fflush(stdout);
     //printf("\n");
 }
 
