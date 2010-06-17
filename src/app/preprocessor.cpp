@@ -94,12 +94,12 @@ bool Preprocessor::internalOpenFile(QString fileName)
             m_fileStack.push(tmpStack.pop());
     }
 
-    // make file name canonical for safe cycle detection
+    // make file name absolute for safe cycle detection
     const QString origFileName = fileName;
     FileInfo fileInfo(fileName);
     if (!fileInfo.exists())
         error(QString("File %1 doesn't exist.").arg(origFileName));
-    fileName = fileInfo.canonicalFilePath();
+    fileName = fileInfo.absoluteFilePath();
 
     // detect include cycles
     foreach (const TextFile& tf, m_fileStack) {
