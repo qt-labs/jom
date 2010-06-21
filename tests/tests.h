@@ -28,6 +28,7 @@
 namespace NMakeFile
 {
     class Preprocessor;
+    class MakefileFactory;
 }
 
 class ParserTest : public QObject
@@ -62,6 +63,10 @@ private slots:
     void windowsPathsInTargetName();
 
 private:
+    bool openMakefile(const QString& fileName);
+
+private:
     QString m_oldCurrentPath;
     NMakeFile::Preprocessor* m_preprocessor;
+    NMakeFile::MakefileFactory* m_makefileFactory;
 };

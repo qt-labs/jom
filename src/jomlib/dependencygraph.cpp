@@ -225,7 +225,7 @@ DescriptionBlock* DependencyGraph::findAvailableTarget()
 
 void DependencyGraph::displayNodeBuildInfo(Node* node)
 {
-    if (g_options.displayBuildInfo) {
+    if (node->target->makefile()->options()->displayBuildInfo) {
         QString msg;
         if (node->state == Node::UpToDateState)
             msg = " ";

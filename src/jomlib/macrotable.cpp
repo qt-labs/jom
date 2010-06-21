@@ -22,7 +22,6 @@
  ****************************************************************************/
 #include "macrotable.h"
 #include "exception.h"
-#include "options.h"
 
 #include <QStringList>
 #include <QRegExp>
@@ -31,8 +30,7 @@
 
 namespace NMakeFile {
 
-MacroTable::MacroTable(QStringList* environment)
-:   m_environment(environment)
+MacroTable::MacroTable()
 {
 }
 
@@ -50,7 +48,7 @@ QString MacroTable::macroValue(const QString& macroName) const
  * That means changing the macro value changes the environment.
  * Note that environment macro names are converted to upper case.
  */
-void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString& value, bool forceReadOnly)
+void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString& value, bool readOnly)
 {
     if (m_macros.contains(name))
         return;
@@ -58,7 +56,7 @@ void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString&
     if (!macroData)
         return;
     macroData->isEnvironmentVariable = true;
-    macroData->isReadOnly = forceReadOnly || g_options.overrideEnvVarMacros;
+    macroData->isReadOnly = readOnly;
     setEnvironmentVariable(name, value);
 }
 
@@ -100,19 +98,16 @@ void MacroTable::setEnvironmentVariable(const QString& name, const QString& valu
     ::SetEnvironmentVariableW(reinterpret_cast<const WCHAR*>(name.utf16()),
                               reinterpret_cast<const WCHAR*>(value.utf16()));
 
-    if (!m_environment)
-        return;
-
     const QString namePlusEq = name + "=";
-    QStringList::iterator it = m_environment->begin();
-    QStringList::iterator itEnd = m_environment->end();
+    QStringList::iterator it = m_environment.begin();
+    QStringList::iterator itEnd = m_environment.end();
     for (; it != itEnd; ++it) {
         if ((*it).startsWith(namePlusEq, Qt::CaseInsensitive)) {
-            m_environment->erase(it);
+            m_environment.erase(it);
             break;
         }
     }
-    m_environment->append(namePlusEq + value);
+    m_environment.append(namePlusEq + value);
 }
 
 MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, const QString& value)
@@ -232,7 +227,7 @@ QString MacroTable::cycleCheckedMacroValue(const QString& macroName, QSet<QStrin
     return macroValue(macroName);
 }
 
-void MacroTable::dump()
+void MacroTable::dump() const
 {
     QHash<QString, MacroData>::const_iterator it = m_macros.begin();
     for (; it != m_macros.end(); ++it) {

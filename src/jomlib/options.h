@@ -22,7 +22,8 @@
  ****************************************************************************/
 #pragma once
 
-#include <QStringList>
+#include <QtCore/QStringList>
+#include <QtCore/QSharedPointer>
 
 namespace NMakeFile {
 
@@ -32,6 +33,7 @@ class Options
 {
 public:
     Options();
+
     bool readCommandLineArguments(QStringList arguments, QString& makefile,
                                   QStringList& targets, MacroTable& macroTable);
 
@@ -50,7 +52,6 @@ public:
     bool suppressExecutedCommandsDisplay;
     bool batchModeEnabled;
     bool dumpInlineFiles;
-    int maxNumberOfJobs;
     bool dumpDependencyGraph;
     bool dumpDependencyGraphDot;
     bool displayMakeInformation;
@@ -66,6 +67,13 @@ private:
     bool handleCommandLineOption(QString arg, QStringList& arguments, QString& makefile, QString& makeflags);
 };
 
-extern Options g_options;
+class GlobalOptions
+{
+public:
+    GlobalOptions();
+    int maxNumberOfJobs;
+};
+
+extern GlobalOptions g_options;
 
 } // namespace NMakeFile

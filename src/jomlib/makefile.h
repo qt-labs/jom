@@ -29,6 +29,8 @@
 
 namespace NMakeFile {
 
+class Options;
+
 class InlineFile {
 public:
     InlineFile();
@@ -65,10 +67,11 @@ public:
 
 class CommandExecutor;
 class InferenceRule;
+class Makefile;
 
 class DescriptionBlock : public CommandContainer {
 public:
-    DescriptionBlock();
+    DescriptionBlock(Makefile* mkfile);
 
     size_t id() const { return m_id; }
     bool isExecuting() const { return m_bExecuting; }
@@ -95,6 +98,11 @@ public:
         return m_targetFilePath;
     }
 
+    /**
+     * Returns the makefile, this target belongs to.
+     */
+    const Makefile* makefile() const { return m_pMakefile; }
+
     QStringList m_dependents;
     QDateTime m_timeStamp;
     QStringList m_suffixes;
@@ -117,6 +125,7 @@ private:
     bool m_bExecuting;
     QString m_targetName;
     QString m_targetFilePath;
+    Makefile* m_pMakefile;
 };
 
 class InferenceRule : public CommandContainer {
@@ -137,12 +146,9 @@ class Makefile
 {
 public:
     Makefile();
-    ~Makefile()
-    {
-    }
+    ~Makefile();
 
     void clear();
-    void setMacroTable(MacroTable* macroTable) { m_macroTable = macroTable; }
 
     void append(DescriptionBlock* target)
     {
@@ -192,6 +198,12 @@ public:
         return m_inferenceRules;
     }
 
+    void setOptions(Options *o) { m_options = o; }
+    const Options* options() const { return m_options; }
+
+    void setMacroTable(MacroTable *mt) { m_macroTable = mt; }
+    const MacroTable* macroTable() const { return m_macroTable; }
+
     void dumpTarget(DescriptionBlock*, uchar level = 0) const;
     void dumpTargets() const;
     void dumpInferenceRules() const;
@@ -214,6 +226,7 @@ private:
     QStringList m_preciousTargets;
     QList<InferenceRule> m_inferenceRules;
     MacroTable* m_macroTable;
+    Options* m_options;
 };
 
 } // namespace NMakeFile

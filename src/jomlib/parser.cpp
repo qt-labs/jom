@@ -47,15 +47,17 @@ Parser::~Parser()
  * Parses the content, provided by the Preprocessor object and
  * creates a new Makefile object.
  */
-QSharedPointer<Makefile> Parser::apply(Preprocessor* pp, const QStringList& activeTargets)
+void Parser::apply(Preprocessor* pp,
+                   Makefile* mkfile,
+                   const QStringList& activeTargets)
 {
-    m_makefile = QSharedPointer<Makefile>(new Makefile);
+    m_makefile = mkfile;
     m_activeTargets = activeTargets;
-    m_makefile->setMacroTable(pp->macroTable());
     m_preprocessor = pp;
     m_conditionalDepth = 0;
-    m_silentCommands = g_options.suppressOutputMessages;
-    m_ignoreExitCodes = !g_options.stopOnErrors;
+    const Options* options = mkfile->options();
+    m_silentCommands = options->suppressOutputMessages;
+    m_ignoreExitCodes = !options->stopOnErrors;
     m_latestTimeStamp = QDateTime::currentDateTime();
     m_suffixes.clear();
     m_suffixes << ".exe" << ".obj" << ".asm" << ".c" << ".cpp" << ".cxx"
@@ -85,7 +87,7 @@ QSharedPointer<Makefile> Parser::apply(Preprocessor* pp, const QStringList& acti
 
     // if the makefile doesn't contain target, we can stop here
     if (m_makefile->targets().isEmpty())
-        return m_makefile;
+        return;
 
     // make sure that all active targets exist
     foreach (const QString& targetName, m_activeTargets)
@@ -102,7 +104,6 @@ QSharedPointer<Makefile> Parser::apply(Preprocessor* pp, const QStringList& acti
         checkForCycles(m_makefile->target(targetName));
 
     preselectInferenceRules();
-    return m_makefile;
 }
 
 MacroTable* Parser::macroTable()
@@ -233,7 +234,7 @@ bool Parser::isDotDirective(const QString& line)
 
 DescriptionBlock* Parser::createTarget(const QString& targetName)
 {
-    DescriptionBlock* target = new DescriptionBlock();
+    DescriptionBlock* target = new DescriptionBlock(m_makefile);
     target->setTargetName(targetName);
     target->m_suffixes = m_suffixes;
     m_makefile->append(target);

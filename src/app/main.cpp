@@ -25,6 +25,7 @@
 #include <preprocessor.h>
 #include <targetexecutor.h>
 #include <exception.h>
+#include <makefilefactory.h>
 
 #include <QDebug>
 #include <QDir>
@@ -56,45 +57,6 @@ static void showUsage()
            "Please see the Microsoft nmake documentation for more options.\n"
            "/DUMPGRAPH show the generated dependency graph\n"
            "/DUMPGRAPHDOT dump dependency graph in dot format\n");
-}
-
-static void readEnvironment(const QStringList& environment, MacroTable& macroTable)
-{
-    foreach (const QString& env, environment) {
-        QString lhs, rhs;
-        int idx = env.indexOf('=');
-        lhs = env.left(idx);
-        rhs = env.right(env.length() - idx - 1);
-        //qDebug() << lhs << rhs;
-        macroTable.defineEnvironmentMacroValue(lhs, rhs);
-    }
-}
-
-/**
- * Returns true, if the path contains some whitespace.
- */
-static bool isComplexPathName(const QString& path)
-{
-    for (int i=path.length()-1; i > 0; i--) {
-        const QChar ch = path.at(i);
-        if (ch.isSpace())
-            return true;
-    }
-    return false;
-}
-
-/**
- * Enclose the path in double quotes, if its a complex one.
- */
-static QString encloseInDoubleQuotesIfNeeded(const QString& path)
-{
-    if (isComplexPathName(path)) {
-        QString result = "\"";
-        result.append(path);
-        result.append('"');
-        return result;
-    }
-    return path;
 }
 
 static TargetExecutor* g_pTargetExecutor = 0;
@@ -137,70 +99,41 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
 
-    QString filename;
-    QStringList targets;
     QStringList systemEnvironment = QProcess::systemEnvironment();
-    MacroTable macroTable(&systemEnvironment);
-    if (!g_options.readCommandLineArguments(qApp->arguments(), filename, targets, macroTable)) {
-        showUsage();
-        return 128;
+    MakefileFactory mf;
+    mf.setEnvironment(systemEnvironment);
+    if (!mf.apply(qApp->arguments().mid(1))) {
+        switch (mf.errorType()) {
+        case MakefileFactory::CommandLineError:
+            showUsage();
+            return 128;
+        case MakefileFactory::ParserError:
+            fprintf(stderr, "ERROR: ");
+            fprintf(stderr, qPrintable(mf.errorString()));
+            fprintf(stderr, "\n");
+            return 2;
+        }
     }
-    if (g_options.showUsageAndExit) {
-        if (g_options.showLogo)
+
+    Makefile* mkfile = mf.makefile();
+    const Options* options = mkfile->options();
+
+    if (options->showUsageAndExit) {
+        if (options->showLogo)
             showLogo();
         showUsage();
         return 0;
-    } else if (g_options.showVersionAndExit) {
+    } else if (options->showVersionAndExit) {
         printf("jom version %d.%d.%d\n", nVersionMajor, nVersionMinor, nVersionPatch);
         return 0;
     }
-    g_options.fullAppPath = QCoreApplication::applicationFilePath();
-    g_options.fullAppPath.replace(QLatin1Char('/'), QDir::separator());
 
-    if (g_options.showLogo)
+    if (options->showLogo)
         showLogo();
 
-    readEnvironment(systemEnvironment, macroTable);
-    if (!g_options.ignorePredefinedRulesAndMacros) {
-        macroTable.setMacroValue("MAKE", encloseInDoubleQuotesIfNeeded(g_options.fullAppPath));
-        macroTable.setMacroValue("MAKEDIR", encloseInDoubleQuotesIfNeeded(QDir::currentPath()));
-        macroTable.setMacroValue("AS", "ml");       // Macro Assembler
-        macroTable.setMacroValue("ASFLAGS", QString::null);
-        macroTable.setMacroValue("BC", "bc");       // Basic Compiler
-        macroTable.setMacroValue("BCFLAGS", QString::null);
-        macroTable.setMacroValue("CC", "cl");       // C Compiler
-        macroTable.setMacroValue("CCFLAGS", QString::null);
-        macroTable.setMacroValue("COBOL", "cobol"); // COBOL Compiler
-        macroTable.setMacroValue("COBOLFLAGS", QString::null);
-        macroTable.setMacroValue("CPP", "cl");      // C++ Compiler
-        macroTable.setMacroValue("CPPFLAGS", QString::null);
-        macroTable.setMacroValue("CXX", "cl");      // C++ Compiler
-        macroTable.setMacroValue("CXXFLAGS", QString::null);
-        macroTable.setMacroValue("FOR", "fl");      // FORTRAN Compiler
-        macroTable.setMacroValue("FORFLAGS", QString::null);
-        macroTable.setMacroValue("PASCAL", "pl");   // Pascal Compiler
-        macroTable.setMacroValue("PASCALFLAGS", QString::null);
-        macroTable.setMacroValue("RC", "rc");       // Resource Compiler
-        macroTable.setMacroValue("RCFLAGS", QString::null);
-    }
-
-    QSharedPointer<Makefile> mkfile;
-    try {
-        Preprocessor preprocessor;
-        preprocessor.setMacroTable(&macroTable);
-        preprocessor.openFile(filename);
-        Parser parser;
-        mkfile = parser.apply(&preprocessor, targets);
-    } catch (Exception e) {
-        fprintf(stderr, "ERROR: ");
-        fprintf(stderr, qPrintable(e.toString()));
-        fprintf(stderr, "\n");
-        return 2;
-    }
-
-    if (g_options.displayMakeInformation) {
+    if (options->displayMakeInformation) {
         printf("MACROS:\n\n");
-        macroTable.dump();
+        mkfile->macroTable()->dump();
         printf("\nINFERENCE RULES:\n\n");
         mkfile->dumpInferenceRules();
         printf("\nTARGETS:\n\n");
@@ -210,7 +143,7 @@ int main(int argc, char* argv[])
     TargetExecutor executor(systemEnvironment);
     g_pTargetExecutor = &executor;
     try {
-        executor.apply(mkfile.data(), targets);
+        executor.apply(mkfile, mf.activeTargets());
     }
     catch (Exception e) {
         QString msg = "Error in executor: " + e.message() + "\n";
@@ -220,5 +153,6 @@ int main(int argc, char* argv[])
     app.postEvent(&executor, new TargetExecutor::StartEvent());
     int result = app.exec();
     g_pTargetExecutor = 0;
+    delete mkfile;
     return result;
 }

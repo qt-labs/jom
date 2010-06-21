@@ -71,8 +71,8 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 
     mkfile->updateTimeStamps(descblock);
     m_depgraph->build(mkfile, descblock);
-    if (g_options.dumpDependencyGraph) {
-        if (g_options.dumpDependencyGraphDot)
+    if (m_makefile->options()->dumpDependencyGraph) {
+        if (m_makefile->options()->dumpDependencyGraphDot)
             m_depgraph->dotDump();
         else
             m_depgraph->dump();

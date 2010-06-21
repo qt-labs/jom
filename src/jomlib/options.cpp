@@ -30,7 +30,12 @@
 
 namespace NMakeFile {
 
-Options g_options;
+GlobalOptions g_options;
+
+GlobalOptions::GlobalOptions()
+:   maxNumberOfJobs(QThread::idealThreadCount())
+{
+}
 
 Options::Options()
 :   buildAllTargets(false),
@@ -48,7 +53,6 @@ Options::Options()
     suppressExecutedCommandsDisplay(false),
     batchModeEnabled(true),
     dumpInlineFiles(false),
-    maxNumberOfJobs(QThread::idealThreadCount()),
     dumpDependencyGraph(false),
     dumpDependencyGraphDot(false),
     displayMakeInformation(false),
@@ -72,7 +76,6 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
                                        QStringList& targets, MacroTable& macroTable)
 {
     QString makeflags;
-    arguments.removeAt(0);
     if (!expandCommandFiles(arguments))
         return false;
 
@@ -93,7 +96,7 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
                 fprintf(stderr, "ERROR: The macro name %s is invalid.", qPrintable(name));
                 exit(128);
             }
-            macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1), true);
+            macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1), overrideEnvVarMacros);
         } else {
             // handle target
             if (!targets.contains(arg))
@@ -257,9 +260,9 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                             fprintf(stderr, "Error: no process count specified for option -j\n");
                             return false;
                         }
-                        maxNumberOfJobs = arguments.takeFirst().toUInt(&ok);
+                        g_options.maxNumberOfJobs = arguments.takeFirst().toUInt(&ok);
                     } else {
-                        maxNumberOfJobs = arg.toUInt(&ok);
+                        g_options.maxNumberOfJobs = arg.toUInt(&ok);
                         arg = QString();
                     }
                     if (!ok) {

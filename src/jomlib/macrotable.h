@@ -23,23 +23,27 @@
 #pragma once
 
 #include <QtCore/QSet>
+#include <QtCore/QStringList>
 
 namespace NMakeFile {
 
 class MacroTable
 {
 public:
-    MacroTable(QStringList* environment = 0);
+    MacroTable();
     ~MacroTable();
+
+    void setEnvironment(const QStringList& e) { m_environment = e; }
+    const QStringList& environment() const { return m_environment; }
 
     bool isMacroDefined(const QString& name) const;
     bool isMacroNameValid(const QString& name) const;
     QString macroValue(const QString& macroName) const;
-    void defineEnvironmentMacroValue(const QString& name, const QString& value, bool forceReadOnly = false);
+    void defineEnvironmentMacroValue(const QString& name, const QString& value, bool readOnly = false);
     void setMacroValue(const QString& name, const QString& value);
     void undefineMacro(const QString& name);
     QString expandMacros(const QString& str) const;
-    void dump();
+    void dump() const;
 
 private:
     struct MacroData
@@ -58,8 +62,8 @@ private:
     QString expandMacros(const QString& str, QSet<QString>& usedMacros) const;
     QString cycleCheckedMacroValue(const QString& macroName, QSet<QString>& usedMacros) const;
 
-    QHash<QString, MacroData> m_macros;
-    QStringList* m_environment;
+    QHash<QString, MacroData>   m_macros;
+    QStringList                 m_environment;
 };
 
 } // namespace NMakeFile

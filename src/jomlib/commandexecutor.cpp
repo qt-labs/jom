@@ -103,7 +103,7 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
         msg += QByteArray::number(exitCode);
         msg += "\n";
         writeToStandardError(msg);
-        bool abortMakeProcess = !g_options.buildUnrelatedTargetsOnError;
+        bool abortMakeProcess = !m_pTarget->makefile()->options()->buildUnrelatedTargetsOnError;
         emit finished(this, abortMakeProcess);
         return;
     }
@@ -137,12 +137,12 @@ void CommandExecutor::executeCurrentCommandLine()
     QString commandLine = cmd.m_commandLine;
     bool spawnJOM = false;
     if (g_options.maxNumberOfJobs > 1) {
-        int idx = commandLine.indexOf(g_options.fullAppPath);
+        int idx = commandLine.indexOf(m_pTarget->makefile()->options()->fullAppPath);
         if (idx > -1) {
             spawnJOM = true;
-            const int appPathLength = g_options.fullAppPath.length();
+            const int appPathLength = m_pTarget->makefile()->options()->fullAppPath.length();
             QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
-            if (g_options.displayBuildInfo)
+            if (m_pTarget->makefile()->options()->displayBuildInfo)
                 arg += " /D";
 
             // Check if the jom call is enclosed by double quotes.
@@ -157,13 +157,13 @@ void CommandExecutor::executeCurrentCommandLine()
         }
     }
 
-    if (!cmd.m_silent && !g_options.suppressExecutedCommandsDisplay) {
+    if (!cmd.m_silent && !m_pTarget->makefile()->options()->suppressExecutedCommandsDisplay) {
         QByteArray output = commandLine.toLocal8Bit();
         output.append('\n');
         writeToStandardOutput(output);
     }
 
-    if (g_options.dryRun)
+    if (m_pTarget->makefile()->options()->dryRun)
         return;
 
     if (!m_nextWorkingDir.isEmpty()) {

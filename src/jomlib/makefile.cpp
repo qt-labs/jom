@@ -23,6 +23,7 @@
 #include "makefile.h"
 #include "fileinfo.h"
 #include "exception.h"
+#include "options.h"
 #include <QDebug>
 
 namespace NMakeFile {
@@ -65,11 +66,12 @@ Command::~Command()
     qDeleteAll(m_inlineFiles);
 }
 
-DescriptionBlock::DescriptionBlock()
+DescriptionBlock::DescriptionBlock(Makefile* mkfile)
 :   m_bFileExists(false),
     m_canAddCommands(ACSUnknown),
     m_bExecuting(false),
-    m_bVisitedByCycleCheck(false)
+    m_bVisitedByCycleCheck(false),
+    m_pMakefile(mkfile)
 {
     m_id = m_nextId++;
 }
@@ -317,8 +319,15 @@ bool InferenceRule::operator == (const InferenceRule& rhs) const
 
 Makefile::Makefile()
 :   m_macroTable(0),
-    m_firstTarget(0)
+    m_firstTarget(0),
+    m_options(0)
 {
+}
+
+Makefile::~Makefile()
+{
+    delete m_macroTable;
+    delete m_options;
 }
 
 void Makefile::clear()

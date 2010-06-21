@@ -27,7 +27,6 @@
 #include <QVector>
 #include <QStack>
 #include <QStringList>
-#include <QSharedPointer>
 
 #include "makefile.h"
 
@@ -42,7 +41,9 @@ public:
     Parser();
     virtual ~Parser();
 
-    QSharedPointer<Makefile> apply(Preprocessor* pp, const QStringList& activeTargets = QStringList());
+    void apply(Preprocessor* pp,
+               Makefile* mkfile,
+               const QStringList& activeTargets = QStringList());
     MacroTable* macroTable();
 
 private:
@@ -76,7 +77,7 @@ private:
     QRegExp                 m_rexInferenceRule;
     QRegExp                 m_rexSingleWhiteSpace;
 
-    QSharedPointer<Makefile>    m_makefile;
+    Makefile*               m_makefile;
     QStringList             m_suffixes;
     QStringList             m_activeTargets;
 
