@@ -98,7 +98,9 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
 
     if (exitStatus != QProcess::NormalExit)
         exitCode = 2;
-    if (exitCode != 0) {
+
+    const Command &currentCommand = m_pTarget->m_commands.at(m_currentCommandIdx);
+    if (exitCode > currentCommand.m_maxExitCode) {
         QByteArray msg = "command failed with exit code ";
         msg += QByteArray::number(exitCode);
         msg += "\n";
