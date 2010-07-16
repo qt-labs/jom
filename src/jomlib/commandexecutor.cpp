@@ -267,12 +267,14 @@ void CommandExecutor::cleanupTempFiles()
 
 void CommandExecutor::writeToStandardOutput(const QByteArray& output)
 {
-    printf(output.data());
+    fputs(output, stdout);
+    fflush(stdout);
 }
 
 void CommandExecutor::writeToStandardError(const QByteArray& output)
 {
-    fprintf(stderr, output.data());
+    fputs(output, stderr);
+    fflush(stderr);
 }
 
 bool CommandExecutor::isSimpleCommandLine(const QList<CmdLexer::Token>& tokens)

@@ -1,5 +1,10 @@
 This is the changelog for jom, the parallel build tool.
 
+Changes since jom 0.9.3
+- Opening files from volume mounted to NTFS directory fixed.
+  (QTCREATORBUG-1475)
+- Output buffering issue fixed. (QTBUG-10798)
+
 Changes since jom 0.9.2
 - Support for multiple inline files per command line added.
 - Its now possible to use "." as target name. (QTCREATORBUG-1131)
