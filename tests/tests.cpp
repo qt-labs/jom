@@ -782,8 +782,9 @@ bool ParserTest::runJom(const QStringList &args)
 void ParserTest::ignoreExitCodes()
 {
     QVERIFY(runJom(QStringList() << "/f" << "blackbox\\ignoreExitCodes\\test.mk"));
-    qDebug() << m_jomProcess->readAll();
     QCOMPARE(m_jomProcess->exitCode(), 0);
+    QByteArray output = m_jomProcess->readAllStandardOutput();
+    QVERIFY(output.contains("Failing command was properly ignored"));
 }
 
 QTEST_MAIN(ParserTest)
