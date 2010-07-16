@@ -40,6 +40,7 @@ void ParserTest::initTestCase()
 {
     m_makefileFactory = new MakefileFactory;
     m_preprocessor = 0;
+    m_jomProcess = 0;
     m_oldCurrentPath = QDir::currentPath();
     if (QFile::exists("../makefiles"))
         QDir::setCurrent("../makefiles");
@@ -757,6 +758,32 @@ void ParserTest::windowsPathsInTargetName()
     QVERIFY(target != 0);
     QCOMPARE(target->targetName(), QLatin1String("S"));
     QCOMPARE(target->m_commands.count(), 2);
+}
+
+bool ParserTest::runJom(const QStringList &args)
+{
+    if (!m_jomProcess) {
+        m_jomProcess = new QProcess(this);
+        m_jomProcess->setProcessChannelMode(QProcess::MergedChannels);
+    }
+    QString jomBinary = "../../bin/jomd.exe";
+    m_jomProcess->start(jomBinary, args);
+    if (!m_jomProcess->waitForStarted()) {
+        qDebug("could not start jom");
+        return false;
+    }
+    if (!m_jomProcess->waitForFinished()) {
+        qDebug("error while executing jom");
+        return false;
+    }
+    return true;
+}
+
+void ParserTest::ignoreExitCodes()
+{
+    QVERIFY(runJom(QStringList() << "/f" << "blackbox\\ignoreExitCodes\\test.mk"));
+    qDebug() << m_jomProcess->readAll();
+    QCOMPARE(m_jomProcess->exitCode(), 0);
 }
 
 QTEST_MAIN(ParserTest)

@@ -2,14 +2,8 @@
 #
 # http://msdn.microsoft.com/en-us/library/1whxt45w.aspx
 
-all:
-	@echo Please specify a target.
-
-tests: test_ignoreExitCode
-
-init:
-
-post_check:
+all: test_ignoreExitCode
+	@echo ---SUCCESS---
 
 test_ignoreExitCode:
 	-nonexistent_command

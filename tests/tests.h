@@ -22,8 +22,9 @@
  ****************************************************************************/
 #pragma once
 
-#include <QObject>
-#include <QString>
+#include <QtCore/QObject>
+#include <QtCore/QString>
+#include <QtCore/QProcess>
 
 namespace NMakeFile
 {
@@ -62,11 +63,16 @@ private slots:
     void fileNameMacrosInDependents();
     void windowsPathsInTargetName();
 
+    // black-box tests
+    void ignoreExitCodes();
+
 private:
     bool openMakefile(const QString& fileName);
+    bool runJom(const QStringList &args);
 
 private:
     QString m_oldCurrentPath;
     NMakeFile::Preprocessor* m_preprocessor;
     NMakeFile::MakefileFactory* m_makefileFactory;
+    QProcess *m_jomProcess;
 };
