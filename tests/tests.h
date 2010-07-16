@@ -65,6 +65,8 @@ private slots:
 
     // black-box tests
     void ignoreExitCodes();
+    void inlineFiles();
+    void unicodeFiles();
 
 private:
     bool openMakefile(const QString& fileName);

@@ -787,4 +787,18 @@ void ParserTest::ignoreExitCodes()
     QVERIFY(output.contains("Failing command was properly ignored"));
 }
 
+void ParserTest::inlineFiles()
+{
+    //### remove file content comparison stuff from the makefile and do it here
+    QVERIFY(runJom(QStringList() << "/f" << "blackbox\\inlineFiles\\test.mk"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+}
+
+void ParserTest::unicodeFiles()
+{
+    QVERIFY(runJom(QStringList() << "/f" << "blackbox\\unicodeFiles\\test.mk"));
+    //### TODO: fix me!
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+}
+
 QTEST_MAIN(ParserTest)
