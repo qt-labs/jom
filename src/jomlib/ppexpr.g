@@ -1,6 +1,126 @@
+----------------------------------------------------------------------------
+--
+-- Copyright (C) 2008-2010 Nokia Corporation and/or its subsidiary(-ies).
+-- Contact: Nokia Corporation (qt-info@nokia.com)
+--
+-- This file is part of the jom project on Trolltech Labs.
+--
+-- This file may be used under the terms of the GNU General Public
+-- License version 2.0 or 3.0 as published by the Free Software Foundation
+-- and appearing in the file LICENSE.GPL included in the packaging of
+-- this file.  Please review the following information to ensure GNU
+-- General Public Licensing requirements will be met:
+-- http://www.fsf.org/licensing/licenses/info/GPLv2.html and
+-- http://www.gnu.org/copyleft/gpl.html.
+--
+-- If you are unsure which license is appropriate for your use, please
+-- contact the sales department at qt-sales@nokia.com.
+--
+-- This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+-- WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+--
+----------------------------------------------------------------------------
+%parser ppexpr_grammar
+%decl ppexprparser.h
+%impl ppexprparser.cpp
 
+%token_prefix T_
+
+%token NUMBER
+%token STRING
+%token BOOL_AND
+%token BOOL_OR
+%token BIT_AND
+%token BIT_OR
+%token EQUAL
+%token NOT_EQUAL 
+%token LESS_THAN
+%token GREATER_THAN
+%token EQUAL_OR_LESS_THAN
+%token EQUAL_OR_GREATER_THAN
+%token SHIFT_LEFT
+%token SHIFT_RIGHT
+%token PLUS
+%token MINUS
+%token MULT
+%token DIV
+%token MOD
+%token BIT_NOT
+%token BOOL_NOT
+%token LEFT_PAREN
+%token RIGHT_PAREN
+%token LINEFEED
+
+%start expression
+
+/:
+#include "ppexpr_grammar_p.h"
+#include <QtCore>
+
+namespace NMakeFile {
+    class MacroTable;
+}
+
+class PPExprParser : protected $table
+{
+public:
+    PPExprParser();
+    ~PPExprParser();
+
+    bool parse(const char* str);
+
+    int expressionValue()
+    {
+        return sym(1).num;
+    }
+
+    QByteArray errorMessage() const
+    {
+        return m_errorMessage;
+    }
+
+    void setMacroTable(NMakeFile::MacroTable* macroTable)
+    {
+        m_macroTable = macroTable;
+    }
+
+protected:
+    struct Value
+    {
+#ifdef _DEBUG
+        Value()
+        : num(0)
+        {}
+#endif
+
+        union {
+            int num;
+            QByteArray* str;
+        };
+    };
+
+protected:
+    int yylex();
+    inline void reallocateStack();
+
+    inline Value &sym(int index)
+    { return sym_stack [tos + index - 1]; }
+
+protected:
+    void* yyInputBuffer;
+    Value yylval;
+    int tos;
+    int stack_size;
+    Value *sym_stack;
+    int *state_stack;
+    NMakeFile::MacroTable* m_macroTable;
+    QByteArray m_errorMessage;
+};
+:/
+
+/.
 #include "ppexprparser.h"
-#include "../macrotable.h"
+#include "macrotable.h"
 #include "ppexpr-lex.inc"
 
 PPExprParser::PPExprParser()
@@ -101,24 +221,44 @@ bool PPExprParser::parse(const char* str)
             act = state_stack [tos++];
 
             switch (r) {
+./
 
-    case 2: // term0
+expression  ::=  term0;
+term0       ::=  term1;
+term0       ::=  term0 BOOL_AND term1;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(1).num != 0 && sym(3).num != 0) ? 1 : 0;
         break;
+./
 
-    case 3: // term0
+term0       ::=  term0 BOOL_OR term1;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(1).num != 0 || sym(3).num != 0) ? 1 : 0;
         break;
+./
 
-    case 4: // term0
+term0       ::=  term0 BIT_AND term1;
+/.
+    case $rule_number: // $rule
         sym(1).num &= sym(3).num;
         break;
+./
 
-    case 5: // term0
+term0       ::=  term0 BIT_OR term1;
+/.
+    case $rule_number: // $rule
         sym(1).num |= sym(3).num;
         break;
+./
 
-    case 8: { // strterm1
+term1     ::= term2;
+term1     ::= strterm1;
+
+strterm1    ::= STRING EQUAL STRING;
+/.
+    case $rule_number: { // $rule
         QByteArray* lhs = sym(1).str;
         QByteArray* rhs = sym(3).str;
         sym(1).num = (*lhs == *rhs) ? 1 : 0;
@@ -126,8 +266,11 @@ bool PPExprParser::parse(const char* str)
         delete rhs;
         break;
     }
+./
 
-    case 9: { // strterm1
+strterm1    ::= STRING NOT_EQUAL STRING;
+/.
+    case $rule_number: { // $rule
         QByteArray* lhs = sym(1).str;
         QByteArray* rhs = sym(3).str;
         sym(1).num = (*lhs == *rhs) ? 0 : 1;
@@ -135,52 +278,92 @@ bool PPExprParser::parse(const char* str)
         delete rhs;
         break;
     }
+./
 
-    case 11: // term2
+term2       ::= term3;
+term2       ::= term2 EQUAL term3;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(1).num == sym(3).num);
         break;
+./
 
-    case 12: // term2
+term2       ::= term2 NOT_EQUAL term3;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(1).num != sym(3).num);
         break;
+./
 
-    case 13: // term2
+term2       ::= term2 LESS_THAN term3;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(1).num < sym(3).num);
         break;
+./
 
-    case 14: // term2
+term2       ::= term2 GREATER_THAN term3;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(1).num > sym(3).num);
         break;
+./
 
-    case 15: // term2
+term2       ::= term2 EQUAL_OR_LESS_THAN term3;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(1).num <= sym(3).num);
         break;
+./
 
-    case 16: // term2
+term2       ::= term2 EQUAL_OR_GREATER_THAN term3;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(1).num >= sym(3).num);
         break;
+./
 
-    case 18: // term3
+term3       ::= term4;
+term3       ::= term3 SHIFT_LEFT term4;
+/.
+    case $rule_number: // $rule
         sym(1).num <<= sym(3).num;
         break;
+./
 
-    case 19: // term3
+term3       ::= term3 SHIFT_RIGHT term4;
+/.
+    case $rule_number: // $rule
         sym(1).num >>= sym(3).num;
         break;
+./
 
-    case 21: // term4
+term4       ::= term5;
+term4       ::= term4 PLUS term5;
+/.
+    case $rule_number: // $rule
         sym(1).num += sym(3).num;
         break;
+./
 
-    case 22: // term4
+term4       ::= term4 MINUS term5;
+/.
+    case $rule_number: // $rule
         sym(1).num -= sym(3).num;
         break;
+./
 
-    case 24: // term5
+term5       ::= term6;
+term5       ::= term5 MULT term6;
+/.
+    case $rule_number: // $rule
         sym(1).num *= sym(3).num;
         break;
+./
 
-    case 25: { // term5
+term5       ::= term5 DIV term6;
+/.
+    case $rule_number: { // $rule
         const int rhs = sym(3).num;
         if (rhs == 0) {
             m_errorMessage = "division by zero";
@@ -190,27 +373,46 @@ bool PPExprParser::parse(const char* str)
         sym(1).num /= rhs;
         break;
     }
+./
 
-    case 26: // term5
+term5       ::= term5 MOD term6;
+/.
+    case $rule_number: // $rule
         sym(1).num %= sym(3).num;
         break;
+./
 
-    case 28: // term6
+term6 ::= primary;
+term6 ::= MINUS primary;
+/.
+    case $rule_number: // $rule
         sym(1).num = -sym(2).num;
         break;
+./
 
-    case 29: // term6
+term6 ::= BIT_NOT primary;
+/.
+    case $rule_number: // $rule
         sym(1).num = ~sym(2).num;
         break;
+./
 
-    case 30: // term6
+term6 ::= BOOL_NOT primary;
+/.
+    case $rule_number: // $rule
         sym(1).num = (sym(2).num == 0) ? 1 : 0;
         break;
+./
 
-    case 32: // primary
+primary ::= NUMBER;
+primary ::= LEFT_PAREN term0 RIGHT_PAREN;
+/.
+    case $rule_number: // $rule
         sym(1).num = sym(2).num;
         break;
+./
 
+/.
             } // switch
 
             state_stack [tos] = nt_action (act, lhs [r] - TERMINAL_COUNT);
@@ -226,3 +428,5 @@ bool PPExprParser::parse(const char* str)
     yy_delete_buffer((YY_BUFFER_STATE)yyInputBuffer);
     return false;
 }
+./
+

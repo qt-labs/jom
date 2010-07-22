@@ -27,7 +27,7 @@
 #include <QScopedPointer>
 #include <QDebug>
 
-#include <ppexpr/ppexprparser.h>
+#include <ppexprparser.h>
 #include <makefilefactory.h>
 #include <preprocessor.h>
 #include <parser.h>

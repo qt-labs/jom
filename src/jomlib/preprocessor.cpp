@@ -21,7 +21,7 @@
  **
  ****************************************************************************/
 #include "preprocessor.h"
-#include "ppexpr/ppexprparser.h"
+#include "ppexprparser.h"
 #include "macrotable.h"
 #include "exception.h"
 #include "makefilelinereader.h"
