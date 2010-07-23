@@ -24,6 +24,7 @@
 #pragma once
 
 #include <QtCore/QFile>
+#include <QtCore/QTextStream>
 
 namespace NMakeFile {
 
@@ -41,8 +42,14 @@ public:
 private:
     void removeFirstCharacter(char* buf, char* endPtr);
 
+    typedef QString (MakefileLineReader::*ReadLineImpl)();
+    ReadLineImpl m_readLineImpl;
+    QString readLine_impl_local8bit();
+    QString readLine_impl_unicode();
+
 private:
     QFile m_file;
+    QTextStream m_textStream;
     static const size_t m_nInitialLineBufferSize = 6144;
     static const size_t m_nLineBufferGrowSize = 1024;
     size_t m_nLineBufferSize;

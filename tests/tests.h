@@ -66,6 +66,7 @@ private slots:
     // black-box tests
     void ignoreExitCodes();
     void inlineFiles();
+    void unicodeFiles_data();
     void unicodeFiles();
 
 private:

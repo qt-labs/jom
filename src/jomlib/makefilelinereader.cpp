@@ -23,6 +23,8 @@
 
 #include "makefilelinereader.h"
 #include "helperfunctions.h"
+#include <QTextCodec>
+#include <QDebug>
 
 namespace NMakeFile {
 
@@ -42,7 +44,28 @@ MakefileLineReader::~MakefileLineReader()
 
 bool MakefileLineReader::open()
 {
-    return m_file.open(QIODevice::ReadOnly | QIODevice::Text);
+    if (!m_file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+
+    // check BOM
+    enum FileEncoding { FCLatin1, FCUTF8, FCUTF16 };
+    FileEncoding fileEncoding = FCLatin1;
+    QByteArray buf = m_file.peek(3);
+    if (buf.startsWith("\xFF\xFE"))
+        fileEncoding = FCUTF16;
+    else if (buf.startsWith("\xEF\xBB\xBF"))
+        fileEncoding = FCUTF8;
+
+    if (fileEncoding == FCLatin1) {
+        m_readLineImpl = &NMakeFile::MakefileLineReader::readLine_impl_local8bit;
+    } else {
+        m_readLineImpl = &NMakeFile::MakefileLineReader::readLine_impl_unicode;
+        m_textStream.setCodec(fileEncoding == FCUTF8 ? "UTF-8" : "UTF-16");
+        m_textStream.setAutoDetectUnicode(false);
+        m_textStream.setDevice(&m_file);
+    }
+
+    return true;
 }
 
 void MakefileLineReader::close()
@@ -50,7 +73,21 @@ void MakefileLineReader::close()
     m_file.close();
 }
 
+/**
+ * This function reads lines from a makefile and
+ *    - ignores all lines that start with #
+ *    - combines multi-lines (lines with \ at the end) into a single long line
+ *    - handles the ^ escape character for \ and \n at the end
+ */
 QString MakefileLineReader::readLine()
+{
+    return (this->*m_readLineImpl)();
+}
+
+/**
+ * readLine implementation optimized for 8 bit files.
+ */
+QString MakefileLineReader::readLine_impl_local8bit()
 {
     QString line;
     bool multiLineAppendix = false;
@@ -118,6 +155,48 @@ QString MakefileLineReader::readLine()
         --idx;
     line.truncate(idx+1);
 
+    return line;
+}
+
+/**
+ * readLine implementation for unicode files.
+ * Much slower than the 8 bit version.
+ */
+QString MakefileLineReader::readLine_impl_unicode()
+{
+    QString line;
+    bool endOfLineReached = false;
+    bool multilineAppendix = false;
+    do {
+        m_nLineNumber++;
+        QString str = m_textStream.readLine();
+        if (str.isNull())
+            break;
+
+        if (str.startsWith(QLatin1Char('#')))
+            continue;
+
+        if (multilineAppendix && (str.startsWith(QLatin1Char(' ')) || str.startsWith(QLatin1Char('\t')))) {
+            str = str.trimmed();
+            str.prepend(QLatin1Char(' '));
+        }
+
+        if (str.endsWith(QLatin1String("^\\"))) {
+            str.remove(str.length() - 2, 1);
+            endOfLineReached = true;
+        } else if (str.endsWith(QLatin1Char('\\'))) {
+            str.chop(1);
+            multilineAppendix = true;
+        } else if (str.endsWith(QLatin1Char('^'))) {
+            str.chop(1);
+            str.append(QLatin1Char('\n'));
+            multilineAppendix = true;
+        } else {
+            endOfLineReached = true;
+        }
+
+        line.append(str);
+    } while (!endOfLineReached);
     return line;
 }
 

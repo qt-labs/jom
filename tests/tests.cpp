@@ -794,10 +794,18 @@ void ParserTest::inlineFiles()
     QCOMPARE(m_jomProcess->exitCode(), 0);
 }
 
+void ParserTest::unicodeFiles_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::newRow("UTF8") << QString("test_utf8.mk");
+    QTest::newRow("UTF16") << QString("test_utf16.mk");
+}
+
 void ParserTest::unicodeFiles()
 {
-    QVERIFY(runJom(QStringList() << "/f" << "blackbox\\unicodeFiles\\test.mk"));
-    //### TODO: fix me!
+    QFETCH(QString, fileName);
+    fileName.prepend(QLatin1String("blackbox\\unicodeFiles\\"));
+    QVERIFY(runJom(QStringList() << "/f" << fileName));
     QCOMPARE(m_jomProcess->exitCode(), 0);
 }
 
