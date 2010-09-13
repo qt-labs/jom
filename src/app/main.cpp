@@ -40,7 +40,7 @@ using namespace NMakeFile;
 
 const int nVersionMajor = 0;
 const int nVersionMinor = 9;
-const int nVersionPatch = 3;
+const int nVersionPatch = 4;
 
 static void showLogo()
 {
