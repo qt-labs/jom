@@ -627,7 +627,7 @@ void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
 
 void Parser::error(const QString& msg)
 {
-    throw Exception(msg, m_preprocessor->currentFileName(), m_preprocessor->lineNumber());
+    throw FileException(msg, m_preprocessor->currentFileName(), m_preprocessor->lineNumber());
 }
 
 } // namespace NMakeFile

@@ -381,7 +381,7 @@ int Preprocessor::evaluateExpression(const QString& expr)
 
 void Preprocessor::error(const QString& msg)
 {
-    throw Exception(msg, currentFileName(), lineNumber());
+    throw FileException(msg, currentFileName(), lineNumber());
 }
 
 void Preprocessor::removeInlineComments(QString& line)
