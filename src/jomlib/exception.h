@@ -29,16 +29,25 @@ namespace NMakeFile {
 class Exception
 {
 public:
-    explicit Exception(const QString& message = QString(), const QString& fileName = QString(), int line = 0);
-    ~Exception();
+    explicit Exception(const QString& message = QString());
 
     const QString& message() const { return m_message; }
+    virtual const QString toString() const;
+
+protected:
+    QString m_message;
+};
+
+class FileException : public Exception
+{
+public:
+    explicit FileException(const QString& message = QString(), const QString& fileName = QString(), int line = 0);
+
     const QString& fileName() const { return m_fileName; }
     int line() const { return m_line; }
     const QString toString() const;
 
-private:
-    QString m_message;
+protected:
     QString m_fileName;
     int     m_line;
 };

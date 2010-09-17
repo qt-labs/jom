@@ -41,7 +41,7 @@ using namespace NMakeFile;
 
 const int nVersionMajor = 0;
 const int nVersionMinor = 9;
-const int nVersionPatch = 3;
+const int nVersionPatch = 4;
 
 static void showLogo()
 {
@@ -108,6 +108,7 @@ int main(int argc, char* argv[])
             showUsage();
             return 128;
         case MakefileFactory::ParserError:
+        case MakefileFactory::IOError:
             fprintf(stderr, "ERROR: ");
             fprintf(stderr, qPrintable(mf.errorString()));
             fprintf(stderr, "\n");

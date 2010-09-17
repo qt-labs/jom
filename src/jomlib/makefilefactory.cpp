@@ -84,6 +84,23 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments)
     if (options->showUsageAndExit || options->showVersionAndExit)
         return true;
 
+    if (!options->stderrFile.isEmpty()) {
+        // Try to open the file for writing.
+        const wchar_t *wszFileName = options->stderrFile.utf16();
+        FILE *f = _wfopen(wszFileName, L"w");
+        if (!f) {
+            m_errorString = "Cannot open stderr file for writing.";
+            m_errorType = IOError;
+            return false;
+        }
+        fclose(f);
+        if (!_wfreopen(wszFileName, L"w", stderr)) {
+            m_errorString = "Cannot reopen stderr handle for writing.";
+            m_errorType = IOError;
+            return false;
+        }
+    }
+
     options->fullAppPath = QCoreApplication::applicationFilePath();
     options->fullAppPath.replace(QLatin1Char('/'), QDir::separator());
 

@@ -16,7 +16,8 @@ public:
     enum ErrorType {
         NoError,
         CommandLineError,
-        ParserError
+        ParserError,
+        IOError
     };
 
     Makefile* makefile() { return m_makefile; }

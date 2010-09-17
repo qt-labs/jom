@@ -24,18 +24,24 @@
 
 namespace NMakeFile {
 
-Exception::Exception(const QString& message, const QString& fileName, int line)
-:   m_message(message),
+Exception::Exception(const QString& message)
+:   m_message(message)
+{
+}
+
+const QString Exception::toString() const
+{
+    return m_message;
+}
+
+FileException::FileException(const QString& message, const QString& fileName, int line)
+:   Exception(message),
     m_fileName(fileName),
     m_line(line)
 {
 }
 
-Exception::~Exception()
-{
-}
-
-const QString Exception::toString() const
+const QString FileException::toString() const
 {
     QString output = m_message;
     if (!m_fileName.isEmpty()) {
