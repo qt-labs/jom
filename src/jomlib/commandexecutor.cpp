@@ -202,7 +202,7 @@ void CommandExecutor::executeCurrentCommandLine()
 
     if (!executionSucceeded) {
         //qDebug("+++ shell exec");
-        m_process.start(QLatin1String("cmd \"/C ") + commandLine + QLatin1String("\""));
+        m_process.start(QLatin1String("cmd /C \" ") + commandLine + QLatin1String(" \""));
         executionSucceeded = m_process.waitForStarted();
     }
 
