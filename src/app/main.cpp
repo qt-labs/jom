@@ -156,6 +156,12 @@ int main(int argc, char* argv[])
     }
     g_options.fullAppPath = QCoreApplication::applicationFilePath();
     g_options.fullAppPath.replace(QLatin1Char('/'), QDir::separator());
+    if (!g_options.stderrFile.isEmpty()) {
+        if (!_wfreopen(g_options.stderrFile.utf16(), L"w", stderr)) {
+            printf("ERROR: Cannot open stderr file for writing.\n");
+            return 2;
+        }
+    }
 
     if (g_options.showLogo)
         showLogo();

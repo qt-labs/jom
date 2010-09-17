@@ -1,3 +1,5 @@
+DEFINES += _CRT_SECURE_NO_WARNINGS
+
 HEADERS += fileinfo.h \
            helperfunctions.h \
            makefile.h \

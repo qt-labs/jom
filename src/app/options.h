@@ -59,7 +59,7 @@ public:
     bool debugMode;
     bool showVersionAndExit;
     QString fullAppPath;
-    QString stderrFile; // TODO: do something with this
+    QString stderrFile;
 
 private:
     bool expandCommandFiles(QStringList& arguments);
