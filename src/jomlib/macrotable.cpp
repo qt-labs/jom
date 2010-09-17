@@ -151,35 +151,40 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
     ret.reserve(str.count());
 
     int i = 0;
+    const int max_i = str.count() - 2;
     while (i < str.count()) {
+        if (i >= max_i) {
+            ret.append(str.mid(i));
+            break;
+        }
         if (str.at(i) == QLatin1Char('$')) {
             ++i;
-            if (i >= str.count()) {
-                qWarning("Single $ at end of line found while expanding macro.");
-            } else if (str.at(i) == QLatin1Char('(')) {
+            if (str.at(i) == QLatin1Char('(')) {
                 // found standard macro invokation a la $(MAKE)
                 int k = str.indexOf(QLatin1Char(')'), i);
-                if (k < 0) {
-                    qWarning("Macro invokation $( without closing ) found.");
-                } else {
-                    const QString macroName = str.mid(i + 1, k - i - 1);
-                    switch (macroName.at(0).toLatin1())
+                if (k < 0)
+                    throw Exception("Macro invokation $( without closing ) found");
+
+                const QString macroName = str.mid(i + 1, k - i - 1);
+                if (macroName.isEmpty())
+                    throw Exception("Macro name is missing from invokation");
+
+                switch (macroName.at(0).toLatin1())
+                {
+                case '@':
+                case '*':
                     {
-                    case '@':
-                    case '*':
-                        {
-                            ret.append(QLatin1String("$("));
-                            ret.append(macroName);
-                            ret.append(QLatin1String(")"));
-                        }
-                        break;
-                    default:
-                        {
-                            QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
-                            macroValue = expandMacros(macroValue, usedMacros);
-                            usedMacros.remove(macroName);
-                            ret.append(macroValue);
-                        }
+                        ret.append(QLatin1String("$("));
+                        ret.append(macroName);
+                        ret.append(QLatin1String(")"));
+                    }
+                    break;
+                default:
+                    {
+                        QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
+                        macroValue = expandMacros(macroValue, usedMacros);
+                        usedMacros.remove(macroName);
+                        ret.append(macroValue);
                     }
                 }
                 i = k;
@@ -204,7 +209,7 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                     ret.append(str.at(i));
                     break;
                 default:
-                    qWarning("Invalid macro invokation found.");
+                    throw Exception("Invalid macro invokation found");
                 }
             }
         } else {

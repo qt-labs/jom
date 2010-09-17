@@ -43,6 +43,8 @@ private slots:
     void includeFiles();
     void includeCycle();
     void macros();
+    void invalidMacros_data();
+    void invalidMacros();
     void preprocessorExpressions_data();
     void preprocessorExpressions();
     void preprocessorDivideByZero();

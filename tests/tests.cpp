@@ -135,7 +135,29 @@ void ParserTest::macros()
     QCOMPARE(macroTable.expandMacros("$(BANANA)"), QLatin1String("yellow"));
     QCOMPARE(macroTable.expandMacros("$1"), QLatin1String("x"));
     QCOMPARE(macroTable.expandMacros("$(XXX)"), QLatin1String("xxx"));
+    QCOMPARE(macroTable.expandMacros("dollar at the end$"), QLatin1String("dollar at the end$"));
     QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
+}
+
+void ParserTest::invalidMacros_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::newRow("missing paranthesis")    << QString("$(FOO) $(MISSING_PARANTHESIS");
+    QTest::newRow("empty macro name 1") << QString("empty macro name $()");
+    QTest::newRow("empty macro name 2") << QString("empty $() macro name");
+}
+
+void ParserTest::invalidMacros()
+{
+    QFETCH(QString, expression);
+    bool exceptionCaught = false;
+    MacroTable macroTable;
+    try {
+        macroTable.expandMacros(expression);
+    } catch (Exception e) {
+        exceptionCaught = true;
+    }
+    QVERIFY(exceptionCaught);
 }
 
 void ParserTest::preprocessorExpressions_data()
