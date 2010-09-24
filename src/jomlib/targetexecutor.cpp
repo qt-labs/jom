@@ -85,7 +85,7 @@ bool TargetExecutor::event(QEvent* e)
     if (e->type() == QEvent::User) {
         try {
             startProcesses();
-        } catch (Exception e) {
+        } catch (Exception &e) {
             m_bAborted = true;
             QString msg = "Error: " + e.message() + "\n";
             fprintf(stderr, qPrintable(msg));

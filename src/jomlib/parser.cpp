@@ -64,25 +64,32 @@ void Parser::apply(Preprocessor* pp,
                << ".bas" << ".cbl" << ".for" << ".pas" << ".res" << ".rc";
     int dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos;
 
-    readLine();
-    while (!m_line.isNull()) {
-        QString expandedLine = m_preprocessor->macroTable()->expandMacros(m_line);
-        if (isEmptyLine(expandedLine)) {
-            readLine();
-        } else if (isDotDirective(expandedLine)) {
-            m_line = expandedLine;
-            Preprocessor::removeInlineComments(m_line);
-            parseDotDirective();
-        } else if (isInferenceRule(expandedLine)) {
-            m_line = expandedLine;
-            Preprocessor::removeInlineComments(m_line);
-            parseInferenceRule();
-        } else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos)) {
-            parseDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos);
-        } else {
-            error("syntax error");
-            readLine();
+    try {
+        readLine();
+        while (!m_line.isNull()) {
+            QString expandedLine = m_preprocessor->macroTable()->expandMacros(m_line);
+            if (isEmptyLine(expandedLine)) {
+                readLine();
+            } else if (isDotDirective(expandedLine)) {
+                m_line = expandedLine;
+                Preprocessor::removeInlineComments(m_line);
+                parseDotDirective();
+            } else if (isInferenceRule(expandedLine)) {
+                m_line = expandedLine;
+                Preprocessor::removeInlineComments(m_line);
+                parseInferenceRule();
+            } else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos)) {
+                parseDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos);
+            } else {
+                error("syntax error");
+                readLine();
+            }
         }
+    } catch (FileException&) {
+        throw;
+    } catch (Exception &e) {
+        // Enrich the error message with filename and line number.
+        error(e.message());
     }
 
     // if the makefile doesn't contain target, we can stop here

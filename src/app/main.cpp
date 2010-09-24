@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
             return 128;
         case MakefileFactory::ParserError:
         case MakefileFactory::IOError:
-            fprintf(stderr, "ERROR: ");
+            fprintf(stderr, "Error: ");
             fprintf(stderr, qPrintable(mf.errorString()));
             fprintf(stderr, "\n");
             return 2;
@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
     try {
         executor.apply(mkfile, mf.activeTargets());
     }
-    catch (Exception e) {
+    catch (Exception &e) {
         QString msg = "Error in executor: " + e.message() + "\n";
         fprintf(stderr, qPrintable(msg));
     }

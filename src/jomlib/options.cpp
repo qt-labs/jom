@@ -93,7 +93,7 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
             int idx = arg.indexOf(QLatin1Char('='));
             QString name = arg.left(idx);
             if (!macroTable.isMacroNameValid(name)) {
-                fprintf(stderr, "ERROR: The macro name %s is invalid.", qPrintable(name));
+                fprintf(stderr, "Error: The macro name %s is invalid.", qPrintable(name));
                 exit(128);
             }
             macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1), overrideEnvVarMacros);

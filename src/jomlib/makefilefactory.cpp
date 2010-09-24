@@ -134,13 +134,12 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments)
         preprocessor.openFile(filename);
         Parser parser;
         parser.apply(&preprocessor, m_makefile, m_activeTargets);
-    } catch (Exception e) {
+    } catch (Exception &e) {
         m_errorType = ParserError;
         m_errorString = e.toString();
-        return false;
     }
 
-    return true;
+    return m_errorType == NoError;
 }
 
 } //namespace NMakeFile

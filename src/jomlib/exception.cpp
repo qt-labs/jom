@@ -46,7 +46,9 @@ const QString FileException::toString() const
     QString output = m_message;
     if (!m_fileName.isEmpty()) {
         output += QLatin1String(" in ");
-        output += m_fileName;
+        QString fileName = m_fileName;
+        fileName.replace(QLatin1Char('/'), QLatin1Char('\\'));
+        output += fileName;
         output += QLatin1String(" ");
     }
 
