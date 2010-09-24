@@ -55,7 +55,6 @@ private:
     void writeToStandardOutput(const QByteArray& data);
     void writeToStandardError(const QByteArray& data);
     bool isSimpleCommandLine(const QString &cmdLine);
-    bool findExecutableInPath(QString& fileName);
     bool exec_cd(const QString &commandLine);
 
 private:

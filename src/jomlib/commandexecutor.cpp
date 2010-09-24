@@ -160,8 +160,12 @@ void CommandExecutor::executeCurrentCommandLine()
         }
     }
 
+    // Unescape commandline characters.
+    commandLine.replace("%%", "%");
+
     if (!cmd.m_silent && !m_pTarget->makefile()->options()->suppressExecutedCommandsDisplay) {
         QByteArray output = commandLine.toLocal8Bit();
+        output.prepend('\t');
         output.append('\n');
         writeToStandardOutput(output);
     }
@@ -196,8 +200,28 @@ void CommandExecutor::executeCurrentCommandLine()
 
     if (!executionSucceeded) {
         //qDebug("+++ shell exec");
-        m_process.start(QLatin1String("cmd /C \" ") + commandLine + QLatin1String(" \""));
+
+        int doubleQuoteCount(0), idx(0);
+        const QChar doubleQuote = QLatin1Char('"');
+        while (doubleQuoteCount < 3 && (commandLine.indexOf(doubleQuote, idx) >= 0))
+            ++doubleQuoteCount;
+
+        if (doubleQuoteCount >= 3) {
+            // There are more than three double quotes in the command. We must properly escape it.
+            commandLine.prepend(QLatin1String("\" "));
+            commandLine.append(QLatin1String(" \""));
+        }
+
+#if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
+        m_process.setNativeArguments(commandLine);
+        m_process.start("cmd", QStringList() << "/c");
+#else
+        m_process.start(QLatin1String("cmd /C ") + commandLine);
+#endif
         executionSucceeded = m_process.waitForStarted();
+#if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
+        m_process.setNativeArguments(QString());
+#endif
     }
 
     if (!executionSucceeded)
@@ -277,15 +301,6 @@ bool CommandExecutor::isSimpleCommandLine(const QString &commandLine)
 {
     static QRegExp rex("\\||>|<|&");
     return rex.indexIn(commandLine) == -1;
-}
-
-bool CommandExecutor::findExecutableInPath(QString& fileName) // ### needed?
-{
-    FileInfo fi(fileName);
-    if (fi.isAbsolute() && fi.exists())
-        return true;
-
-    return false;
 }
 
 bool CommandExecutor::exec_cd(const QString &commandLine)
