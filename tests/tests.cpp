@@ -782,23 +782,31 @@ void ParserTest::windowsPathsInTargetName()
     QCOMPARE(target->m_commands.count(), 2);
 }
 
-bool ParserTest::runJom(const QStringList &args)
+bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory)
 {
+    QString jomBinary = QFileInfo("../../bin/jomd.exe").absoluteFilePath();
+    QString oldWorkingDirectory;
+    if (!workingDirectory.isNull()) {
+        oldWorkingDirectory = QDir::currentPath();
+        QDir::setCurrent(workingDirectory);
+    }
     if (!m_jomProcess) {
         m_jomProcess = new QProcess(this);
         m_jomProcess->setProcessChannelMode(QProcess::MergedChannels);
     }
-    QString jomBinary = "../../bin/jomd.exe";
     m_jomProcess->start(jomBinary, args);
+    bool success = true;
     if (!m_jomProcess->waitForStarted()) {
         qDebug("could not start jom");
-        return false;
+        success = false;
     }
-    if (!m_jomProcess->waitForFinished()) {
+    if (success && !m_jomProcess->waitForFinished()) {
         qDebug("error while executing jom");
-        return false;
+        success = false;
     }
-    return true;
+    if (!workingDirectory.isNull())
+        QDir::setCurrent(oldWorkingDirectory);
+    return success;
 }
 
 void ParserTest::ignoreExitCodes()
@@ -829,6 +837,31 @@ void ParserTest::unicodeFiles()
     fileName.prepend(QLatin1String("blackbox\\unicodeFiles\\"));
     QVERIFY(runJom(QStringList() << "/f" << fileName));
     QCOMPARE(m_jomProcess->exitCode(), 0);
+}
+
+void ParserTest::builtin_cd_data()
+{
+    QTest::addColumn<QString>("testCase");
+    QTest::addColumn<QByteArray>("expectedOutput");
+    QTest::newRow("1") << QString("test1") << QByteArray("blackbox\\builtins\\subdir");
+    QTest::newRow("2") << QString("test2") << QByteArray("blackbox\\builtins\\subdir");
+    QTest::newRow("3") << QString("test3") << QByteArray("blackbox\\builtins");
+}
+
+void ParserTest::builtin_cd()
+{
+    QFETCH(QString, testCase);
+    QFETCH(QByteArray, expectedOutput);
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "cd.mk" << testCase, "blackbox/builtins"));
+    QByteArray output = m_jomProcess->readAllStandardOutput();
+    while (output.endsWith('\r') || output.endsWith('\n'))
+        output.chop(1);
+    bool success = output.endsWith(expectedOutput);
+    if (!success) {
+        qDebug() << "actual:      " << output;
+        qDebug() << "expected end:" << expectedOutput;
+    }
+    QVERIFY(success);
 }
 
 QTEST_MAIN(ParserTest)

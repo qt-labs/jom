@@ -26,9 +26,10 @@
 #include "helperfunctions.h"
 #include "fileinfo.h"
 
-#include <QDir>
-#include <QTemporaryFile>
-#include <QDebug>
+#include <QtCore/QDebug>
+#include <QtCore/QDir>
+#include <QtCore/QRegExp>
+#include <QtCore/QTemporaryFile>
 #include <windows.h>
 
 namespace NMakeFile {
@@ -173,16 +174,12 @@ void CommandExecutor::executeCurrentCommandLine()
         m_nextWorkingDir.clear();
     }
 
-    m_cmdLexer.setInput(commandLine);
-    QList<CmdLexer::Token> cmdLineTokens = m_cmdLexer.lexTokens();
-    const bool simpleCmdLine = isSimpleCommandLine(cmdLineTokens);
-    CmdLexer::Token program = cmdLineTokens.takeFirst();
-
-    if (program.type == CmdLexer::TArgument
-        && program.value.compare(QLatin1String("cd"), Qt::CaseInsensitive) == 0)
+    const bool simpleCmdLine = isSimpleCommandLine(commandLine);
+    if (simpleCmdLine)
     {
-        bool success = exec_cd(cmdLineTokens, simpleCmdLine);
-        if (simpleCmdLine) {
+        // handle builtins
+        if (commandLine.startsWith("cd ", Qt::CaseInsensitive) || commandLine.startsWith("cd\t", Qt::CaseInsensitive)) {
+            bool success = exec_cd(commandLine);
             onProcessFinished(success ? 0 : 1, QProcess::NormalExit);
             return;
         }
@@ -191,11 +188,8 @@ void CommandExecutor::executeCurrentCommandLine()
     bool executionSucceeded = false;
     if (simpleCmdLine) {
         //qDebug("+++ direct exec");
-        QStringList args;
-        foreach (const CmdLexer::Token& t, cmdLineTokens)
-            args.append(t.value);
         m_ignoreProcessErrors = true;
-        m_process.start(program.value, args);
+        m_process.start(commandLine);
         executionSucceeded = m_process.waitForStarted();
         m_ignoreProcessErrors = false;
     }
@@ -279,12 +273,10 @@ void CommandExecutor::writeToStandardError(const QByteArray& output)
     fflush(stderr);
 }
 
-bool CommandExecutor::isSimpleCommandLine(const QList<CmdLexer::Token>& tokens)
+bool CommandExecutor::isSimpleCommandLine(const QString &commandLine)
 {
-    foreach (const CmdLexer::Token& t, tokens)
-        if (t.type != CmdLexer::TArgument)
-            return false;
-    return true;
+    static QRegExp rex("\\||>|<|&");
+    return rex.indexIn(commandLine) == -1;
 }
 
 bool CommandExecutor::findExecutableInPath(QString& fileName) // ### needed?
@@ -296,29 +288,35 @@ bool CommandExecutor::findExecutableInPath(QString& fileName) // ### needed?
     return false;
 }
 
-bool CommandExecutor::exec_cd(const QList<CmdLexer::Token>& args, bool isSimpleCmdLine)
+bool CommandExecutor::exec_cd(const QString &commandLine)
 {
-    QList<CmdLexer::Token>::const_iterator it = args.begin();
-    if (it == args.end() || it->type != CmdLexer::TArgument) {
+    QString args = commandLine.right(commandLine.count() - 3);    // cut of "cd "
+    args = args.trimmed();
+
+    if (args.isEmpty()) {
         // cd, called without arguments, prints the current working directory.
-        if (isSimpleCmdLine)
-            writeToStandardOutput(QDir::toNativeSeparators(QDir::currentPath()).toLocal8Bit());
+        QString cwd = m_process.workingDirectory();
+        if (cwd.isNull())
+            cwd = QDir::currentPath();
+        writeToStandardOutput(QDir::toNativeSeparators(cwd).toLocal8Bit());
         return true;
     }
 
     bool changeDrive = false;
-    if (it->value.compare(QLatin1String("/d"), Qt::CaseInsensitive) == 0) {
+    if (args.startsWith(QLatin1String("/d"), Qt::CaseInsensitive)) {
         changeDrive = true;
-        ++it;
-        if (it == args.end() || it->type != CmdLexer::TArgument) {
+        args.remove(0, 3);
+        args = args.trimmed();
+        if (args.isEmpty()) {
             // "cd /d" does nothing.
             return true;
         }
     }
 
-    if (!FileInfo(it->value).exists()) {
+    FileInfo fi(args);
+    if (!fi.exists()) {
         QString msg = QLatin1String("Couldn't change working directory to %0.");
-        writeToStandardError(msg.arg(it->value).toLocal8Bit());
+        writeToStandardError(msg.arg(args).toLocal8Bit());
         return false;
     }
 
@@ -326,7 +324,7 @@ bool CommandExecutor::exec_cd(const QList<CmdLexer::Token>& args, bool isSimpleC
         // ### handle the case where we cd into a dir on a drive != current drive 
     }
 
-    m_nextWorkingDir = it->value;
+    m_nextWorkingDir = fi.absoluteFilePath();
     return true;
 }
 

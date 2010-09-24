@@ -70,10 +70,12 @@ private slots:
     void inlineFiles();
     void unicodeFiles_data();
     void unicodeFiles();
+    void builtin_cd_data();
+    void builtin_cd();
 
 private:
     bool openMakefile(const QString& fileName);
-    bool runJom(const QStringList &args);
+    bool runJom(const QStringList &args, const QString &workingDirectory = QString());
 
 private:
     QString m_oldCurrentPath;
