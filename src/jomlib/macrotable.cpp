@@ -151,13 +151,9 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
     ret.reserve(str.count());
 
     int i = 0;
-    const int max_i = str.count() - 2;
-    while (i < str.count()) {
-        if (i >= max_i) {
-            ret.append(str.mid(i));
-            break;
-        }
-        if (str.at(i) == QLatin1Char('$')) {
+    const int max_i = str.count() - 1;
+    while (i <= max_i) {
+        if (str.at(i) == QLatin1Char('$') && i < max_i) {
             ++i;
             if (str.at(i) == QLatin1Char('(')) {
                 // found standard macro invokation a la $(MAKE)
