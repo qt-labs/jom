@@ -156,14 +156,30 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
         if (str.at(i) == QLatin1Char('$') && i < max_i) {
             ++i;
             if (str.at(i) == QLatin1Char('(')) {
-                // found standard macro invokation a la $(MAKE)
-                int k = str.indexOf(QLatin1Char(')'), i);
-                if (k < 0)
-                    throw Exception("Macro invokation $( without closing ) found");
+                // found macro invocation
+                int macroInvokationEnd = i+1;
+                int macroNameEnd = -1;
+                bool closingParenthesisFound = false;
+                for (; macroInvokationEnd <= max_i; ++macroInvokationEnd) {
+                    const QChar &ch = str.at(macroInvokationEnd);
+                    if (ch == QLatin1Char(':'))
+                        macroNameEnd = macroInvokationEnd;
+                    else if (ch == QLatin1Char(')')) {
+                        closingParenthesisFound = true;
+                        break;
+                    }
+                }
+                if (!closingParenthesisFound)
+                    throw Exception("Macro invocation $( without closing ) found");
 
-                const QString macroName = str.mid(i + 1, k - i - 1);
+                if (macroNameEnd < 0) {
+                    // found standard macro invocation a la $(MAKE)
+                    macroNameEnd = macroInvokationEnd;
+                }
+
+                const QString macroName = str.mid(i + 1, macroNameEnd - i - 1);
                 if (macroName.isEmpty())
-                    throw Exception("Macro name is missing from invokation");
+                    throw Exception("Macro name is missing from invocation");
 
                 switch (macroName.at(0).toLatin1())
                 {
@@ -179,16 +195,18 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                     {
                         QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
                         macroValue = expandMacros(macroValue, usedMacros);
+                        if (macroNameEnd != macroInvokationEnd)
+                            parseSubstitutionStatement(str, macroNameEnd + 1, macroValue, macroInvokationEnd);
                         usedMacros.remove(macroName);
                         ret.append(macroValue);
                     }
                 }
-                i = k;
+                i = macroInvokationEnd;
             } else if (str.at(i) == QLatin1Char('$')) {
                 // found escaped $ char
                 ret.append(QLatin1Char('$'));
             } else if (str.at(i).isLetterOrNumber()) {
-                // found single character macro invokation a la $X
+                // found single character macro invocation a la $X
                 const QString macroName = str.at(i);
                 QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
                 macroValue = expandMacros(macroValue, usedMacros);
@@ -205,7 +223,7 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                     ret.append(str.at(i));
                     break;
                 default:
-                    throw Exception("Invalid macro invokation found");
+                    throw Exception("Invalid macro invocation found");
                 }
             }
         } else {
@@ -237,6 +255,46 @@ void MacroTable::dump() const
         printf(qPrintable((*it).value));
         printf("\n");
     }
+}
+
+/**
+ * Invokes a macro value substitution.
+ *
+ * str:                    $(DEFINES:foo=bar)
+ * substitutionStartIdx:             ^
+ * equalsSignIdx:                       ^
+ * macroInvokationEndIdx:                   ^
+ */
+void MacroTable::parseSubstitutionStatement(const QString &str, int substitutionStartIdx, QString &value, int &macroInvokationEndIdx)
+{
+    macroInvokationEndIdx = -1;
+    int equalsSignIdx = -1;
+    bool quoted = false;
+    QVector<int> quotePositions;
+    for (int i=substitutionStartIdx; i < str.length(); ++i) {
+        const QChar &ch = str.at(i);
+        if (ch == QLatin1Char('=')) {
+            quoted = false;
+            equalsSignIdx = i;
+        } else if (ch == QLatin1Char(')') && !quoted) {
+            quoted = false;
+            macroInvokationEndIdx = i;
+        } else if (ch == QLatin1Char('^')) {
+            quoted = true;
+            quotePositions.append(i);
+        } else {
+            quoted = false;
+        }
+    }
+
+    if (equalsSignIdx < 0 || macroInvokationEndIdx < 0)
+        throw Exception("Cannot find = after : in macro substitution.");
+
+    QString before = str.mid(substitutionStartIdx, equalsSignIdx - substitutionStartIdx);
+    QString after = str.mid(equalsSignIdx + 1, macroInvokationEndIdx - equalsSignIdx - 1);
+    for (int i=quotePositions.count() - 1; i >= 0; --i)
+        after.remove(quotePositions.at(i) - equalsSignIdx - 1, 1);
+    value.replace(before, after);
 }
 
 } // namespace NMakeFile

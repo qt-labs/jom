@@ -37,7 +37,6 @@ Preprocessor::Preprocessor()
 :   m_macroTable(0),
     m_expressionParser(0)
 {
-    m_rexMacro.setPattern("^(\\S+)\\s*=(.*)");
     m_rexPreprocessingDirective.setPattern("^!\\s*(\\S+)(.*)");
 }
 
@@ -169,13 +168,28 @@ void Preprocessor::basicReadLine(QString& line)
 
 bool Preprocessor::parseMacro(const QString& line)
 {
-    if (!m_rexMacro.exactMatch(line))
+    if (line.isEmpty() || line.at(0).isSpace())
         return false;
 
-    QString name = m_rexMacro.cap(1);
-    QString value = m_rexMacro.cap(2);
+    int equalsSignPos = -1;
+    int parenthesisDepth = 0;
+    for (int i=1; i < line.count(); ++i) {
+        const QChar &ch = line.at(i);
+        if (ch == QLatin1Char('(')) {
+            ++parenthesisDepth;
+        } else if (ch == QLatin1Char(')')) {
+            --parenthesisDepth;
+        } else if (parenthesisDepth == 0 && ch == QLatin1Char('=')) {
+            equalsSignPos = i;
+            break;
+        }
+    }
 
-    value = value.trimmed();
+    if (equalsSignPos < 0)
+        return false;
+
+    QString name = line.left(equalsSignPos).trimmed();
+    QString value = line.mid(equalsSignPos + 1).trimmed();
     removeInlineComments(value);
     //qDebug() << "parseMacro" << name << value;
     m_macroTable->setMacroValue(name, value);

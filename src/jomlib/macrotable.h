@@ -45,6 +45,8 @@ public:
     QString expandMacros(const QString& str) const;
     void dump() const;
 
+    static void parseSubstitutionStatement(const QString &str, int substitutionStartIdx, QString &value, int &macroInvokationEndIdx);
+
 private:
     struct MacroData
     {

@@ -109,34 +109,37 @@ void ParserTest::macros()
     bool bExceptionCaught = false;
     try {
         while (!pp.readLine().isNull());
+        QCOMPARE(macroTable.macroValue("VERY_LONG_Macro_Name_With_mucho_mucho_characters_and_some_number_too_1234458789765421200218427824996512548989654486630110059699471421"), QLatin1String("AHA"));
+        QCOMPARE(macroTable.macroValue("SEIN"), QLatin1String("ist"));
+        QCOMPARE(macroTable.macroValue("vielipsum_istwallewalle_"), QLatin1String("Icke wa dsch und er denn uurrrgh..."));
+        QVERIFY(macroTable.isMacroDefined("NoContent"));
+        QCOMPARE(macroTable.macroValue("NoContent"), QLatin1String(""));
+        QCOMPARE(macroTable.macroValue("Literal1"), QLatin1String("# who does that anyway? #"));
+        QCOMPARE(macroTable.macroValue("Literal2"), QLatin1String("thi$$ i$$ pricele$$$$"));
+        QCOMPARE(macroTable.expandMacros("$(Literal2)"), QLatin1String("thi$ i$ pricele$$"));
+        QCOMPARE(macroTable.macroValue("Literal3"), QLatin1String("schnupsi\nwupsi\ndupsi"));
+        QCOMPARE(macroTable.macroValue("Literal4"), QLatin1String("backslash at the end\\"));
+        QCOMPARE(macroTable.macroValue("Literal5"), QLatin1String("backslash at the end\\"));
+        QCOMPARE(macroTable.macroValue("Literal6"), QLatin1String("backslash at the end\\"));
+        QCOMPARE(macroTable.macroValue("SplitOverLines"), QLatin1String("one  two three"));
+        QCOMPARE(macroTable.macroValue("Incremental"), QLatin1String("one two"));
+        QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
+                 QLatin1String("_thi$ i$ pricele$$_"));
+        QCOMPARE(macroTable.expandMacros("$B"), QLatin1String("B"));
+        QCOMPARE(macroTable.expandMacros("$y"), QLatin1String("y"));
+        QCOMPARE(macroTable.expandMacros("$(BANANA)"), QLatin1String("yellow"));
+        QCOMPARE(macroTable.expandMacros("$1"), QLatin1String("x"));
+        QCOMPARE(macroTable.expandMacros("$(XXX)"), QLatin1String("xxx"));
+        QCOMPARE(macroTable.expandMacros("dollar at the end$"), QLatin1String("dollar at the end$"));
+        QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
+        QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION:not=perfectly)"), QLatin1String("is perfectly working"));
+        QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION: not = of course )"), QLatin1String("is of course working"));
+        QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION:not=(properly^))"), QLatin1String("is (properly) working"));
     } catch (Exception e) {
         qDebug() << e.message();
         bExceptionCaught = true;
     }
     QVERIFY(!bExceptionCaught);
-    QCOMPARE(macroTable.macroValue("VERY_LONG_Macro_Name_With_mucho_mucho_characters_and_some_number_too_1234458789765421200218427824996512548989654486630110059699471421"), QLatin1String("AHA"));
-    QCOMPARE(macroTable.macroValue("SEIN"), QLatin1String("ist"));
-    QCOMPARE(macroTable.macroValue("vielipsum_istwallewalle_"), QLatin1String("Icke wa dsch und er denn uurrrgh..."));
-    QVERIFY(macroTable.isMacroDefined("NoContent"));
-    QCOMPARE(macroTable.macroValue("NoContent"), QLatin1String(""));
-    QCOMPARE(macroTable.macroValue("Literal1"), QLatin1String("# who does that anyway? #"));
-    QCOMPARE(macroTable.macroValue("Literal2"), QLatin1String("thi$$ i$$ pricele$$$$"));
-    QCOMPARE(macroTable.expandMacros("$(Literal2)"), QLatin1String("thi$ i$ pricele$$"));
-    QCOMPARE(macroTable.macroValue("Literal3"), QLatin1String("schnupsi\nwupsi\ndupsi"));
-    QCOMPARE(macroTable.macroValue("Literal4"), QLatin1String("backslash at the end\\"));
-    QCOMPARE(macroTable.macroValue("Literal5"), QLatin1String("backslash at the end\\"));
-    QCOMPARE(macroTable.macroValue("Literal6"), QLatin1String("backslash at the end\\"));
-    QCOMPARE(macroTable.macroValue("SplitOverLines"), QLatin1String("one  two three"));
-    QCOMPARE(macroTable.macroValue("Incremental"), QLatin1String("one two"));
-    QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
-             QLatin1String("_thi$ i$ pricele$$_"));
-    QCOMPARE(macroTable.expandMacros("$B"), QLatin1String("B"));
-    QCOMPARE(macroTable.expandMacros("$y"), QLatin1String("y"));
-    QCOMPARE(macroTable.expandMacros("$(BANANA)"), QLatin1String("yellow"));
-    QCOMPARE(macroTable.expandMacros("$1"), QLatin1String("x"));
-    QCOMPARE(macroTable.expandMacros("$(XXX)"), QLatin1String("xxx"));
-    QCOMPARE(macroTable.expandMacros("dollar at the end$"), QLatin1String("dollar at the end$"));
-    QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
 }
 
 void ParserTest::invalidMacros_data()
@@ -422,6 +425,11 @@ void ParserTest::descriptionBlocks()
     QCOMPARE(target->m_commands.count(), 1);
     cmd = target->m_commands.first();
     QCOMPARE(cmd.m_commandLine, QLatin1String("echo ($dollar-signs$)"));
+
+    target = mkfile->target(QLatin1String("SubstitutedTargetName"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_dependents.count(), 3);
+    QCOMPARE(target->m_commands.count(), 1);
 }
 
 // inferenceRules test mode
@@ -628,6 +636,25 @@ void ParserTest::fileNameMacros()
         command = target->m_commands.takeFirst();
         QCOMPARE(command.m_commandLine, QLatin1String("echo ") + str);
     }
+
+    target = mkfile->target(QLatin1String("manyDependentsSubstitutedNames"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.size(), 4);
+    command = target->m_commands.takeFirst();
+    QEXPECT_FAIL("", "dollar escaping is broken in filename macros", Continue);
+    QCOMPARE(command.m_commandLine, QLatin1String("@echo $(**) Tilly Jilly"));
+    QVERIFY(command.m_commandLine.endsWith("Tilly Jilly")); // ### remove when the above works
+    command = target->m_commands.takeFirst();
+    QEXPECT_FAIL("", "dollar escaping is broken in filename macros", Continue);
+    QCOMPARE(command.m_commandLine, QLatin1String("$(?) Tilly Jilly"));
+    QVERIFY(command.m_commandLine.endsWith("Tilly Jilly")); // ### remove when the above works
+    command = target->m_commands.takeFirst();
+    QEXPECT_FAIL("", "substitution in filename macros not working yet", Continue);
+    QCOMPARE(command.m_commandLine, QLatin1String("$(**:ll=mm) Timmy Jimmy"));
+    command = target->m_commands.takeFirst();
+    QEXPECT_FAIL("", "substitution in filename macros not working yet", Continue);
+    QCOMPARE(command.m_commandLine, QLatin1String("$(?:ll=mm) Timmy Jimmy"));
 
     system("del generated.txt gen1.txt gen2.txt gen3.txt > NUL 2>&1");
     target = mkfile->target(QLatin1String("gen_init"));

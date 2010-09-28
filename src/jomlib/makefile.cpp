@@ -175,12 +175,14 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
         int replacementLength = 0;
         char ch = str.at(idx).toLatin1();
         if (ch == '(') {
+            int substitutionIdx = -1;
+            bool substitutionStateKnown = false;
             bool fileNameReturned;
             QString macroValue = getFileNameMacroValue(str.midRef(idx+1), replacementLength,
                                                        depIdx, dependentsForbidden, fileNameReturned);
             if (!macroValue.isNull()) {
                 int k;
-                ch = str.at(idx+2).toLatin1();
+                ch = str.at(idx + replacementLength + 1).toLatin1();
                 switch (ch)
                 {
                 case 'D':
@@ -201,9 +203,26 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
                     if (k > -1)
                         macroValue = macroValue.left(k);
                     break;
+                case ':':
+                    substitutionStateKnown = true;
+                    substitutionIdx = idx + replacementLength + 2;
+                    break;
+                case ')':
+                    // No file name modifier given.
+                    substitutionStateKnown = true;
+                    break;
                 default:
                     // TODO: yield error? ignore for now
                     continue;
+                }
+
+                // We've seen D, B, F or R and don't know yet whether we should substitute something.
+                if (!substitutionStateKnown && str.at(idx + replacementLength + 2) == QLatin1Char(':'))
+                    substitutionIdx = idx + replacementLength + 2;
+
+                if (substitutionIdx > 0) {
+                    int macroInvokationEnd;
+                    MacroTable::parseSubstitutionStatement(str, substitutionIdx, macroValue, macroInvokationEnd);
                 }
 
                 if (fileNameReturned)

@@ -85,7 +85,6 @@ private:
 
     QStack<TextFile>    m_fileStack;
     MacroTable*         m_macroTable;
-    QRegExp             m_rexMacro;
     QRegExp             m_rexPreprocessingDirective;
     QStack<bool>        m_conditionalStack;
     PPExprParser*       m_expressionParser;

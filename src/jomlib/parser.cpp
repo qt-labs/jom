@@ -198,23 +198,27 @@ bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength, int& co
 
     separatorPos = -1;
     int i = -1;
-    while (true) {
-        i = m_line.indexOf(QLatin1Char(':'), i+1);
-        if (i <= 0)
-            break;
-        if (i == 1 && firstChar.isLetter())
-            continue;
-
-        int k = i-1;
-        int l = i-2;
-        if (m_line.at(k).isLetter()) {
-            QChar ch = m_line.at(l);
-            if (ch.isSpace() || ch == '\"')
+    int parenthesisLevel = 0;
+    for (i=0; i < m_line.count(); ++i) {
+        const QChar &ch = m_line.at(i);
+        if (ch == QLatin1Char('(')) {
+            ++parenthesisLevel;
+        } else if (ch == QLatin1Char(')')) {
+            --parenthesisLevel;
+        } else if (parenthesisLevel == 0 && ch == QLatin1Char(':')) {
+            // Is it a drive letter at the beginning of the line?
+            if (i == 1 && firstChar.isLetter())
                 continue;
+            // Is it a drive letter somewhere in the line?
+            if (i > 1 && m_line.at(i-1).isLetter()) {
+                const QChar &ch2 = m_line.at(i-2);
+                if (ch2.isSpace() || ch2 == '"')
+                    continue;
+            }
+            // No further objections. We've found the separator.
+            separatorPos = i;
+            break;
         }
-
-        separatorPos = i;
-        break;
     }
 
     if (separatorPos < 0)

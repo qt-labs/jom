@@ -1,5 +1,6 @@
 all: Footb$$@ LolCatExtractorManager.tar.gz manyDependents \
-	 gen_init generated.txt gen_cleanup macros.mk $(MAKEDIR)\infrules.mk
+     manyDependentsSingleExecution manyDependentsSubstitutedNames \
+     gen_init generated.txt gen_cleanup macros.mk $(MAKEDIR)\infrules.mk
 
 Football:
 	@echo $@ $@
@@ -15,12 +16,20 @@ manyDependentsSingleExecution: Timmy Jimmy Kenny Eric Kyle Stan
 	!@echo $**
 	!@echo $?
 
+manyDependentsSubstitutedNames: Tilly Jilly
+    @echo $$(**) $(**)
+    @echo $$(?) $(?)
+    @echo $$(**:ll=mm) $(**:ll=mm)
+    @echo $$(?:ll=mm) $(?:ll=mm)
+
 Timmy:
 Jimmy:
 Kenny:
 Eric:
 Kyle:
 Stan:
+Tilly:
+Jilly:
 
 gen_init:
 	@echo x > gen1.txt
