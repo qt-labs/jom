@@ -648,11 +648,9 @@ void ParserTest::fileNameMacros()
     command = target->m_commands.takeFirst();
     QCOMPARE(command.m_commandLine, QLatin1String("echo $(?) Tilly Jilly"));
     command = target->m_commands.takeFirst();
-    QEXPECT_FAIL("", "substitution in filename macros not working yet", Continue);
-    QCOMPARE(command.m_commandLine, QLatin1String("$(**:ll=mm) Timmy Jimmy"));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**:ll=mm) Timmy Jimmy"));
     command = target->m_commands.takeFirst();
-    QEXPECT_FAIL("", "substitution in filename macros not working yet", Continue);
-    QCOMPARE(command.m_commandLine, QLatin1String("$(?:ll=mm) Timmy Jimmy"));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?:ll=mm) Timmy Jimmy"));
 
     system("del generated.txt gen1.txt gen2.txt gen3.txt > NUL 2>&1");
     target = mkfile->target(QLatin1String("gen_init"));

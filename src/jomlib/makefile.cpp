@@ -225,6 +225,7 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
                 if (substitutionIdx > 0) {
                     int macroInvokationEnd;
                     MacroTable::parseSubstitutionStatement(str, substitutionIdx, macroValue, macroInvokationEnd);
+                    replacementLength = macroInvokationEnd - idx - 2;  // because we're later adding 4
                 }
 
                 if (fileNameReturned)

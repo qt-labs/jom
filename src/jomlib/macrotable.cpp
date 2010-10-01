@@ -189,8 +189,7 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                 case '?':
                     {
                         ret.append(QLatin1String("$("));
-                        ret.append(macroName);
-                        ret.append(QLatin1String(")"));
+                        ret.append(str.mid(i + 1, macroInvokationEnd - i));
                     }
                     break;
                 default:
