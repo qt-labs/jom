@@ -366,10 +366,6 @@ void ParserTest::dotDirectives()
     QCOMPARE(mkfile->preciousTargets().at(0), QLatin1String("preciousness_one"));
     QCOMPARE(mkfile->preciousTargets().at(1), QLatin1String("preciousness_two"));
     QCOMPARE(mkfile->preciousTargets().at(2), QLatin1String("preciousness_three"));
-
-    DescriptionBlock* suffixTarget = mkfile->target(QLatin1String("suffixes"));
-    QVERIFY(suffixTarget != 0);
-    QVERIFY(target->m_suffixes != suffixTarget->m_suffixes);
 }
 
 void ParserTest::descriptionBlocks()

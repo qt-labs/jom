@@ -361,7 +361,6 @@ void Makefile::clear()
 
     m_firstTarget = 0;
     m_targets.clear();
-    m_suffixesLists.clear();
     m_preciousTargets.clear();
     m_inferenceRules.clear();
 }
@@ -470,7 +469,6 @@ void Makefile::applyInferenceRules(DescriptionBlock* target)
 
     QList<InferenceRule*> rules = target->m_inferenceRules;
     filterRulesByDependent(rules, target->targetName());
-    //sortRulesBySuffixes(rules, *target->m_suffixes.data());
 
     if (rules.isEmpty()) {
         //qDebug() << "XXX" << target->m_targetName << "no matching inference rule found.";

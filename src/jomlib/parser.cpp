@@ -247,7 +247,6 @@ DescriptionBlock* Parser::createTarget(const QString& targetName)
 {
     DescriptionBlock* target = new DescriptionBlock(m_makefile);
     target->setTargetName(targetName);
-    target->m_suffixes = m_suffixes;
     m_makefile->append(target);
     return target;
 }
@@ -333,7 +332,6 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
             canAddCommands = DescriptionBlock::ACSEnabled;
         }
         descblock->m_dependents.append(dependents);
-        descblock->m_suffixes = m_suffixes;
         descblock->expandFileNameMacrosForDependents();
 
         if (!commands.isEmpty()) {
@@ -579,7 +577,7 @@ void Parser::preselectInferenceRules()
     foreach (const QString targetName, m_activeTargets) {
         DescriptionBlock* target = m_makefile->target(targetName);
         if (target->m_commands.isEmpty())
-            preselectInferenceRules(target->targetFilePath(), target->m_inferenceRules, target->m_suffixes);
+            preselectInferenceRules(target->targetFilePath(), target->m_inferenceRules, m_suffixes);
         preselectInferenceRulesRecursive(target);
     }
 }
@@ -607,17 +605,14 @@ void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
 {
     foreach (const QString& dependentName, target->m_dependents) {
         DescriptionBlock* dependent = m_makefile->target(dependentName);
-        QStringList suffixes;
         QString dependentFileName = dependentName;
         if (dependent) {
             if (!dependent->m_commands.isEmpty()) {
                 preselectInferenceRulesRecursive(dependent);
                 continue;
             }
-            suffixes = dependent->m_suffixes;
             dependentFileName = dependent->targetFilePath();
         } else {
-            suffixes = target->m_suffixes;
             if (dependentFileName.startsWith(QLatin1Char('"')) && dependentFileName.endsWith(QLatin1Char('"'))) {
                 dependentFileName.remove(0, 1);
                 dependentFileName.chop(1);
@@ -625,7 +620,7 @@ void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
         }
 
         QList<InferenceRule*> selectedRules;
-        preselectInferenceRules(dependentFileName, selectedRules, suffixes);
+        preselectInferenceRules(dependentFileName, selectedRules, m_suffixes);
 
         if (!dependent) {
             if (selectedRules.isEmpty())

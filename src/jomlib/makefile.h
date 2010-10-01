@@ -105,7 +105,6 @@ public:
 
     QStringList m_dependents;
     QDateTime m_timeStamp;
-    QStringList m_suffixes;
     bool m_bFileExists;
     bool m_bVisitedByCycleCheck;
     QList<InferenceRule*> m_inferenceRules;
@@ -183,11 +182,6 @@ public:
         return m_targets;
     }
 
-    const QList<QStringList>& suffixes()
-    {
-        return m_suffixesLists;
-    }
-
     const QStringList& preciousTargets() const
     {
         return m_preciousTargets;
@@ -222,7 +216,6 @@ private:
 private:
     DescriptionBlock* m_firstTarget;
     QHash<QString, DescriptionBlock*> m_targets;
-    QList<QStringList> m_suffixesLists;
     QStringList m_preciousTargets;
     QList<InferenceRule> m_inferenceRules;
     MacroTable* m_macroTable;
