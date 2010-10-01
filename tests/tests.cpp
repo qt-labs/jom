@@ -889,7 +889,9 @@ void ParserTest::suffixes()
     QList<QByteArray> output = m_jomProcess->readAllStandardOutput().split('\n');
     for (QList<QByteArray>::iterator it = output.begin(); it != output.end(); ++it)
         *it = it->trimmed();
-    qDebug() << output;
+    QCOMPARE(output.takeFirst(), QByteArray("a -> x"));
+    QCOMPARE(output.takeFirst(), QByteArray("b -> x"));
+    QCOMPARE(output.takeFirst(), QByteArray("c -> x"));
 }
 
 QTEST_MAIN(ParserTest)
