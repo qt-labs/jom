@@ -73,6 +73,7 @@ private:
     Node* m_root;
     QHash<DescriptionBlock*, Node*> m_nodeContainer;    //TODO: use vector and DescBlock ids instead
     QVector<Node*> m_nodesToRemove;
+    QList<DescriptionBlock*> m_leaves;
 };
 
 } // namespace NMakeFile

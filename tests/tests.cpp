@@ -482,13 +482,13 @@ void ParserTest::inferenceRules()
 
     QVERIFY(mkfile);
     DescriptionBlock* target = mkfile->target(targetName);
-    mkfile->applyInferenceRules(target);
+    mkfile->applyInferenceRules(QList<DescriptionBlock*>() << target);
     QVERIFY(target);
     if (mode == IRTM_DeferredRule) {
         QVERIFY(target->m_commands.count() == 0);
         system(qPrintable(QLatin1String("echo.>") + fileToCreate));
         QVERIFY(QFile::exists(fileToCreate));
-        mkfile->applyInferenceRules(target);
+        mkfile->applyInferenceRules(QList<DescriptionBlock*>() << target);
         system(qPrintable(QLatin1String("del ") + fileToCreate));
         QVERIFY(!QFile::exists(fileToCreate));
     }

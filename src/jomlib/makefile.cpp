@@ -458,29 +458,30 @@ void Makefile::filterRulesByDependent(QList<InferenceRule*>& rules, const QStrin
     }    
 }
 
+void Makefile::applyInferenceRules(QList<DescriptionBlock*> targets)
+{
+    foreach (DescriptionBlock *t, targets)
+        applyInferenceRules(t);
+
+    if (!m_batchModeTargets.isEmpty()) {
+        foreach (const InferenceRule *rule, m_batchModeRules) {
+            QList<DescriptionBlock*> allBatchTargets = m_batchModeTargets.values(rule);
+            int filesPerBatch = qMax(1, qRound(float(allBatchTargets.count()) / float(g_options.maxNumberOfJobs)));
+            do {
+                QList<DescriptionBlock*> batch;
+                for (int i=0; i < filesPerBatch && !allBatchTargets.isEmpty(); ++i)
+                    batch.append( allBatchTargets.takeFirst() );
+                applyInferenceRule(batch, rule);
+            } while (!allBatchTargets.isEmpty());
+        }
+        m_batchModeRules.clear();
+        m_batchModeTargets.clear();
+    }
+}
+
 static bool infRulesPriorityGreaterThan(const InferenceRule *lhs, const InferenceRule *rhs)
 {
     return lhs->m_priority > rhs->m_priority;
-}
-
-void Makefile::applyInferenceRules(DescriptionBlock* target)
-{
-    if (target->m_inferenceRules.isEmpty())
-        return;
-
-    QList<InferenceRule*> rules = target->m_inferenceRules;
-    filterRulesByDependent(rules, target->targetName());
-    qStableSort(rules.begin(), rules.end(), infRulesPriorityGreaterThan);
-
-    if (rules.isEmpty()) {
-        //qDebug() << "XXX" << target->m_targetName << "no matching inference rule found.";
-        return;
-    }
-
-    // take the last matching inference rule
-    const InferenceRule* matchingRule = rules.last();
-    applyInferenceRule(target, matchingRule);
-    target->m_inferenceRules.clear();
 }
 
 void Makefile::addInferenceRule(const InferenceRule& rule)
@@ -560,8 +561,35 @@ void Makefile::updateTimeStamps(DescriptionBlock* target)
     }
 }
 
-void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule* rule)
+void Makefile::applyInferenceRules(DescriptionBlock* target)
 {
+    if (target->m_inferenceRules.isEmpty())
+        return;
+
+    QList<InferenceRule*> rules = target->m_inferenceRules;
+    filterRulesByDependent(rules, target->targetName());
+    qStableSort(rules.begin(), rules.end(), infRulesPriorityGreaterThan);
+
+    if (rules.isEmpty()) {
+        //qDebug() << "XXX" << target->m_targetName << "no matching inference rule found.";
+        return;
+    }
+
+    // take the last matching inference rule
+    const InferenceRule* matchingRule = rules.last();
+    applyInferenceRule(target, matchingRule);
+    target->m_inferenceRules.clear();
+}
+
+void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule* rule, bool applyingBatchMode)
+{
+    if (!applyingBatchMode && m_options->batchModeEnabled && rule->m_batchMode) {
+        m_batchModeRules.insert(rule);
+        m_batchModeTargets.insert(rule, target);
+        return;
+    }
+
+    target->m_inferenceRules.clear();
     const QString& targetName = target->targetName();
     //qDebug() << "----> applyInferenceRule for" << targetName;
 
@@ -588,6 +616,40 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
         command.m_commandLine.replace(QLatin1String("$<"), inferredDependent);
+    }
+}
+
+void Makefile::applyInferenceRule(QList<DescriptionBlock*> &batch, const InferenceRule *rule)
+{
+    QString inferredDependents;
+    DescriptionBlock *executingTarget = batch.first();
+    foreach (DescriptionBlock *target, batch) {
+        target->m_inferenceRules.clear();
+        QString inferredDependent = FileInfo(target->targetFilePath()).fileName();
+        inferredDependent.chop(rule->m_toExtension.length());
+        inferredDependent.append(rule->m_fromExtension);
+
+        if (rule->m_fromSearchPath != QLatin1String("."))
+            inferredDependent.prepend(rule->m_fromSearchPath + QLatin1Char('\\'));
+
+        if (!executingTarget->m_dependents.contains(inferredDependent))
+            executingTarget->m_dependents.append(inferredDependent);
+
+        inferredDependents.append(inferredDependent);
+        inferredDependents.append(QLatin1Char(' '));
+    }
+
+    executingTarget->m_commands = rule->m_commands;
+    QList<Command>::iterator it = executingTarget->m_commands.begin();
+    QList<Command>::iterator itEnd = executingTarget->m_commands.end();
+    for (; it != itEnd; ++it) {
+        Command& command = *it;
+        foreach (InlineFile* inlineFile, command.m_inlineFiles) {
+            inlineFile->m_content.replace(QLatin1String("$<"), inferredDependents);
+            inlineFile->m_content = m_macroTable->expandMacros(inlineFile->m_content);
+        }
+        command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
+        command.m_commandLine.replace(QLatin1String("$<"), inferredDependents);
     }
 }
 

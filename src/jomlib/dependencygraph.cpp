@@ -166,6 +166,7 @@ void DependencyGraph::clear()
     m_nodesToRemove.clear();
     qDeleteAll(m_nodeContainer);
     m_nodeContainer.clear();
+    m_leaves.clear();
 }
 
 void DependencyGraph::addEdge(Node* parent, Node* child)
@@ -208,19 +209,39 @@ void DependencyGraph::remove(Node* node)
 
 DescriptionBlock* DependencyGraph::findAvailableTarget()
 {
+    if (!m_leaves.isEmpty()) {
+        DescriptionBlock *leaf = m_leaves.takeFirst();
+        if (leaf->m_commands.isEmpty() && !leaf->m_inferenceRules.isEmpty())
+            leaf->makefile()->applyInferenceRules(QList<DescriptionBlock*>() << leaf);
+        return leaf;
+    }
+
     DescriptionBlock* result;
     do {
-        foreach (Node* node, m_nodesToRemove)
-            remove(node);
-        m_nodesToRemove.clear();
+        do {
+            foreach (Node* node, m_nodesToRemove)
+                remove(node);
+            m_nodesToRemove.clear();
 
-        if (!m_root)
-            return 0;
+            if (!m_root)
+                return 0;
 
-        result = findAvailableTarget(m_root);
-    } while (!result && !m_nodesToRemove.isEmpty());
-    if (result) m_makefile->applyInferenceRules(result);
-    return result;
+            result = findAvailableTarget(m_root);
+        } while (!result && !m_nodesToRemove.isEmpty());
+        if (result)
+            m_leaves.append(result);
+    } while (result);
+
+    QSet<Makefile*> makefileSet;
+    QMultiHash<Makefile*, DescriptionBlock*> multiHash;
+    foreach (DescriptionBlock *leaf, m_leaves) {
+        makefileSet.insert(leaf->makefile());
+        multiHash.insert(leaf->makefile(), leaf);
+    }
+    foreach (Makefile *mf, makefileSet)
+        mf->applyInferenceRules(multiHash.values(mf));
+
+    return m_leaves.isEmpty() ? 0 : m_leaves.takeFirst();
 }
 
 void DependencyGraph::displayNodeBuildInfo(Node* node)

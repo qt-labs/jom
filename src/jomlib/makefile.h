@@ -101,7 +101,7 @@ public:
     /**
      * Returns the makefile, this target belongs to.
      */
-    const Makefile* makefile() const { return m_pMakefile; }
+    Makefile* makefile() const { return m_pMakefile; }
 
     QStringList m_dependents;
     QDateTime m_timeStamp;
@@ -204,7 +204,7 @@ public:
     void dumpInferenceRules() const;
     void invalidateTimeStamps();
     void updateTimeStamps(DescriptionBlock* target);
-    void applyInferenceRules(DescriptionBlock* target);
+    void applyInferenceRules(QList<DescriptionBlock*> targets);
     void addInferenceRule(const InferenceRule& rule);
     void calculateInferenceRulePriorities(const QStringList &suffixes);
     void addPreciousTarget(const QString& targetName);
@@ -212,7 +212,9 @@ public:
 private:
     void filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName);
     QStringList findInferredDependents(InferenceRule* rule, const QStringList& dependents);
-    void applyInferenceRule(DescriptionBlock* target, const InferenceRule* rule);
+    void applyInferenceRules(DescriptionBlock* target);
+    void applyInferenceRule(DescriptionBlock* target, const InferenceRule *rule, bool applyingBatchMode = false);
+    void applyInferenceRule(QList<DescriptionBlock*> &batch, const InferenceRule *rule);
 
 private:
     DescriptionBlock* m_firstTarget;
@@ -221,6 +223,8 @@ private:
     QList<InferenceRule> m_inferenceRules;
     MacroTable* m_macroTable;
     Options* m_options;
+    QSet<const InferenceRule*> m_batchModeRules;
+    QMultiHash<const InferenceRule*, DescriptionBlock*> m_batchModeTargets;
 };
 
 } // namespace NMakeFile
