@@ -492,7 +492,7 @@ void ParserTest::inferenceRules()
         system(qPrintable(QLatin1String("del ") + fileToCreate));
         QVERIFY(!QFile::exists(fileToCreate));
     }
-    QVERIFY(target->m_commands.count() == 1);
+    QCOMPARE(target->m_commands.count(), 1);
     QCOMPARE(target->m_commands.first().m_commandLine, expectedCommandLine);
 }
 
@@ -881,6 +881,15 @@ void ParserTest::builtin_cd()
         qDebug() << "expected end:" << expectedOutput;
     }
     QVERIFY(success);
+}
+
+void ParserTest::suffixes()
+{
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk", "blackbox/suffixes"));
+    QList<QByteArray> output = m_jomProcess->readAllStandardOutput().split('\n');
+    for (QList<QByteArray>::iterator it = output.begin(); it != output.end(); ++it)
+        *it = it->trimmed();
+    qDebug() << output;
 }
 
 QTEST_MAIN(ParserTest)

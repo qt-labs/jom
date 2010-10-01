@@ -317,6 +317,8 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
 }
 
 InferenceRule::InferenceRule()
+:   m_batchMode(false),
+    m_priority(-1)
 {
 }
 
@@ -326,7 +328,8 @@ InferenceRule::InferenceRule(const InferenceRule& rhs)
     m_fromExtension(rhs.m_fromExtension),
     m_fromSearchPath(rhs.m_fromSearchPath),
     m_toExtension(rhs.m_toExtension),
-    m_toSearchPath(rhs.m_toSearchPath)
+    m_toSearchPath(rhs.m_toSearchPath),
+    m_priority(rhs.m_priority)
 {
 }
 
@@ -336,7 +339,8 @@ bool InferenceRule::operator == (const InferenceRule& rhs) const
            m_fromExtension == rhs.m_fromExtension &&
            m_fromSearchPath == rhs.m_fromSearchPath &&
            m_toExtension == rhs.m_toExtension &&
-           m_toSearchPath == rhs.m_toSearchPath;
+           m_toSearchPath == rhs.m_toSearchPath &&
+           m_priority == rhs.m_priority;
 }
 
 Makefile::Makefile()
@@ -454,12 +458,9 @@ void Makefile::filterRulesByDependent(QList<InferenceRule*>& rules, const QStrin
     }    
 }
 
-void Makefile::sortRulesBySuffixes(QList<InferenceRule*>& rules, const QStringList& suffixes)
+static bool infRulesPriorityGreaterThan(const InferenceRule *lhs, const InferenceRule *rhs)
 {
-    Q_UNUSED(rules);
-    Q_UNUSED(suffixes);
-    //TODO: assign each rule with its .SUFFIXES array index and
-    //      find the first rule with the lowest index number. Choose this one.
+    return lhs->m_priority > rhs->m_priority;
 }
 
 void Makefile::applyInferenceRules(DescriptionBlock* target)
@@ -469,6 +470,7 @@ void Makefile::applyInferenceRules(DescriptionBlock* target)
 
     QList<InferenceRule*> rules = target->m_inferenceRules;
     filterRulesByDependent(rules, target->targetName());
+    qStableSort(rules.begin(), rules.end(), infRulesPriorityGreaterThan);
 
     if (rules.isEmpty()) {
         //qDebug() << "XXX" << target->m_targetName << "no matching inference rule found.";
@@ -489,6 +491,21 @@ void Makefile::addInferenceRule(const InferenceRule& rule)
     if (it != m_inferenceRules.end())
         m_inferenceRules.erase(it);
     m_inferenceRules.append(rule);
+}
+
+void Makefile::calculateInferenceRulePriorities(const QStringList &suffixes)
+{
+    // inference rule priority is determined by .SUFFIXES
+    QList<InferenceRule>::iterator it = m_inferenceRules.begin();
+    for (; it != m_inferenceRules.end(); ++it) {
+        InferenceRule &rule = *it;
+        for (int i=0; i < suffixes.count(); ++i) {
+            if (rule.m_fromExtension == suffixes.at(i)) {
+                rule.m_priority = i;
+                break;
+            }
+        }
+    }
 }
 
 void Makefile::addPreciousTarget(const QString& targetName)

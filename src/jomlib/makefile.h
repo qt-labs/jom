@@ -139,6 +139,7 @@ public:
     QString m_fromExtension;
     QString m_toSearchPath;
     QString m_toExtension;
+    int m_priority; // priority < 0 means: not applicable
 };
 
 class Makefile
@@ -205,11 +206,11 @@ public:
     void updateTimeStamps(DescriptionBlock* target);
     void applyInferenceRules(DescriptionBlock* target);
     void addInferenceRule(const InferenceRule& rule);
+    void calculateInferenceRulePriorities(const QStringList &suffixes);
     void addPreciousTarget(const QString& targetName);
 
 private:
     void filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName);
-    void sortRulesBySuffixes(QList<InferenceRule*>& rules, const QStringList& suffixes);
     QStringList findInferredDependents(InferenceRule* rule, const QStringList& dependents);
     void applyInferenceRule(DescriptionBlock* target, const InferenceRule* rule);
 

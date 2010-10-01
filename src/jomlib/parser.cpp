@@ -26,7 +26,6 @@
 #include "exception.h"
 #include "helperfunctions.h"
 
-#include <QTextStream>
 #include <QDebug>
 
 namespace NMakeFile {
@@ -106,11 +105,14 @@ void Parser::apply(Preprocessor* pp,
         m_activeTargets.append(m_makefile->firstTarget()->targetName());
     }
 
-    // check for cycles in active targets
-    foreach (const QString& targetName, m_activeTargets)
-        checkForCycles(m_makefile->target(targetName));
+    m_makefile->calculateInferenceRulePriorities(m_suffixes);
 
-    preselectInferenceRules();
+    // check for cycles in active targets
+    foreach (const QString& targetName, m_activeTargets) {
+        DescriptionBlock *target = m_makefile->target(targetName);
+        checkForCycles(target);
+        preselectInferenceRules(target);
+    }
 }
 
 MacroTable* Parser::macroTable()
@@ -540,95 +542,50 @@ void Parser::checkForCycles(DescriptionBlock* target)
     target->m_bVisitedByCycleCheck = false;
 }
 
-QList<InferenceRule*> Parser::findRulesByTargetExtension(const QString& targetFileName)
+QList<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFilePath)
 {
-    QList<InferenceRule*> result;
-    foreach (const InferenceRule& rule, m_makefile->inferenceRules())
-        if (targetFileName.endsWith(rule.m_toExtension))
-            result.append(const_cast<InferenceRule*>(&rule));
-    return result;
-}
-
-void Parser::filterRulesByTargetName(QList<InferenceRule*>& rules, const QString& targetFileName)
-{
-    QList<InferenceRule*>::iterator it = rules.begin();
-    while (it != rules.end()) {
-        const InferenceRule* rule = *it;
-        if (!targetFileName.endsWith(rule->m_toExtension)) {
-            it = rules.erase(it);
+    QList<InferenceRule*> rules;
+    foreach (const InferenceRule &rule, m_makefile->inferenceRules()) {
+        if (rule.m_priority < 0 || !targetFilePath.endsWith(rule.m_toExtension))
             continue;
-        }
 
-        QString fileName = fileNameFromFilePath(targetFileName);
-        QString directory = targetFileName.left(targetFileName.length() - fileName.length());
+        QString fileName = fileNameFromFilePath(targetFilePath);
+        QString directory = targetFilePath.left(targetFilePath.length() - fileName.length());
         removeDirSeparatorAtEnd(directory);
-        if (directory.isEmpty()) directory = ".";
-        if (directory != rule->m_toSearchPath) {
-            it = rules.erase(it);
+        if (directory.isEmpty())
+            directory = ".";
+        if (directory != rule.m_toSearchPath)
             continue;
-        }
 
-        ++it;
+        // ### can't we work with QList<const InferenceRule*> ?
+        rules.append(const_cast<InferenceRule*>(&rule));
     }
+    return rules;
 }
 
-void Parser::preselectInferenceRules()
+void Parser::preselectInferenceRules(DescriptionBlock *target)
 {
-    foreach (const QString targetName, m_activeTargets) {
-        DescriptionBlock* target = m_makefile->target(targetName);
-        if (target->m_commands.isEmpty())
-            preselectInferenceRules(target->targetFilePath(), target->m_inferenceRules, m_suffixes);
-        preselectInferenceRulesRecursive(target);
+    if (target->m_commands.isEmpty()) {
+        QList<InferenceRule*> rules = findRulesByTargetName(target->targetFilePath());
+        if (!rules.isEmpty())
+            target->m_inferenceRules = rules;
     }
-}
-
-void Parser::preselectInferenceRules(const QString& targetFileName,
-                                     QList<InferenceRule*>& rules,
-                                     const QStringList& suffixes)
-{
-    bool inferenceRulesApplicable = false;
-    foreach (const QString& suffix, suffixes) {
-        if (targetFileName.endsWith(suffix)) {
-            inferenceRulesApplicable = true;
-            break;
-        }
-    }
-
-    if (!inferenceRulesApplicable)
-        return;
-
-    rules = findRulesByTargetExtension(targetFileName);
-    filterRulesByTargetName(rules, targetFileName);
-}
-
-void Parser::preselectInferenceRulesRecursive(DescriptionBlock* target)
-{
-    foreach (const QString& dependentName, target->m_dependents) {
-        DescriptionBlock* dependent = m_makefile->target(dependentName);
-        QString dependentFileName = dependentName;
+    foreach (const QString &dependentName, target->m_dependents) {
+        DescriptionBlock *dependent = m_makefile->target(dependentName);
         if (dependent) {
-            if (!dependent->m_commands.isEmpty()) {
-                preselectInferenceRulesRecursive(dependent);
-                continue;
-            }
-            dependentFileName = dependent->targetFilePath();
+            preselectInferenceRules(dependent);
         } else {
+            QString dependentFileName = dependentName;
             if (dependentFileName.startsWith(QLatin1Char('"')) && dependentFileName.endsWith(QLatin1Char('"'))) {
                 dependentFileName.remove(0, 1);
                 dependentFileName.chop(1);
             }
+            QList<InferenceRule*> rules = findRulesByTargetName(dependentFileName);
+            if (!rules.isEmpty()) {
+                dependent = createTarget(dependentFileName);
+                dependent->m_inferenceRules = rules;
+            }
         }
-
-        QList<InferenceRule*> selectedRules;
-        preselectInferenceRules(dependentFileName, selectedRules, m_suffixes);
-
-        if (!dependent) {
-            if (selectedRules.isEmpty())
-                continue;
-            dependent = createTarget(dependentName);
-        }
-        dependent->m_inferenceRules = selectedRules;
-        preselectInferenceRulesRecursive(dependent);
     }
 }
 

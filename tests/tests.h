@@ -72,6 +72,7 @@ private slots:
     void unicodeFiles();
     void builtin_cd_data();
     void builtin_cd();
+    void suffixes();
 
 private:
     bool openMakefile(const QString& fileName);

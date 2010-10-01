@@ -60,11 +60,8 @@ private:
     void parseCommandLine(const QString& cmdLine, QList<Command>& commands, bool inferenceRule);
     void parseInlineFiles(Command& cmd, bool inferenceRule);
     void checkForCycles(DescriptionBlock* target);
-    QList<InferenceRule*> findRulesByTargetExtension(const QString& suffixes);
-    void filterRulesByTargetName(QList<InferenceRule*>& rules, const QString& targetName);
-    void preselectInferenceRules();
-    void preselectInferenceRules(const QString& targetName, QList<InferenceRule*>& rules, const QStringList& suffixes);
-    void preselectInferenceRulesRecursive(DescriptionBlock* target);
+    QList<InferenceRule*> findRulesByTargetName(const QString& targetFilePath);
+    void preselectInferenceRules(DescriptionBlock *target);
     void error(const QString& msg);
 
 private:
