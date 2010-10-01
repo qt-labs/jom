@@ -94,6 +94,8 @@ void DescriptionBlock::expandFileNameMacrosForDependents()
     QStringList::iterator it = m_dependents.begin();
     for (; it != m_dependents.end(); ++it) {
         QString& dependent = *it;
+        dependent.replace(QLatin1String("$$@"), QLatin1String("$@"));
+        dependent.replace(QLatin1String("$$(@"), QLatin1String("$(@"));
         expandFileNameMacros(dependent, -1, true);
     }
 }

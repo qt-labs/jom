@@ -27,6 +27,7 @@ $(DIRECTORYNAME):
 
 dollarSigns:
     @echo ($$dollar-signs$$)
+    @echo $$(dollar-signs)$$
 
 TARGETNAME=XTargetName
 $(TARGETNAME:X=Substituted): dep1 dep2 dep3

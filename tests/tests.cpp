@@ -422,9 +422,11 @@ void ParserTest::descriptionBlocks()
     target = mkfile->target(QLatin1String("dollarSigns"));
     QVERIFY(target != 0);
     QCOMPARE(target->m_dependents.count(), 0);
-    QCOMPARE(target->m_commands.count(), 1);
-    cmd = target->m_commands.first();
+    QCOMPARE(target->m_commands.count(), 2);
+    cmd = target->m_commands.takeFirst();
     QCOMPARE(cmd.m_commandLine, QLatin1String("echo ($dollar-signs$)"));
+    cmd = target->m_commands.first();
+    QCOMPARE(cmd.m_commandLine, QLatin1String("echo $(dollar-signs)$"));
 
     target = mkfile->target(QLatin1String("SubstitutedTargetName"));
     QVERIFY(target != 0);
@@ -642,13 +644,9 @@ void ParserTest::fileNameMacros()
     target->expandFileNameMacros();
     QCOMPARE(target->m_commands.size(), 4);
     command = target->m_commands.takeFirst();
-    QEXPECT_FAIL("", "dollar escaping is broken in filename macros", Continue);
-    QCOMPARE(command.m_commandLine, QLatin1String("@echo $(**) Tilly Jilly"));
-    QVERIFY(command.m_commandLine.endsWith("Tilly Jilly")); // ### remove when the above works
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**) Tilly Jilly"));
     command = target->m_commands.takeFirst();
-    QEXPECT_FAIL("", "dollar escaping is broken in filename macros", Continue);
-    QCOMPARE(command.m_commandLine, QLatin1String("$(?) Tilly Jilly"));
-    QVERIFY(command.m_commandLine.endsWith("Tilly Jilly")); // ### remove when the above works
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?) Tilly Jilly"));
     command = target->m_commands.takeFirst();
     QEXPECT_FAIL("", "substitution in filename macros not working yet", Continue);
     QCOMPARE(command.m_commandLine, QLatin1String("$(**:ll=mm) Timmy Jimmy"));

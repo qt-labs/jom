@@ -117,7 +117,7 @@ MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, co
         return 0;
 
     MacroData* result = 0;
-    const QString instantiatedName = "$(" + expandedName + ")";
+    const QString instantiatedName = QLatin1String("$(") + expandedName + QLatin1String(")");
     QString newValue = value;
     if (value.contains(instantiatedName))
         newValue.replace(instantiatedName, macroValue(expandedName));
@@ -183,8 +183,10 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
 
                 switch (macroName.at(0).toLatin1())
                 {
-                case '@':
+                case '<':
                 case '*':
+                case '@':
+                case '?':
                     {
                         ret.append(QLatin1String("$("));
                         ret.append(macroName);
@@ -205,6 +207,20 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
             } else if (str.at(i) == QLatin1Char('$')) {
                 // found escaped $ char
                 ret.append(QLatin1Char('$'));
+                if (i < max_i) {
+                    char ch = str.at(i+1).toLatin1();
+                    if (ch == '(' && i + 1 < max_i)
+                        ch = str.at(i+2).toLatin1();
+                    switch (ch)
+                    {
+                    case '<':
+                    case '*':
+                    case '@':
+                    case '?':
+                        ret.append('$');
+                        break;
+                    }
+                }
             } else if (str.at(i).isLetterOrNumber()) {
                 // found single character macro invocation a la $X
                 const QString macroName = str.at(i);
