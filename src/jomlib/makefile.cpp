@@ -126,6 +126,7 @@ void DescriptionBlock::expandFileNameMacros(Command& command, int depIdx)
     expandFileNameMacros(command.m_commandLine, depIdx, false);
     foreach (InlineFile* inlineFile, command.m_inlineFiles) {
         expandFileNameMacros(inlineFile->m_filename, depIdx, false);
+        expandFileNameMacros(inlineFile->m_content, depIdx, false);
     }
 }
 

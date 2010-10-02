@@ -648,6 +648,18 @@ void ParserTest::fileNameMacros()
     command = target->m_commands.takeFirst();
     QCOMPARE(command.m_commandLine, QLatin1String("echo $(?:ll=mm) Timmy Jimmy"));
 
+    target = mkfile->target(QLatin1String("manyDependentsInlineFile"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.size(), 1);
+    command = target->m_commands.first();
+    QCOMPARE(command.m_inlineFiles.count(), 1);
+    InlineFile *inlineFile = command.m_inlineFiles.first();
+    QStringList content = inlineFile->m_content.split("\n", QString::SkipEmptyParts);
+    QCOMPARE(content.count(), 2);
+    QCOMPARE(content.at(0), QLatin1String("$@ manyDependentsInlineFile"));
+    QCOMPARE(content.at(1), QLatin1String("$** Timmy Jimmy Kenny Eric Kyle Stan"));
+
     system("del generated.txt gen1.txt gen2.txt gen3.txt > NUL 2>&1");
     target = mkfile->target(QLatin1String("gen_init"));
     QVERIFY(target);
