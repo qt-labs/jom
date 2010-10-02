@@ -4,6 +4,7 @@ all: Footb$$@ LolCatExtractorManager.tar.gz manyDependents \
      gen_init generated.txt gen_cleanup macros.mk $(MAKEDIR)\infrules.mk
 
 Football:
+	@echo $$@
 	@echo $@ $@
 
 LolCatExtractorManager.tar.gz:

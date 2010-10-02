@@ -602,7 +602,9 @@ void ParserTest::fileNameMacros()
     target = mkfile->target(QLatin1String("Football"));
     QVERIFY(target);
     target->expandFileNameMacros();
-    QVERIFY(!target->m_commands.isEmpty());
+    QCOMPARE(target->m_commands.count(), 2);
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $@"));
     command = target->m_commands.first();
     QCOMPARE(command.m_commandLine, QLatin1String("echo Football Football"));
 
