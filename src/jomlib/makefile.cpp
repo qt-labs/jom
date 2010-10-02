@@ -160,7 +160,7 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
         if (lastEscapedIdx == idx - 1)
             continue;
 
-        if (idx - 2 > 0) {
+        if (idx - 2 >= 0) {
             char chBefore = str.at(idx - 2).toLatin1();
             if (chBefore == '^') {
                 lastEscapedIdx = idx - 1;
