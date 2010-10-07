@@ -170,8 +170,10 @@ void CommandExecutor::executeCurrentCommandLine()
         writeToStandardOutput(output);
     }
 
-    if (m_pTarget->makefile()->options()->dryRun)
+    if (m_pTarget->makefile()->options()->dryRun) {
+        onProcessFinished(0, QProcess::NormalExit);
         return;
+    }
 
     if (!m_nextWorkingDir.isEmpty()) {
         m_process.setWorkingDirectory(m_nextWorkingDir);
