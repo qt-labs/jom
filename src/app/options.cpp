@@ -24,6 +24,8 @@
 #include "macrotable.h"
 #include "exception.h"
 
+#include <cstdlib>
+
 #include <QThread>
 #include <QFile>
 

@@ -36,6 +36,10 @@
 #include <windows.h>
 #include <Tlhelp32.h>
 
+#ifndef __in
+#define __in
+#endif
+
 using namespace NMakeFile;
 
 const int nVersionMajor = 0;
@@ -157,7 +161,7 @@ int main(int argc, char* argv[])
     g_options.fullAppPath = QCoreApplication::applicationFilePath();
     g_options.fullAppPath.replace(QLatin1Char('/'), QDir::separator());
     if (!g_options.stderrFile.isEmpty()) {
-        if (!_wfreopen(g_options.stderrFile.utf16(), L"w", stderr)) {
+        if (!_wfreopen(reinterpret_cast<const wchar_t*>(g_options.stderrFile.utf16()), L"w", stderr)) {
             printf("ERROR: Cannot open stderr file for writing.\n");
             return 2;
         }

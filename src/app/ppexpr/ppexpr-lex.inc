@@ -556,7 +556,9 @@ char *yytext;
 #define YY_DECL int PPExprParser::yylex()
 #define ECHO
 #define YY_SKIP_YYWRAP
+#ifndef __GNUC__
 #define fileno _fileno
+#endif
 
 static int isatty (int)
 {

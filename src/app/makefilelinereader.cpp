@@ -24,6 +24,8 @@
 #include "makefilelinereader.h"
 #include "helperfunctions.h"
 
+#include <cstdlib>
+
 namespace NMakeFile {
 
 MakefileLineReader::MakefileLineReader(const QString& filename)
