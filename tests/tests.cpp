@@ -20,56 +20,27 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
+#include "tests.h"
+
 #include <QTest>
 #include <QDir>
+#include <QScopedPointer>
 #include <QDebug>
 
-#include <ppexpr/ppexprparser.h>
+#include <ppexprparser.h>
+#include <makefilefactory.h>
 #include <preprocessor.h>
 #include <parser.h>
+#include <options.h>
 #include <exception.h>
 
 using namespace NMakeFile;
 
-class ParserTest : public QObject
-{
-    Q_OBJECT
-private slots:
-    void initTestCase();
-    void cleanupTestCase();
-
-    // preprocessor tests
-    void includeFiles();
-    void includeCycle();
-    void macros();
-    void preprocessorExpressions_data();
-    void preprocessorExpressions();
-    void preprocessorDivideByZero();
-    void preprocessorInvalidExpressions_data();
-    void preprocessorInvalidExpressions();
-    void conditionals();
-    void dotDirectives();
-
-    // parser tests
-    void descriptionBlocks();
-    void inferenceRules_data();
-    void inferenceRules();
-    void cycleInTargets();
-    void dependentsWithSpace();
-    void multipleTargets();
-    void comments();
-    void fileNameMacros();
-    void fileNameMacrosInDependents();
-    void windowsPathsInTargetName();
-
-private:
-    QString m_oldCurrentPath;
-    Preprocessor* m_preprocessor;
-};
-
 void ParserTest::initTestCase()
 {
+    m_makefileFactory = new MakefileFactory;
     m_preprocessor = 0;
+    m_jomProcess = 0;
     m_oldCurrentPath = QDir::currentPath();
     if (QFile::exists("../makefiles"))
         QDir::setCurrent("../makefiles");
@@ -79,8 +50,14 @@ void ParserTest::initTestCase()
 
 void ParserTest::cleanupTestCase()
 {
+    delete m_makefileFactory;
     delete m_preprocessor;
     QDir::setCurrent(m_oldCurrentPath);
+}
+
+bool ParserTest::openMakefile(const QString& fileName)
+{
+    return m_makefileFactory->apply(QStringList() << QLatin1String("/F") << fileName);
 }
 
 void ParserTest::includeFiles()
@@ -132,33 +109,58 @@ void ParserTest::macros()
     bool bExceptionCaught = false;
     try {
         while (!pp.readLine().isNull());
+        QCOMPARE(macroTable.macroValue("VERY_LONG_Macro_Name_With_mucho_mucho_characters_and_some_number_too_1234458789765421200218427824996512548989654486630110059699471421"), QLatin1String("AHA"));
+        QCOMPARE(macroTable.macroValue("SEIN"), QLatin1String("ist"));
+        QCOMPARE(macroTable.macroValue("vielipsum_istwallewalle_"), QLatin1String("Icke wa dsch und er denn uurrrgh..."));
+        QVERIFY(macroTable.isMacroDefined("NoContent"));
+        QCOMPARE(macroTable.macroValue("NoContent"), QLatin1String(""));
+        QCOMPARE(macroTable.macroValue("Literal1"), QLatin1String("# who does that anyway? #"));
+        QCOMPARE(macroTable.macroValue("Literal2"), QLatin1String("thi$$ i$$ pricele$$$$"));
+        QCOMPARE(macroTable.expandMacros("$(Literal2)"), QLatin1String("thi$ i$ pricele$$"));
+        QCOMPARE(macroTable.macroValue("Literal3"), QLatin1String("schnupsi\nwupsi\ndupsi"));
+        QCOMPARE(macroTable.macroValue("Literal4"), QLatin1String("backslash at the end\\"));
+        QCOMPARE(macroTable.macroValue("Literal5"), QLatin1String("backslash at the end\\"));
+        QCOMPARE(macroTable.macroValue("Literal6"), QLatin1String("backslash at the end\\"));
+        QCOMPARE(macroTable.macroValue("SplitOverLines"), QLatin1String("one  two three"));
+        QCOMPARE(macroTable.macroValue("Incremental"), QLatin1String("one two"));
+        QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
+                 QLatin1String("_thi$ i$ pricele$$_"));
+        QCOMPARE(macroTable.expandMacros("$B"), QLatin1String("B"));
+        QCOMPARE(macroTable.expandMacros("$y"), QLatin1String("y"));
+        QCOMPARE(macroTable.expandMacros("$(BANANA)"), QLatin1String("yellow"));
+        QCOMPARE(macroTable.expandMacros("$1"), QLatin1String("x"));
+        QCOMPARE(macroTable.expandMacros("$(XXX)"), QLatin1String("xxx"));
+        QCOMPARE(macroTable.expandMacros("dollar at the end$"), QLatin1String("dollar at the end$"));
+        QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
+        QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION:not=perfectly)"), QLatin1String("is perfectly working"));
+        QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION: not = of course )"), QLatin1String("is of course working"));
+        QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION:not=(properly^))"), QLatin1String("is (properly) working"));
     } catch (Exception e) {
         qDebug() << e.message();
         bExceptionCaught = true;
     }
     QVERIFY(!bExceptionCaught);
-    QCOMPARE(macroTable.macroValue("VERY_LONG_Macro_Name_With_mucho_mucho_characters_and_some_number_too_1234458789765421200218427824996512548989654486630110059699471421"), QLatin1String("AHA"));
-    QCOMPARE(macroTable.macroValue("SEIN"), QLatin1String("ist"));
-    QCOMPARE(macroTable.macroValue("vielipsum_istwallewalle_"), QLatin1String("Icke wa dsch und er denn uurrrgh..."));
-    QVERIFY(macroTable.isMacroDefined("NoContent"));
-    QCOMPARE(macroTable.macroValue("NoContent"), QLatin1String(""));
-    QCOMPARE(macroTable.macroValue("Literal1"), QLatin1String("# who does that anyway? #"));
-    QCOMPARE(macroTable.macroValue("Literal2"), QLatin1String("thi$$ i$$ pricele$$$$"));
-    QCOMPARE(macroTable.expandMacros("$(Literal2)"), QLatin1String("thi$ i$ pricele$$"));
-    QCOMPARE(macroTable.macroValue("Literal3"), QLatin1String("schnupsi\nwupsi\ndupsi"));
-    QCOMPARE(macroTable.macroValue("Literal4"), QLatin1String("backslash at the end\\"));
-    QCOMPARE(macroTable.macroValue("Literal5"), QLatin1String("backslash at the end\\"));
-    QCOMPARE(macroTable.macroValue("Literal6"), QLatin1String("backslash at the end\\"));
-    QCOMPARE(macroTable.macroValue("SplitOverLines"), QLatin1String("one  two three"));
-    QCOMPARE(macroTable.macroValue("Incremental"), QLatin1String("one two"));
-    QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
-             QLatin1String("_thi$ i$ pricele$$_"));
-    QCOMPARE(macroTable.expandMacros("$B"), QLatin1String("B"));
-    QCOMPARE(macroTable.expandMacros("$y"), QLatin1String("y"));
-    QCOMPARE(macroTable.expandMacros("$(BANANA)"), QLatin1String("yellow"));
-    QCOMPARE(macroTable.expandMacros("$1"), QLatin1String("x"));
-    QCOMPARE(macroTable.expandMacros("$(XXX)"), QLatin1String("xxx"));
-    QVERIFY(!macroTable.isMacroDefined("ThisIsNotDefined"));
+}
+
+void ParserTest::invalidMacros_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::newRow("missing paranthesis")    << QString("$(FOO) $(MISSING_PARANTHESIS");
+    QTest::newRow("empty macro name 1") << QString("empty macro name $()");
+    QTest::newRow("empty macro name 2") << QString("empty $() macro name");
+}
+
+void ParserTest::invalidMacros()
+{
+    QFETCH(QString, expression);
+    bool exceptionCaught = false;
+    MacroTable macroTable;
+    try {
+        macroTable.expandMacros(expression);
+    } catch (Exception e) {
+        exceptionCaught = true;
+    }
+    QVERIFY(exceptionCaught);
 }
 
 void ParserTest::preprocessorExpressions_data()
@@ -301,49 +303,25 @@ void ParserTest::preprocessorInvalidExpressions()
 
 void ParserTest::conditionals()
 {
-    if (!m_preprocessor)
-        m_preprocessor = new Preprocessor;
-    MacroTable* macroTable = new MacroTable;
-    m_preprocessor->setMacroTable(macroTable);
-    QVERIFY( m_preprocessor->openFile(QLatin1String("conditionals.mk")) );
+    QVERIFY( openMakefile(QLatin1String("conditionals.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
 
-    Parser parser;
-    bool exceptionThrown = false;
-    try {
-        parser.apply(m_preprocessor);
-    } catch (...) {
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
-
+    const MacroTable *macroTable = mkfile->macroTable();
+    QVERIFY(macroTable);
     QCOMPARE(macroTable->macroValue("TEST1"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST2"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST3"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST4"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST5"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST6"), QLatin1String("true"));
-
-    m_preprocessor->setMacroTable(0);
-    delete macroTable;
 }
 
 void ParserTest::dotDirectives()
 {
-    if (!m_preprocessor)
-        m_preprocessor = new Preprocessor;
-    MacroTable* macroTable = new MacroTable;
-    m_preprocessor->setMacroTable(macroTable);
-    QVERIFY( m_preprocessor->openFile(QLatin1String("dotdirectives.mk")) );
-
-    QSharedPointer<Makefile> mkfile;
-    Parser parser;
-    bool exceptionThrown = false;
-    try {
-        mkfile = parser.apply(m_preprocessor);
-    } catch (...) {
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
+    QVERIFY( openMakefile(QLatin1String("dotdirectives.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
 
     DescriptionBlock* target;
     Command cmd;
@@ -388,32 +366,14 @@ void ParserTest::dotDirectives()
     QCOMPARE(mkfile->preciousTargets().at(0), QLatin1String("preciousness_one"));
     QCOMPARE(mkfile->preciousTargets().at(1), QLatin1String("preciousness_two"));
     QCOMPARE(mkfile->preciousTargets().at(2), QLatin1String("preciousness_three"));
-
-    DescriptionBlock* suffixTarget = mkfile->target(QLatin1String("suffixes"));
-    QVERIFY(suffixTarget != 0);
-    QVERIFY(target->m_suffixes != suffixTarget->m_suffixes);
-
-    delete macroTable;
 }
 
 void ParserTest::descriptionBlocks()
 {
-    MacroTable macroTable;
-    Preprocessor pp;
-    Parser parser;
-    pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("descriptionBlocks.mk")) );
+    QVERIFY( openMakefile(QLatin1String("descriptionBlocks.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
 
-    QSharedPointer<Makefile> mkfile;
-    bool exceptionThrown = false;
-    try {
-        mkfile = parser.apply(&pp);
-    } catch (...) {
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
-
-    QVERIFY(mkfile != 0);
     DescriptionBlock* target = mkfile->target("one");
     QVERIFY(target != 0);
     QCOMPARE(target->m_dependents.count(), 3);
@@ -458,9 +418,16 @@ void ParserTest::descriptionBlocks()
     target = mkfile->target(QLatin1String("dollarSigns"));
     QVERIFY(target != 0);
     QCOMPARE(target->m_dependents.count(), 0);
-    QCOMPARE(target->m_commands.count(), 1);
-    cmd = target->m_commands.first();
+    QCOMPARE(target->m_commands.count(), 2);
+    cmd = target->m_commands.takeFirst();
     QCOMPARE(cmd.m_commandLine, QLatin1String("echo ($dollar-signs$)"));
+    cmd = target->m_commands.first();
+    QCOMPARE(cmd.m_commandLine, QLatin1String("echo $(dollar-signs)$"));
+
+    target = mkfile->target(QLatin1String("SubstitutedTargetName"));
+    QVERIFY(target != 0);
+    QCOMPARE(target->m_dependents.count(), 3);
+    QCOMPARE(target->m_commands.count(), 1);
 }
 
 // inferenceRules test mode
@@ -495,10 +462,7 @@ void ParserTest::inferenceRules_data()
 
 void ParserTest::inferenceRules()
 {
-    static MacroTable* macroTable = 0;
-    static Preprocessor* pp = 0;
-    static Parser* parser = 0;
-    static QSharedPointer<Makefile> mkfile;
+    static QScopedPointer<Makefile> mkfile;
 
     QFETCH(char, mode);
     QFETCH(QString, targetName);
@@ -507,50 +471,45 @@ void ParserTest::inferenceRules()
 
     switch (mode) {
         case IRTM_Init: // init
-            macroTable = new MacroTable;
-            pp = new Preprocessor;
-            parser = new Parser;
-            QVERIFY(macroTable);
-            QVERIFY(pp);
-            QVERIFY(parser);
-            pp->setMacroTable(macroTable);
-            QVERIFY( pp->openFile(QLatin1String("infrules.mk")) );
-            mkfile = parser->apply(pp);
+            QVERIFY( openMakefile(QLatin1String("infrules.mk")) );
+            mkfile.reset(m_makefileFactory->makefile());
             QVERIFY(mkfile);
             return;
         case IRTM_Cleanup: // cleanup
-            delete parser;
-            delete pp;
-            delete macroTable;
+            mkfile.reset();
             return;
     }
 
+    QVERIFY(mkfile);
     DescriptionBlock* target = mkfile->target(targetName);
-    mkfile->applyInferenceRules(target);
+    mkfile->applyInferenceRules(QList<DescriptionBlock*>() << target);
     QVERIFY(target);
     if (mode == IRTM_DeferredRule) {
         QVERIFY(target->m_commands.count() == 0);
         system(qPrintable(QLatin1String("echo.>") + fileToCreate));
         QVERIFY(QFile::exists(fileToCreate));
-        mkfile->applyInferenceRules(target);
+        mkfile->applyInferenceRules(QList<DescriptionBlock*>() << target);
         system(qPrintable(QLatin1String("del ") + fileToCreate));
         QVERIFY(!QFile::exists(fileToCreate));
     }
-    QVERIFY(target->m_commands.count() == 1);
+    QCOMPARE(target->m_commands.count(), 1);
     QCOMPARE(target->m_commands.first().m_commandLine, expectedCommandLine);
 }
 
 void ParserTest::cycleInTargets()
 {
-    MacroTable macroTable;
+    MacroTable *macroTable = new MacroTable;
+    Makefile mkfile;
+    mkfile.setOptions(new Options);
+    mkfile.setMacroTable(macroTable);
     Preprocessor pp;
     Parser parser;
-    pp.setMacroTable(&macroTable);
+    pp.setMacroTable(macroTable);
     QVERIFY( pp.openFile(QLatin1String("cycle_in_targets.mk")) );
 
     bool exceptionThrown = false;
     try {
-        parser.apply(&pp);
+        parser.apply(&pp, &mkfile);
     } catch (...) {
         exceptionThrown = true;
     }
@@ -559,21 +518,8 @@ void ParserTest::cycleInTargets()
 
 void ParserTest::dependentsWithSpace()
 {
-    MacroTable macroTable;
-    Preprocessor pp;
-    Parser parser;
-    pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("depswithspace.mk")) );
-
-    QSharedPointer<Makefile> mkfile;
-    bool exceptionThrown = false;
-    try {
-        mkfile = parser.apply(&pp);
-    } catch (Exception e) {
-        qDebug() << e.message();
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
+    QVERIFY( openMakefile(QLatin1String("depswithspace.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
     QVERIFY(mkfile);
     DescriptionBlock* target = mkfile->target("first");
     QVERIFY(target);
@@ -585,21 +531,8 @@ void ParserTest::dependentsWithSpace()
 
 void ParserTest::multipleTargets()
 {
-    MacroTable macroTable;
-    Preprocessor pp;
-    Parser parser;
-    pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("targetmultidef.mk")) );
-
-    QSharedPointer<Makefile> mkfile;
-    bool exceptionThrown = false;
-    try {
-        mkfile = parser.apply(&pp);
-    } catch (Exception e) {
-        qDebug() << e.message();
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
+    QVERIFY( openMakefile(QLatin1String("targetmultidef.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
     QVERIFY(mkfile);
     DescriptionBlock* target = mkfile->target("foo");
     QVERIFY(target);
@@ -620,24 +553,12 @@ void ParserTest::multipleTargets()
 
 void ParserTest::comments()
 {
-    MacroTable macroTable;
-    Preprocessor pp;
-    Parser parser;
-    pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("comments.mk")) );
-
-    QSharedPointer<Makefile> mkfile;
-    bool exceptionThrown = false;
-    try {
-        mkfile = parser.apply(&pp);
-    } catch (...) {
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
-    QCOMPARE(macroTable.macroValue("COMPILER"), QLatin1String("Ada95"));
-    QCOMPARE(macroTable.macroValue("DEF"), QLatin1String("#define"));
-
+    QVERIFY( openMakefile(QLatin1String("comments.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
     QVERIFY(mkfile);
+    QCOMPARE(mkfile->macroTable()->macroValue("COMPILER"), QLatin1String("Ada95"));
+    QCOMPARE(mkfile->macroTable()->macroValue("DEF"), QLatin1String("#define"));
+
     DescriptionBlock* target = mkfile->target("first");
     QVERIFY(target);
     QCOMPARE(target->m_dependents.count(), 2);
@@ -666,21 +587,11 @@ void ParserTest::comments()
 
 void ParserTest::fileNameMacros()
 {
-    MacroTable macroTable;
-    Preprocessor pp;
-    Parser parser;
-    macroTable.setMacroValue("MAKEDIR", QDir::currentPath());
-    pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("filenamemacros.mk")) );
-
-    QSharedPointer<Makefile> mkfile;
-    bool exceptionThrown = false;
-    try {
-        mkfile = parser.apply(&pp);
-    } catch (...) {
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
+    bool ok = m_makefileFactory->apply(QStringList() << "MAKEDIR=" + QDir::currentPath()
+                                                     << "/f" << QLatin1String("filenamemacros.mk"));
+    QVERIFY(ok);
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
 
     DescriptionBlock* target;
     Command command;
@@ -691,7 +602,9 @@ void ParserTest::fileNameMacros()
     target = mkfile->target(QLatin1String("Football"));
     QVERIFY(target);
     target->expandFileNameMacros();
-    QVERIFY(!target->m_commands.isEmpty());
+    QCOMPARE(target->m_commands.count(), 2);
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $@"));
     command = target->m_commands.first();
     QCOMPARE(command.m_commandLine, QLatin1String("echo Football Football"));
 
@@ -723,6 +636,31 @@ void ParserTest::fileNameMacros()
         command = target->m_commands.takeFirst();
         QCOMPARE(command.m_commandLine, QLatin1String("echo ") + str);
     }
+
+    target = mkfile->target(QLatin1String("manyDependentsSubstitutedNames"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.size(), 4);
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**) Tilly Jilly"));
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?) Tilly Jilly"));
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**:ll=mm) Timmy Jimmy"));
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?:ll=mm) Timmy Jimmy"));
+
+    target = mkfile->target(QLatin1String("manyDependentsInlineFile"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.size(), 1);
+    command = target->m_commands.first();
+    QCOMPARE(command.m_inlineFiles.count(), 1);
+    InlineFile *inlineFile = command.m_inlineFiles.first();
+    QStringList content = inlineFile->m_content.split("\n", QString::SkipEmptyParts);
+    QCOMPARE(content.count(), 2);
+    QCOMPARE(content.at(0), QLatin1String("$@ manyDependentsInlineFile"));
+    QCOMPARE(content.at(1), QLatin1String("$** Timmy Jimmy Kenny Eric Kyle Stan"));
 
     system("del generated.txt gen1.txt gen2.txt gen3.txt > NUL 2>&1");
     target = mkfile->target(QLatin1String("gen_init"));
@@ -774,20 +712,9 @@ void ParserTest::fileNameMacros()
 
 void ParserTest::fileNameMacrosInDependents()
 {
-    MacroTable macroTable;
-    Preprocessor pp;
-    Parser parser;
-    pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("fileNameMacrosInDependents.mk")) );
-
-    QSharedPointer<Makefile> mkfile;
-    bool exceptionThrown = false;
-    try {
-        mkfile = parser.apply(&pp);
-    } catch (...) {
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
+    QVERIFY( openMakefile(QLatin1String("fileNameMacrosInDependents.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
 
     DescriptionBlock* target;
     target = mkfile->target(QLatin1String("foo"));
@@ -865,21 +792,9 @@ void ParserTest::fileNameMacrosInDependents()
 
 void ParserTest::windowsPathsInTargetName()
 {
-    MacroTable macroTable;
-    Preprocessor pp;
-    Parser parser;
-    macroTable.setMacroValue("MAKEDIR", QDir::currentPath());
-    pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("windowspaths.mk")) );
-
-    QSharedPointer<Makefile> mkfile;
-    bool exceptionThrown = false;
-    try {
-        mkfile = parser.apply(&pp);
-    } catch (...) {
-        exceptionThrown = true;
-    }
-    QVERIFY(!exceptionThrown);
+    QVERIFY( openMakefile(QLatin1String("windowspaths.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
 
     DescriptionBlock* target = mkfile->firstTarget();
     QVERIFY(target != 0);
@@ -900,5 +815,97 @@ void ParserTest::windowsPathsInTargetName()
     QCOMPARE(target->m_commands.count(), 2);
 }
 
+bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory)
+{
+    QString jomBinary = QFileInfo("../../bin/jomd.exe").absoluteFilePath();
+    QString oldWorkingDirectory;
+    if (!workingDirectory.isNull()) {
+        oldWorkingDirectory = QDir::currentPath();
+        QDir::setCurrent(workingDirectory);
+    }
+    if (!m_jomProcess) {
+        m_jomProcess = new QProcess(this);
+        m_jomProcess->setProcessChannelMode(QProcess::MergedChannels);
+    }
+    m_jomProcess->start(jomBinary, args);
+    bool success = true;
+    if (!m_jomProcess->waitForStarted()) {
+        qDebug("could not start jom");
+        success = false;
+    }
+    if (success && !m_jomProcess->waitForFinished()) {
+        qDebug("error while executing jom");
+        success = false;
+    }
+    if (!workingDirectory.isNull())
+        QDir::setCurrent(oldWorkingDirectory);
+    return success;
+}
+
+void ParserTest::ignoreExitCodes()
+{
+    QVERIFY(runJom(QStringList() << "/f" << "blackbox\\ignoreExitCodes\\test.mk"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QByteArray output = m_jomProcess->readAllStandardOutput();
+    QVERIFY(output.contains("Failing command was properly ignored"));
+}
+
+void ParserTest::inlineFiles()
+{
+    //### remove file content comparison stuff from the makefile and do it here
+    QVERIFY(runJom(QStringList() << "/f" << "blackbox\\inlineFiles\\test.mk"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+}
+
+void ParserTest::unicodeFiles_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::newRow("UTF8") << QString("test_utf8.mk");
+    QTest::newRow("UTF16") << QString("test_utf16.mk");
+}
+
+void ParserTest::unicodeFiles()
+{
+    QFETCH(QString, fileName);
+    fileName.prepend(QLatin1String("blackbox\\unicodeFiles\\"));
+    QVERIFY(runJom(QStringList() << "/f" << fileName));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+}
+
+void ParserTest::builtin_cd_data()
+{
+    QTest::addColumn<QString>("testCase");
+    QTest::addColumn<QByteArray>("expectedOutput");
+    QTest::newRow("1") << QString("test1") << QByteArray("blackbox\\builtins\\subdir");
+    QTest::newRow("2") << QString("test2") << QByteArray("blackbox\\builtins\\subdir");
+    QTest::newRow("3") << QString("test3") << QByteArray("blackbox\\builtins");
+}
+
+void ParserTest::builtin_cd()
+{
+    QFETCH(QString, testCase);
+    QFETCH(QByteArray, expectedOutput);
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "cd.mk" << testCase, "blackbox/builtins"));
+    QByteArray output = m_jomProcess->readAllStandardOutput();
+    while (output.endsWith('\r') || output.endsWith('\n'))
+        output.chop(1);
+    bool success = output.endsWith(expectedOutput);
+    if (!success) {
+        qDebug() << "actual:      " << output;
+        qDebug() << "expected end:" << expectedOutput;
+    }
+    QVERIFY(success);
+}
+
+void ParserTest::suffixes()
+{
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk", "blackbox/suffixes"));
+    QList<QByteArray> output = m_jomProcess->readAllStandardOutput().split('\n');
+    for (QList<QByteArray>::iterator it = output.begin(); it != output.end(); ++it)
+        *it = it->trimmed();
+    QCOMPARE(output.takeFirst(), QByteArray("a -> x"));
+    QCOMPARE(output.takeFirst(), QByteArray("b -> x"));
+    QCOMPARE(output.takeFirst(), QByteArray("c -> x"));
+}
+
 QTEST_MAIN(ParserTest)
-#include "tests.moc"

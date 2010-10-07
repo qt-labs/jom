@@ -5,6 +5,8 @@ release
 Makefile
 Makefile.Debug
 Makefile.Release
+*.lib
+*.obj
 *.ncb
 *.sln
 *.suo

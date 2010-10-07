@@ -1,10 +1,19 @@
 TEMPLATE = app
-TARGET = 
-DEPENDPATH += . ../src/app
-INCLUDEPATH += ../src/app
+DEPENDPATH += . ../src/jomlib
+INCLUDEPATH += ../src/jomlib
+CONFIG += debug_and_release
 QT += testlib
 
-SOURCES += tests.cpp
+build_pass:CONFIG(debug, debug|release) {
+    LIBS += ../lib/jomlibd.lib
+}
+build_pass:CONFIG(release, debug|release) {
+    LIBS += ../lib/jomlib.lib
+}
+contains(QMAKE_CXXFLAGS_RELEASE, -MT) {
+    QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt
+}
 
-include(../src/app/app.pri)
+HEADERS += tests.h
+SOURCES += tests.cpp
 

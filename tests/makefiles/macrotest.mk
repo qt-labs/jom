@@ -30,3 +30,5 @@ $BANANA=$yellow
 
 1=x
 XXX=$1$(1)$1
+
+MACROSUBSTITUTION=is not working
