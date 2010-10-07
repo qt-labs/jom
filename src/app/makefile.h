@@ -158,6 +158,10 @@ public:
     DescriptionBlock* target(const QString& name) const
     {
         DescriptionBlock* result = m_targets.value(name, 0);
+        if(!result) {
+            QString systemName = name;
+            result = m_targets.value(systemName.replace(QLatin1Char('/'), QLatin1Char('\\')), 0);
+        }
         if (!result) {
             QString alternativeName = name;
             if (name.startsWith('"') && name.endsWith('"')) {
