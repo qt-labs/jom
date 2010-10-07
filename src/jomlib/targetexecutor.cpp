@@ -70,7 +70,7 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
     }
 
     mkfile->updateTimeStamps(descblock);
-    m_depgraph->build(mkfile, descblock);
+    m_depgraph->build(descblock);
     if (m_makefile->options()->dumpDependencyGraph) {
         if (m_makefile->options()->dumpDependencyGraphDot)
             m_depgraph->dotDump();
@@ -124,7 +124,7 @@ void TargetExecutor::startProcesses()
             nextTarget = m_pendingTargets.takeFirst();
             m_makefile->invalidateTimeStamps();
             m_makefile->updateTimeStamps(nextTarget);
-            m_depgraph->build(m_makefile, nextTarget);
+            m_depgraph->build(nextTarget);
             qApp->postEvent(this, new StartEvent);
         }
     }

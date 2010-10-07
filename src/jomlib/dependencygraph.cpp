@@ -60,9 +60,8 @@ void DependencyGraph::deleteNode(Node* node)
     delete node;
 }
 
-void DependencyGraph::build(Makefile* mkfile, DescriptionBlock* target)
+void DependencyGraph::build(DescriptionBlock* target)
 {
-    m_makefile = mkfile;
     m_root = createNode(target, 0);
     internalBuild(m_root);
     //dump();
@@ -109,7 +108,8 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 void DependencyGraph::internalBuild(Node* node)
 {
     foreach (const QString& dependentName, node->target->m_dependents) {
-        DescriptionBlock* dependent = m_makefile->target(dependentName);
+        Makefile* const makefile = node->target->makefile();
+        DescriptionBlock* dependent = makefile->target(dependentName);
         if (!dependent)
             continue;
 
@@ -161,7 +161,6 @@ void DependencyGraph::internalDotDump(Node* node, const QString& parent)
 
 void DependencyGraph::clear()
 {
-    m_makefile = 0;
     m_root = 0;
     m_nodesToRemove.clear();
     qDeleteAll(m_nodeContainer);

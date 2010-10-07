@@ -28,7 +28,6 @@
 
 namespace NMakeFile {
 
-class Makefile;
 class DescriptionBlock;
 
 class DependencyGraph
@@ -37,7 +36,7 @@ public:
     DependencyGraph();
     ~DependencyGraph();
 
-    void build(Makefile* mkfile, DescriptionBlock* target);
+    void build(DescriptionBlock* target);
     bool isEmpty() const;
     void remove(DescriptionBlock* target);
     DescriptionBlock* findAvailableTarget();
@@ -69,7 +68,6 @@ private:
     DescriptionBlock* findAvailableTarget(Node*);
 
 private:
-    Makefile* m_makefile;
     Node* m_root;
     QHash<DescriptionBlock*, Node*> m_nodeContainer;    //TODO: use vector and DescBlock ids instead
     QVector<Node*> m_nodesToRemove;
