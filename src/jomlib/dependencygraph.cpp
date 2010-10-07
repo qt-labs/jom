@@ -110,8 +110,13 @@ void DependencyGraph::internalBuild(Node* node)
     foreach (const QString& dependentName, node->target->m_dependents) {
         Makefile* const makefile = node->target->makefile();
         DescriptionBlock* dependent = makefile->target(dependentName);
-        if (!dependent)
+        if (!dependent) {
+            if (!FileInfo(dependentName).exists()) {
+                QString msg = "Error: dependent '" + dependentName + "' does not exist.";
+                qFatal(qPrintable(msg));
+            }
             continue;
+        }
 
         Node* child;
         if (m_nodeContainer.contains(dependent)) {

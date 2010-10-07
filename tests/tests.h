@@ -73,6 +73,7 @@ private slots:
     void builtin_cd_data();
     void builtin_cd();
     void suffixes();
+    void nonexistentDependent();
 
 private:
     bool openMakefile(const QString& fileName);

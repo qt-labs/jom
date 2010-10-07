@@ -908,4 +908,14 @@ void ParserTest::suffixes()
     QCOMPARE(output.takeFirst(), QByteArray("c -> x"));
 }
 
+void ParserTest::nonexistentDependent()
+{
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk", "blackbox/nonexistentdependent"));
+    QCOMPARE(m_jomProcess->exitCode(), 2);
+    QList<QByteArray> output = m_jomProcess->readAllStandardOutput().split('\n');
+    QVERIFY(!output.contains("we should not see this"));
+    QEXPECT_FAIL("", "behaviour difference to nmake", Continue);
+    QVERIFY(output.contains("yo ho ho ho"));
+}
+
 QTEST_MAIN(ParserTest)
