@@ -221,7 +221,7 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
 
                 // We've seen D, B, F or R and don't know yet whether we should substitute something.
                 if (!substitutionStateKnown && str.at(idx + replacementLength + 2) == QLatin1Char(':'))
-                    substitutionIdx = idx + replacementLength + 2;
+                    substitutionIdx = idx + replacementLength + 3;
 
                 if (substitutionIdx > 0) {
                     int macroInvokationEnd;

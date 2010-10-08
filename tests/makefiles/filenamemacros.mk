@@ -65,3 +65,6 @@ $(MAKEDIR)\infrules.mk: force
 
 force:
 
+root_dir\substitutionWithColon:
+    @echo $(@:root_dir=C:\somewhere)
+    @echo $(@R:root_dir=C:\somewhere)

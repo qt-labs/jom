@@ -162,9 +162,10 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                 bool closingParenthesisFound = false;
                 for (; macroInvokationEnd <= max_i; ++macroInvokationEnd) {
                     const QChar &ch = str.at(macroInvokationEnd);
-                    if (ch == QLatin1Char(':'))
-                        macroNameEnd = macroInvokationEnd;
-                    else if (ch == QLatin1Char(')')) {
+                    if (ch == QLatin1Char(':')) {
+                        if (macroNameEnd < 0)
+                            macroNameEnd = macroInvokationEnd;
+                    } else if (ch == QLatin1Char(')')) {
                         closingParenthesisFound = true;
                         break;
                     }

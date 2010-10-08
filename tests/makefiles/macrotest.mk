@@ -32,3 +32,4 @@ $BANANA=$yellow
 XXX=$1$(1)$1
 
 MACROSUBSTITUTION=is not working
+MKSPECDIR=root_dir\mkspecs

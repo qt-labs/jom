@@ -135,6 +135,7 @@ void ParserTest::macros()
         QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION:not=perfectly)"), QLatin1String("is perfectly working"));
         QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION: not = of course )"), QLatin1String("is of course working"));
         QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION:not=(properly^))"), QLatin1String("is (properly) working"));
+        QCOMPARE(macroTable.expandMacros("$(MKSPECDIR:root_dir=C:\\Qt\\4.7.0)"), QLatin1String("C:\\Qt\\4.7.0\\mkspecs"));
     } catch (Exception e) {
         qDebug() << e.message();
         bExceptionCaught = true;
@@ -708,6 +709,15 @@ void ParserTest::fileNameMacros()
     QCOMPARE(command.m_commandLine, QLatin1String("echo infrules.mk"));
     command = target->m_commands.at(3);
     QCOMPARE(command.m_commandLine, QLatin1String("echo ") + currentPath + QLatin1String("\\infrules"));
+
+    target = mkfile->target("root_dir\\substitutionWithColon");
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.count(), 2);
+    command = target->m_commands.at(0);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo C:\\somewhere\\substitutionWithColon"));
+    command = target->m_commands.at(1);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo C:\\somewhere\\substitutionWithColon"));
 }
 
 void ParserTest::fileNameMacrosInDependents()
