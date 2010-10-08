@@ -43,9 +43,9 @@
 
 using namespace NMakeFile;
 
-const int nVersionMajor = 0;
-const int nVersionMinor = 9;
-const int nVersionPatch = 4;
+const int nVersionMajor = 1;
+const int nVersionMinor = 0;
+const int nVersionPatch = 0;
 
 static void showLogo()
 {
