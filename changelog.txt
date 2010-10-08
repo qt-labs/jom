@@ -1,4 +1,15 @@
-This is the changelog for jom, the parallel build tool.
+This is the changelog for jom 1.0.0, the parallel make tool.
+
+Changes since jom 0.9.4
+- Inference rule batch mode implemented.
+  This improves performance for makefiles that make heavy use of the batch
+  mode, e.g. qmake generated makefiles.
+- Improved command execution. No more batch file writing.
+- Macro substitution implemented. Macro expansions like
+  $(TARGET:suffix=d) are now possible.
+- .SUFFIXES content is handled properly.
+- Fixed several bugs in file name macro expansion.
+- Output of concurrent processes is explicitely separated.
 
 Changes since jom 0.9.3
 - Opening files from volume mounted to NTFS directory fixed.
