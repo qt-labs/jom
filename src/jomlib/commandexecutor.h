@@ -37,8 +37,19 @@ public:
 
     void start(DescriptionBlock* target);
     DescriptionBlock* target() { return m_pTarget; }
+    bool isActive() const { return m_active; }
     void waitForFinished();
     void cleanupTempFiles();
+
+    enum OutputMode
+    {
+        DirectOutput,
+        BufferingOutput
+    };
+
+    void setOutputMode(OutputMode mode);
+    OutputMode outputMode() const { return m_outputMode; }
+    void flushOutput();
 
 signals:
     void finished(CommandExecutor* process, bool abortMakeProcess);
@@ -50,8 +61,10 @@ private slots:
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
 private:
+    void finishExecution(bool abortMakeProcess);
     void executeCurrentCommandLine();
     void createTempFiles();
+    void writeToChannel(const QByteArray& data, FILE *channel);
     void writeToStandardOutput(const QByteArray& data);
     void writeToStandardError(const QByteArray& data);
     bool isSimpleCommandLine(const QString &cmdLine);
@@ -73,6 +86,16 @@ private:
     int                 m_currentCommandIdx;
     QString             m_nextWorkingDir;
     bool                m_ignoreProcessErrors;
+    bool                m_active;
+
+    struct OutputChunk
+    {
+        QByteArray data;
+        FILE *channel;
+    };
+
+    OutputMode          m_outputMode;
+    QList<OutputChunk>  m_outputBuffer;
 };
 
 } // namespace NMakeFile

@@ -43,7 +43,9 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
         CommandExecutor* process = new CommandExecutor(this, environment);
         connect(process, SIGNAL(finished(CommandExecutor*, bool)), this, SLOT(onChildFinished(CommandExecutor*, bool)));
         m_availableProcesses.append(process);
+        m_processes.append(process);
     }
+    m_processes.first()->setOutputMode(CommandExecutor::DirectOutput);
 }
 
 TargetExecutor::~TargetExecutor()
@@ -141,6 +143,30 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
     Q_CHECK_PTR(executor->target());
     m_depgraph->remove(executor->target());
     m_availableProcesses.append(executor);
+
+    bool directOutputProcessIsFinished = (executor->outputMode() == CommandExecutor::DirectOutput);
+    if (directOutputProcessIsFinished) {
+        bool directOutputSet = false;
+        executor->setOutputMode(CommandExecutor::BufferingOutput);
+
+        foreach (CommandExecutor *process, m_processes) {
+            switch (process->outputMode()) {
+            case CommandExecutor::BufferingOutput:
+                if (process->isActive()) {
+                    if (!directOutputSet) {
+                        directOutputSet = true;
+                        process->setOutputMode(CommandExecutor::DirectOutput);
+                    }
+                } else {
+                    process->flushOutput();
+                }
+                break;
+            }
+        }
+
+        if (!directOutputSet)
+            m_availableProcesses.first()->setOutputMode(CommandExecutor::DirectOutput);
+    }
 
     if (abortMakeProcess) {
         m_bAborted = true;

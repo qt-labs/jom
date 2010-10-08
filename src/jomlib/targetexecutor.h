@@ -65,6 +65,7 @@ private:
     QList<DescriptionBlock*> m_pendingTargets;
     bool m_bAborted;
     QList<CommandExecutor*> m_availableProcesses;
+    QList<CommandExecutor*> m_processes;
 };
 
 } //namespace NMakeFile

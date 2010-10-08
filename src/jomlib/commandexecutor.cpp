@@ -40,7 +40,9 @@ QString CommandExecutor::m_tempPath;
 CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
 :   QObject(parent),
     m_pTarget(0),
-    m_ignoreProcessErrors(false)
+    m_ignoreProcessErrors(false),
+    m_active(false),
+    m_outputMode(BufferingOutput)
 {
     if (m_startUpTickCount == 0)
         m_startUpTickCount = GetTickCount();
@@ -69,9 +71,10 @@ CommandExecutor::~CommandExecutor()
 void CommandExecutor::start(DescriptionBlock* target)
 {
     m_pTarget = target;
+    m_active = true;
 
     if (target->m_commands.isEmpty()) {
-        emit finished(this, false);
+        finishExecution(false);
         return;
     }
 
@@ -107,7 +110,7 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
         msg += "\n";
         writeToStandardError(msg);
         bool abortMakeProcess = !m_pTarget->makefile()->options()->buildUnrelatedTargetsOnError;
-        emit finished(this, abortMakeProcess);
+        finishExecution(abortMakeProcess);
         return;
     }
 
@@ -115,7 +118,7 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
     if (m_currentCommandIdx < m_pTarget->m_commands.count()) {
         executeCurrentCommandLine();
     } else {
-        emit finished(this, false);
+        finishExecution(false);
     }
 }
 
@@ -129,9 +132,16 @@ void CommandExecutor::onProcessReadyReadStandardOutput()
     writeToStandardOutput(m_process.readAllStandardOutput());
 }
 
+void CommandExecutor::finishExecution(bool abortMakeProcess)
+{
+    m_active = false;
+    emit finished(this, abortMakeProcess);
+}
+
 void CommandExecutor::waitForFinished()
 {
     m_process.waitForFinished();
+    setOutputMode(DirectOutput);
 }
 
 void CommandExecutor::executeCurrentCommandLine()
@@ -287,16 +297,27 @@ void CommandExecutor::cleanupTempFiles()
     }
 }
 
+void CommandExecutor::writeToChannel(const QByteArray& data, FILE *channel)
+{
+    if (m_outputMode == DirectOutput) {
+        fputs(data, channel);
+        fflush(channel);
+    } else {
+        OutputChunk chunk;
+        chunk.data = data;
+        chunk.channel = channel;
+        m_outputBuffer.append(chunk);
+    }
+}
+
 void CommandExecutor::writeToStandardOutput(const QByteArray& output)
 {
-    fputs(output, stdout);
-    fflush(stdout);
+    writeToChannel(output, stdout);
 }
 
 void CommandExecutor::writeToStandardError(const QByteArray& output)
 {
-    fputs(output, stderr);
-    fflush(stderr);
+    writeToChannel(output, stderr);
 }
 
 bool CommandExecutor::isSimpleCommandLine(const QString &commandLine)
@@ -343,6 +364,28 @@ bool CommandExecutor::exec_cd(const QString &commandLine)
 
     m_nextWorkingDir = fi.absoluteFilePath();
     return true;
+}
+
+void CommandExecutor::setOutputMode(CommandExecutor::OutputMode mode)
+{
+    switch (mode) {
+    case DirectOutput:
+        flushOutput();
+        break;
+    }
+
+    m_outputMode = mode;
+}
+
+void CommandExecutor::flushOutput()
+{
+    if (!m_outputBuffer.isEmpty()) {
+        foreach (const OutputChunk &chunk, m_outputBuffer) {
+            fputs(chunk.data.data(), chunk.channel);
+            fflush(chunk.channel);
+        }
+        m_outputBuffer.clear();
+    }
 }
 
 } // namespace NMakeFile
