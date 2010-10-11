@@ -205,9 +205,17 @@ void CommandExecutor::executeCurrentCommandLine()
     if (simpleCmdLine) {
         //qDebug("+++ direct exec");
         m_ignoreProcessErrors = true;
+#if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
+        m_process.setNativeArguments(commandLine);
+        m_process.start(QString());
+#else
         m_process.start(commandLine);
+#endif
         executionSucceeded = m_process.waitForStarted();
         m_ignoreProcessErrors = false;
+#if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
+        m_process.setNativeArguments(QString());
+#endif
     }
 
     if (!executionSucceeded) {

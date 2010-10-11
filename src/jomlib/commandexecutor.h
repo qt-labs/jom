@@ -20,7 +20,7 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once 
+#pragma once
 
 #include "makefile.h"
 #include <QProcess>
