@@ -28,8 +28,6 @@
 
 namespace NMakeFile {
 
-size_t DescriptionBlock::m_nextId = 0;
-
 InlineFile::InlineFile()
 :   m_keep(false),
     m_unicode(false)
@@ -69,11 +67,9 @@ Command::~Command()
 DescriptionBlock::DescriptionBlock(Makefile* mkfile)
 :   m_bFileExists(false),
     m_canAddCommands(ACSUnknown),
-    m_bExecuting(false),
     m_bVisitedByCycleCheck(false),
     m_pMakefile(mkfile)
 {
-    m_id = m_nextId++;
 }
 
 void DescriptionBlock::setTargetName(const QString& name)

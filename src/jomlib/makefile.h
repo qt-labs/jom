@@ -73,9 +73,6 @@ class DescriptionBlock : public CommandContainer {
 public:
     DescriptionBlock(Makefile* mkfile);
 
-    size_t id() const { return m_id; }
-    bool isExecuting() const { return m_bExecuting; }
-    void setExecuting() { m_bExecuting = true; }
     void expandFileNameMacrosForDependents();
     void expandFileNameMacros();
 
@@ -119,9 +116,6 @@ private:
                                   bool dependentsForbidden, bool& returnsFileName);
 
 private:
-    static size_t m_nextId;
-    size_t m_id;
-    bool m_bExecuting;
     QString m_targetName;
     QString m_targetFilePath;
     Makefile* m_pMakefile;
