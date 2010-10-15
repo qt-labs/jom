@@ -31,7 +31,8 @@
 namespace NMakeFile {
 
 DependencyGraph::DependencyGraph()
-:   m_root(0)
+:   m_root(0),
+    m_bDirtyLeaves(true)
 {
 }
 
@@ -62,6 +63,7 @@ void DependencyGraph::deleteNode(Node* node)
 
 void DependencyGraph::build(DescriptionBlock* target)
 {
+    m_bDirtyLeaves = true;
     m_root = createNode(target, 0);
     internalBuild(m_root);
     //dump();
@@ -107,6 +109,11 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 
 void DependencyGraph::internalBuild(Node* node)
 {
+    if (node->target->m_dependents.isEmpty()) {
+        m_leaves.insert(node);
+        return;
+    }
+
     foreach (const QString& dependentName, node->target->m_dependents) {
         Makefile* const makefile = node->target->makefile();
         DescriptionBlock* dependent = makefile->target(dependentName);
@@ -167,7 +174,6 @@ void DependencyGraph::internalDotDump(Node* node, const QString& parent)
 void DependencyGraph::clear()
 {
     m_root = 0;
-    m_nodesToRemove.clear();
     qDeleteAll(m_nodeContainer);
     m_nodeContainer.clear();
     m_leaves.clear();
@@ -186,73 +192,78 @@ bool DependencyGraph::isEmpty() const
     return m_nodeContainer.isEmpty();
 }
 
-void DependencyGraph::remove(DescriptionBlock* target)
+void DependencyGraph::removeLeaf(DescriptionBlock* target)
 {
     Node* nodeToRemove = m_nodeContainer.value(target);
     if (nodeToRemove)
-        remove(nodeToRemove);
+        removeLeaf(nodeToRemove);
 }
 
-void DependencyGraph::remove(Node* node)
+void DependencyGraph::removeLeaf(Node* node)
 {
     Q_ASSERT(node);
+    Q_ASSERT(node->children.isEmpty());
+
+    m_leaves.remove(node);
 
     QList<Node*>::iterator it;
     foreach (Node* parent, node->parents) {
         it = qFind(parent->children.begin(), parent->children.end(), node);
         parent->children.erase(it);
+        if (parent->children.isEmpty()) {
+            m_bDirtyLeaves = true;
+            m_leaves.insert(parent);
+        }
     }
-
-    foreach (Node* child, node->children) {
-        it = qFind(child->parents.begin(), child->parents.end(), node);
-        child->parents.erase(it);
-    }
-
     deleteNode(node);
 }
 
 DescriptionBlock* DependencyGraph::findAvailableTarget()
 {
-    if (!m_leaves.isEmpty()) {
-        DescriptionBlock *leaf = m_leaves.takeFirst();
-        if (leaf->m_commands.isEmpty() && !leaf->m_inferenceRules.isEmpty())
-            leaf->makefile()->applyInferenceRules(QList<DescriptionBlock*>() << leaf);
-        return leaf;
+    if (m_leaves.isEmpty())
+        return 0;
+
+    // remove all leaves that are not up-to-date
+    QList<Node*> upToDateNodes;
+    while (m_bDirtyLeaves) {
+        m_bDirtyLeaves = false;
+        foreach (Node *leaf, m_leaves)
+            if (leaf->state != Node::ExecutingState && isTargetUpToDate(leaf->target))
+                upToDateNodes.append(leaf);
+        foreach (Node *leaf, upToDateNodes) {
+            displayNodeBuildInfo(leaf, true);
+            removeLeaf(leaf);
+        }
+        upToDateNodes.clear();
     }
 
-    DescriptionBlock* result;
-    do {
-        do {
-            foreach (Node* node, m_nodesToRemove)
-                remove(node);
-            m_nodesToRemove.clear();
-
-            if (!m_root)
-                return 0;
-
-            result = findAvailableTarget(m_root);
-        } while (!result && !m_nodesToRemove.isEmpty());
-        if (result)
-            m_leaves.append(result);
-    } while (result);
-
+    // apply inference rules separated by makefiles
     QSet<Makefile*> makefileSet;
     QMultiHash<Makefile*, DescriptionBlock*> multiHash;
-    foreach (DescriptionBlock *leaf, m_leaves) {
-        makefileSet.insert(leaf->makefile());
-        multiHash.insert(leaf->makefile(), leaf);
+    foreach (Node *leaf, m_leaves) {
+        makefileSet.insert(leaf->target->makefile());
+        multiHash.insert(leaf->target->makefile(), leaf->target);
     }
     foreach (Makefile *mf, makefileSet)
         mf->applyInferenceRules(multiHash.values(mf));
 
-    return m_leaves.isEmpty() ? 0 : m_leaves.takeFirst();
+    // return the first leaf that is not currently executed
+    foreach (Node *leaf, m_leaves) {
+        if (leaf->state != Node::ExecutingState) {
+            leaf->state = Node::ExecutingState;
+            displayNodeBuildInfo(leaf, false);
+            return leaf->target;
+        }
+    }
+
+    return 0;
 }
 
-void DependencyGraph::displayNodeBuildInfo(Node* node)
+void DependencyGraph::displayNodeBuildInfo(Node* node, bool isUpToDate)
 {
     if (node->target->makefile()->options()->displayBuildInfo) {
         QString msg;
-        if (node->state == Node::UpToDateState)
+        if (isUpToDate)
             msg = " ";
         else
             msg = "*";
@@ -261,36 +272,6 @@ void DependencyGraph::displayNodeBuildInfo(Node* node)
         msg += "\n";
         printf(qPrintable(msg));
     }
-}
-
-DescriptionBlock* DependencyGraph::findAvailableTarget(Node* node)
-{
-    if (node->children.isEmpty()) {
-        if (node->state == Node::ExecutingState)
-            return 0;
-
-        if (isTargetUpToDate(node->target)) {
-            if (node->state != Node::UpToDateState) {
-                node->state = Node::UpToDateState;
-                m_nodesToRemove.append(node);
-            }
-            displayNodeBuildInfo(node);
-            return 0;
-        }
-
-        node->state = Node::ExecutingState;
-        displayNodeBuildInfo(node);
-        return node->target;
-    }
-
-    foreach (Node* child, node->children) {
-        DescriptionBlock* result = findAvailableTarget(child);
-        if (result) {
-            return result;
-        }
-    }
-
-    return 0;
 }
 
 } // namespace NMakeFile

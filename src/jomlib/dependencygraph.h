@@ -22,9 +22,8 @@
  ****************************************************************************/
 #pragma once
 
-#include <QList>
-#include <QHash>
-#include <QVector>
+#include <QtCore/QHash>
+#include <QtCore/QSet>
 
 namespace NMakeFile {
 
@@ -38,7 +37,7 @@ public:
 
     void build(DescriptionBlock* target);
     bool isEmpty() const;
-    void remove(DescriptionBlock* target);
+    void removeLeaf(DescriptionBlock* target);
     DescriptionBlock* findAvailableTarget();
     void dump();
     void dotDump();
@@ -49,7 +48,7 @@ private:
 
     struct Node
     {
-        enum State {UnknownState, ExecutingState, UpToDateState};
+        enum State {UnknownState, ExecutingState};
 
         State state;
         DescriptionBlock* target;
@@ -59,19 +58,18 @@ private:
 
     Node* createNode(DescriptionBlock* target, Node* parent);
     void deleteNode(Node* node);
-    void remove(Node* node);
+    void removeLeaf(Node* node);
     void internalBuild(Node* node);
     void addEdge(Node* parent, Node* child);
     void internalDump(Node* node, QString& indent);
     void internalDotDump(Node* node, const QString& parent);
-    void displayNodeBuildInfo(Node* node);
-    DescriptionBlock* findAvailableTarget(Node*);
+    void displayNodeBuildInfo(Node* node, bool isUpToDate);
 
 private:
     Node* m_root;
     QHash<DescriptionBlock*, Node*> m_nodeContainer;    //TODO: use vector and DescBlock ids instead
-    QVector<Node*> m_nodesToRemove;
-    QList<DescriptionBlock*> m_leaves;
+    QSet<Node*> m_leaves;
+    bool m_bDirtyLeaves;
 };
 
 } // namespace NMakeFile

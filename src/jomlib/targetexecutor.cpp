@@ -108,7 +108,7 @@ void TargetExecutor::startProcesses()
         if (nextTarget->m_commands.isEmpty()) {
             // Short cut for targets without commands.
             // We're not really interested in these.
-            m_depgraph->remove(nextTarget);
+            m_depgraph->removeLeaf(nextTarget);
             continue;
         }
 
@@ -141,7 +141,7 @@ void TargetExecutor::waitForProcesses()
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakeProcess)
 {
     Q_CHECK_PTR(executor->target());
-    m_depgraph->remove(executor->target());
+    m_depgraph->removeLeaf(executor->target());
     m_availableProcesses.append(executor);
 
     bool directOutputProcessIsFinished = (executor->outputMode() == CommandExecutor::DirectOutput);
