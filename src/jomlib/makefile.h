@@ -128,6 +128,8 @@ public:
 
     bool operator == (const InferenceRule& rhs) const;
 
+    QString inferredDependent(const QString &targetName) const;
+
     bool m_batchMode;
     QString m_fromSearchPath;
     QString m_fromExtension;

@@ -340,6 +340,23 @@ bool InferenceRule::operator == (const InferenceRule& rhs) const
            m_priority == rhs.m_priority;
 }
 
+/**
+ * Returns the name of the inferred dependent if this rule was applied to the
+ * target with the given name. The target name is assumed to be a file name.
+ * This function also takes quoted file names.
+ */
+QString InferenceRule::inferredDependent(const QString &targetName) const
+{
+    QString dependent = FileInfo(targetName).fileName();
+    dependent.chop(m_toExtension.length());
+    dependent.append(m_fromExtension);
+
+    if (m_fromSearchPath != QLatin1String("."))
+        dependent.prepend(m_fromSearchPath + QLatin1Char('\\'));
+
+    return dependent;
+}
+
 Makefile::Makefile()
 :   m_macroTable(0),
     m_firstTarget(0),
@@ -587,16 +604,9 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
     }
 
     target->m_inferenceRules.clear();
-    const QString& targetName = target->targetName();
-    //qDebug() << "----> applyInferenceRule for" << targetName;
+    //qDebug() << "----> applyInferenceRule for" << target->targetName();
 
-    QString inferredDependent = FileInfo(targetName).fileName();
-    inferredDependent.chop(rule->m_toExtension.length());
-    inferredDependent.append(rule->m_fromExtension);
-
-    if (rule->m_fromSearchPath != QLatin1String("."))
-        inferredDependent.prepend(rule->m_fromSearchPath + QLatin1Char('\\'));
-
+    QString inferredDependent = rule->inferredDependent(target->targetName());
     if (!target->m_dependents.contains(inferredDependent))
         target->m_dependents.append(inferredDependent);
     target->m_commands = rule->m_commands;
@@ -622,13 +632,7 @@ void Makefile::applyInferenceRule(QList<DescriptionBlock*> &batch, const Inferen
     DescriptionBlock *executingTarget = batch.first();
     foreach (DescriptionBlock *target, batch) {
         target->m_inferenceRules.clear();
-        QString inferredDependent = FileInfo(target->targetFilePath()).fileName();
-        inferredDependent.chop(rule->m_toExtension.length());
-        inferredDependent.append(rule->m_fromExtension);
-
-        if (rule->m_fromSearchPath != QLatin1String("."))
-            inferredDependent.prepend(rule->m_fromSearchPath + QLatin1Char('\\'));
-
+        QString inferredDependent = rule->inferredDependent(target->targetFilePath());
         if (!executingTarget->m_dependents.contains(inferredDependent))
             executingTarget->m_dependents.append(inferredDependent);
 
