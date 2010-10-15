@@ -104,7 +104,32 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
         }
     }
 
-    return target->m_timeStamp >= ts;
+    bool isUpToDate = (target->m_timeStamp >= ts);
+    if (isUpToDate && !target->m_inferenceRules.isEmpty()) {
+        // The target is up-to-date but it still has unapplied inference rules.
+        // That means there could be dependents we didn't take into account yet.
+
+        QStringList savedDependents = target->m_dependents;
+        QList<InferenceRule*> savedRules = target->m_inferenceRules;
+        target->m_inferenceRules.clear();
+
+        bool inferredDependentAdded = false;
+        foreach (InferenceRule *rule, savedRules) {
+            QString inferredDependent = rule->inferredDependent(target->targetFilePath());
+            if (!target->m_dependents.contains(inferredDependent) && FileInfo(inferredDependent).exists()) {
+                inferredDependentAdded = true;
+                target->m_dependents.append(inferredDependent);
+            }
+        }
+
+        if (inferredDependentAdded)
+            isUpToDate = isTargetUpToDate(target);
+
+        target->m_dependents = savedDependents;
+        target->m_inferenceRules = savedRules;
+    }
+
+    return isUpToDate;
 }
 
 void DependencyGraph::internalBuild(Node* node)
