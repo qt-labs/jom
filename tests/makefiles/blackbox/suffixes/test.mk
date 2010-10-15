@@ -10,4 +10,6 @@
 
 all: one two.x three.x
 one: one.x
+two.x: one.x
+three.x: two.x
 
