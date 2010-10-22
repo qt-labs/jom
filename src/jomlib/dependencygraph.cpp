@@ -134,11 +134,6 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 
 void DependencyGraph::internalBuild(Node* node)
 {
-    if (node->target->m_dependents.isEmpty()) {
-        m_leaves.insert(node);
-        return;
-    }
-
     foreach (const QString& dependentName, node->target->m_dependents) {
         Makefile* const makefile = node->target->makefile();
         DescriptionBlock* dependent = makefile->target(dependentName);
@@ -159,6 +154,9 @@ void DependencyGraph::internalBuild(Node* node)
 
         internalBuild(child);
     }
+
+    if (node->children.isEmpty())
+        m_leaves.insert(node);
 }
 
 void DependencyGraph::dump()
