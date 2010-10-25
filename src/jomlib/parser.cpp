@@ -454,7 +454,7 @@ void Parser::parseInlineFiles(Command& cmd, bool inferenceRule)
             else
                 contentLine = m_preprocessor->macroTable()->expandMacros(m_line);
 
-            contentLine.append(QLatin1String("\n"));
+            contentLine.append(QLatin1String("\r\n"));
             inlineFile->m_content.append(contentLine);
             readLine();
         }
