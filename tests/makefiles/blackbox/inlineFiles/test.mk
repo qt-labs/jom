@@ -5,7 +5,7 @@
 all:
 	@echo Please specify a target.
 
-tests: test_basic test_fileRemoval test_keepFile test_multipleFiles
+tests: test_basic test_fileRemoval test_keepFile test_multipleFiles test_escaping
 
 init:
 	@if exist output rmdir /s /q output
@@ -21,8 +21,6 @@ line 1
 line 2
 line 3
 <<
-	echo N | comp test_basic_expected.txt output\test_basic.txt
-	@echo .
 
 test_fileRemoval:
 	echo @if exist << exit /b 1 >> output\post_check.cmd
@@ -48,6 +46,9 @@ two
 three
 four
 <<
-	echo N | comp test_multipleFiles_expected.txt output\test_multipleFiles.txt
-	@echo .
 
+test_escaping:
+    copy << output\test_escaping.txt
+InRoot$$$$Sections
+# This line should be there.
+<<

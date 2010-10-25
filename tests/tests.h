@@ -78,6 +78,7 @@ private slots:
 private:
     bool openMakefile(const QString& fileName);
     bool runJom(const QStringList &args, const QString &workingDirectory = QString());
+    bool fileContentsEqual(const QString& fileName1, const QString& fileName2);
 
 private:
     QString m_oldCurrentPath;

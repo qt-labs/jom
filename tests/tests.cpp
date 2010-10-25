@@ -852,6 +852,39 @@ bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory
     return success;
 }
 
+bool ParserTest::fileContentsEqual(const QString& fileName1, const QString& fileName2)
+{
+    QFile file1(fileName1);
+    if (!file1.open(QFile::ReadOnly)) {
+        qWarning("fileContentsEqual: Cannot open file1.");
+        return false;
+    }
+    QFile file2(fileName2);
+    if (!file2.open(QFile::ReadOnly)) {
+        qWarning("fileContentsEqual: Cannot open file2.");
+        return false;
+    }
+
+    QByteArray line1, line2;
+    forever {
+        line1 = file1.readLine();
+        line2 = file2.readLine();
+        if (line1 != line2) {
+            qDebug() << "file1:" << line1;
+            qDebug() << "file2:" << line2;
+            return false;
+        }
+        bool atEnd1 = file1.atEnd();
+        bool atEnd2 = file2.atEnd();
+        if (atEnd1 != atEnd2)
+            return false;
+        if (atEnd1)
+            break;
+    }
+
+    return true;
+}
+
 void ParserTest::ignoreExitCodes()
 {
     QVERIFY(runJom(QStringList() << "/f" << "blackbox\\ignoreExitCodes\\test.mk"));
@@ -862,9 +895,12 @@ void ParserTest::ignoreExitCodes()
 
 void ParserTest::inlineFiles()
 {
-    //### remove file content comparison stuff from the makefile and do it here
-    QVERIFY(runJom(QStringList() << "/f" << "blackbox\\inlineFiles\\test.mk"));
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "init" << "tests", "blackbox/inlineFiles"));
     QCOMPARE(m_jomProcess->exitCode(), 0);
+    QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_basic_expected.txt", "blackbox/inlineFiles/output/test_basic.txt"));
+    QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_multipleFiles_expected.txt", "blackbox/inlineFiles/output/test_multipleFiles.txt"));
+    QEXPECT_FAIL("", "QTCREATORBUG-2874, QTCREATORBUG-2875 must be fixed to make this work", Continue);
+    QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_escaping_expected.txt", "blackbox/inlineFiles/output/test_escaping.txt"));
 }
 
 void ParserTest::unicodeFiles_data()
