@@ -35,7 +35,7 @@ public:
 
     bool open();
     void close();
-    QString readLine();
+    QString readLine(bool bInlineFileMode);
     QString fileName() const { return m_file.fileName(); }
     uint lineNumber() const { return m_nLineNumber; }
 

@@ -436,6 +436,7 @@ void Parser::parseInlineFiles(Command& cmd, bool inferenceRule)
     }
 
     // Read the content for each inline file.
+    m_preprocessor->setInlineFileModeEnabled(true);
     foreach (InlineFile* inlineFile, cmd.m_inlineFiles) {
         readLine();
         while (!m_line.isNull()) {
@@ -454,11 +455,18 @@ void Parser::parseInlineFiles(Command& cmd, bool inferenceRule)
             else
                 contentLine = m_preprocessor->macroTable()->expandMacros(m_line);
 
-            contentLine.append(QLatin1String("\r\n"));
+            if (!contentLine.endsWith("\r\n")) {
+                if (contentLine.endsWith(QLatin1Char('\n')))
+                    contentLine.insert(contentLine.length() - 1, QLatin1Char('\r'));
+                else
+                    contentLine.append("\r\n");
+            }
+
             inlineFile->m_content.append(contentLine);
             readLine();
         }
     }
+    m_preprocessor->setInlineFileModeEnabled(false);
 }
 
 void Parser::parseInferenceRule()

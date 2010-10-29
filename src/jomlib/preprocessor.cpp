@@ -35,7 +35,8 @@ namespace NMakeFile {
 
 Preprocessor::Preprocessor()
 :   m_macroTable(0),
-    m_expressionParser(0)
+    m_expressionParser(0),
+    m_bInlineFileMode(false)
 {
     m_rexPreprocessingDirective.setPattern("^!\\s*(\\S+)(.*)");
 }
@@ -156,13 +157,14 @@ void Preprocessor::basicReadLine(QString& line)
         line = QString();
         return;
     }
-    line = m_fileStack.top().reader->readLine();
+
+    line = m_fileStack.top().reader->readLine(m_bInlineFileMode);
     while (line.isNull()) {
         delete m_fileStack.top().reader;
         m_fileStack.pop();
         if (m_fileStack.isEmpty())
             return;
-        line = m_fileStack.top().reader->readLine();
+        line = m_fileStack.top().reader->readLine(m_bInlineFileMode);
     }
 }
 

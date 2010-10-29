@@ -46,6 +46,8 @@ public:
     uint lineNumber() const;
     QString currentFileName() const;
     int evaluateExpression(const QString& expr);
+    bool isInlineFileMode() const { return m_bInlineFileMode; }
+    void setInlineFileModeEnabled(bool enabled) { m_bInlineFileMode = enabled; }
 
     static void removeInlineComments(QString& line);
 
@@ -89,6 +91,7 @@ private:
     QStack<bool>        m_conditionalStack;
     PPExprParser*       m_expressionParser;
     QStringList         m_linesPutBack;
+    bool                m_bInlineFileMode;
 };
 
 } //namespace NMakeFile

@@ -79,8 +79,11 @@ void MakefileLineReader::close()
  *    - combines multi-lines (lines with \ at the end) into a single long line
  *    - handles the ^ escape character for \ and \n at the end
  */
-QString MakefileLineReader::readLine()
+QString MakefileLineReader::readLine(bool bInlineFileMode)
 {
+    if (bInlineFileMode)
+        return QString::fromLatin1(m_file.readLine());
+
     return (this->*m_readLineImpl)();
 }
 
