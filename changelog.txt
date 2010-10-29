@@ -1,4 +1,10 @@
-This is the changelog for jom 1.0.0, the parallel make tool.
+This is the changelog for jom 1.0.1, the parallel make tool.
+
+Changes since jom 1.0.0
+- Cleaner and faster determination of targets that must be built.
+- Fix incomplete up-to-date check for inference rule targets.
+  (QTCREATORBUG-2713)
+- Don't filter comments in inline files. (QTCREATORBUG-2874)
 
 Changes since jom 0.9.4
 - Inference rule batch mode implemented.
