@@ -827,7 +827,12 @@ void ParserTest::windowsPathsInTargetName()
 
 bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory)
 {
-    QString jomBinary = QFileInfo("../../bin/jomd.exe").absoluteFilePath();
+#ifdef _DEBUG
+    const QLatin1String jomBinaryName("jomd.exe");
+#else
+    const QLatin1String jomBinaryName("jom.exe");
+#endif
+    QString jomBinary = QFileInfo("../../bin/" + jomBinaryName).absoluteFilePath();
     QString oldWorkingDirectory;
     if (!workingDirectory.isNull()) {
         oldWorkingDirectory = QDir::currentPath();

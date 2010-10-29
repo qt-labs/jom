@@ -139,8 +139,9 @@ void DependencyGraph::internalBuild(Node* node)
         DescriptionBlock* dependent = makefile->target(dependentName);
         if (!dependent) {
             if (!FileInfo(dependentName).exists()) {
-                QString msg = "Error: dependent '" + dependentName + "' does not exist.";
-                qFatal(qPrintable(msg));
+                QString msg = "Error: dependent '" + dependentName + "' does not exist.\n";
+                fputs(qPrintable(msg), stderr);
+                exit(2);
             }
             continue;
         }
