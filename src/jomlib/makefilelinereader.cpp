@@ -73,6 +73,13 @@ void MakefileLineReader::close()
     m_file.close();
 }
 
+void MakefileLineReader::growLineBuffer(size_t nGrow)
+{
+    //fprintf(stderr, "realloc %d -> %d\n", m_nLineBufferSize, m_nLineBufferSize + nGrow);
+    m_nLineBufferSize += nGrow;
+    m_lineBuffer = reinterpret_cast<char*>(realloc(m_lineBuffer, m_nLineBufferSize));
+}
+
 /**
  * This function reads lines from a makefile and
  *    - ignores all lines that start with #
@@ -104,9 +111,17 @@ QString MakefileLineReader::readLine_impl_local8bit()
                 return QString();
 
             while (m_lineBuffer[bytesRead-1] != '\n') {
-                //fprintf(stderr, "realloc %d -> %d\n", m_nLineBufferSize, m_nLineBufferSize + m_nLineBufferGrowSize);
-                m_nLineBufferSize += m_nLineBufferGrowSize;
-                m_lineBuffer = reinterpret_cast<char*>(realloc(m_lineBuffer, m_nLineBufferSize));
+                if (m_file.atEnd()) {
+                    // The file didn't end with a newline.
+                    // Code below relies on having a trailing newline.
+                    // We're imitating it by increasing the string length.
+                    if (bytesRead >= (m_nLineBufferSize - 2))
+                        growLineBuffer(1);
+                    ++bytesRead;
+                    break;
+                }
+
+                growLineBuffer(m_nLineBufferGrowSize);
                 int moreBytesRead = m_file.readLine(m_lineBuffer + bytesRead, m_nLineBufferSize - 1 - bytesRead);
                 if (moreBytesRead <= 0)
                     break;

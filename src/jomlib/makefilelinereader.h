@@ -40,7 +40,7 @@ public:
     uint lineNumber() const { return m_nLineNumber; }
 
 private:
-    void removeFirstCharacter(char* buf, char* endPtr);
+    void growLineBuffer(size_t nGrow);
 
     typedef QString (MakefileLineReader::*ReadLineImpl)();
     ReadLineImpl m_readLineImpl;
