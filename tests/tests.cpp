@@ -483,6 +483,7 @@ void ParserTest::inferenceRules()
 
     QVERIFY(mkfile);
     DescriptionBlock* target = mkfile->target(targetName);
+    QVERIFY(target);
     mkfile->applyInferenceRules(QList<DescriptionBlock*>() << target);
     QVERIFY(target);
     if (mode == IRTM_DeferredRule) {
