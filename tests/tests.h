@@ -66,6 +66,8 @@ private slots:
     void windowsPathsInTargetName();
 
     // black-box tests
+    void environmentVariables_data();
+    void environmentVariables();
     void ignoreExitCodes();
     void inlineFiles();
     void unicodeFiles_data();
@@ -85,4 +87,5 @@ private:
     NMakeFile::Preprocessor* m_preprocessor;
     NMakeFile::MakefileFactory* m_makefileFactory;
     QProcess *m_jomProcess;
+    bool m_bResetJomProcessEnvironment;
 };

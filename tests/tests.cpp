@@ -41,6 +41,7 @@ void ParserTest::initTestCase()
     m_makefileFactory = new MakefileFactory;
     m_preprocessor = 0;
     m_jomProcess = 0;
+    m_bResetJomProcessEnvironment = false;
     m_oldCurrentPath = QDir::currentPath();
     if (QFile::exists("../makefiles"))
         QDir::setCurrent("../makefiles");
@@ -843,6 +844,10 @@ bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory
         m_jomProcess = new QProcess(this);
         m_jomProcess->setProcessChannelMode(QProcess::MergedChannels);
     }
+    if (m_bResetJomProcessEnvironment) {
+        m_bResetJomProcessEnvironment = false;
+        m_jomProcess->setEnvironment(QStringList());
+    }
     m_jomProcess->start(jomBinary, args);
     bool success = true;
     if (!m_jomProcess->waitForStarted()) {
@@ -889,6 +894,72 @@ bool ParserTest::fileContentsEqual(const QString& fileName1, const QString& file
     }
 
     return true;
+}
+
+void ParserTest::environmentVariables_data()
+{
+    QTest::addColumn<QStringList>("environment");
+    QTest::addColumn<QStringList>("arguments");
+    QTest::addColumn<QString>("expectedVar1");
+    QTest::addColumn<QString>("expectedVar2");
+
+    // VAR1 is defined in the makefile, VAR2 is not.
+
+    // Test definition of VAR2 via the environment. VAR1 must not be overridden.
+    QTest::newRow("definition by environment")
+        << (QStringList() << "VAR1=env" << "VAR2=env")
+        << QStringList()
+        << "file" << "env";
+
+    // Test the /E command line switch. VAR1 and VAR2 are defined by the environment.
+    QTest::newRow("definition by environment /E")
+        << (QStringList() << "VAR1=env" << "VAR2=env")
+        << (QStringList() << "/E")
+        << "env" << "env";
+
+    // Test macro definition on the command line. Both macros should be overridden.
+    QTest::newRow("definition by command line, empty environment")
+        << QStringList()
+        << (QStringList() << "VAR1=override" << "VAR2=override")
+        << "override" << "override";
+
+    // Test macro definition on the command line. Both macros should be overridden by the command line arguments.
+    // Environment is ignored.
+    QTest::newRow("definition by command line, predefined by environment")
+        << (QStringList() << "VAR1=env" << "VAR2=env")
+        << (QStringList() << "VAR1=override" << "VAR2=override")
+        << "override" << "override";
+
+    // Test macro definition on the command line. Both macros should be overridden by the command line arguments.
+    // Environment is ignored even if the /E switch is passed.
+    QTest::newRow("definition by command line, predefined by environment, /E given")
+        << (QStringList() << "VAR1=env" << "VAR2=env")
+        << (QStringList() << "VAR1=override" << "VAR2=override")
+        << "override" << "override";
+}
+
+void ParserTest::environmentVariables()
+{
+    if (!m_jomProcess)
+        runJom(QStringList() << "/version");    // make sure the QProcess object exists
+    QVERIFY(m_jomProcess);
+
+    QFETCH(QStringList, environment);
+    QFETCH(QStringList, arguments);
+    QFETCH(QString, expectedVar1);
+    QFETCH(QString, expectedVar2);
+
+    m_bResetJomProcessEnvironment = false;
+    m_jomProcess->setEnvironment(environment);
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/nologo" << arguments, "blackbox/environmentVariables"));
+    m_bResetJomProcessEnvironment = true;   // reset environment, if this test fails
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QVERIFY(!m_jomProcess->atEnd());
+    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()), QLatin1String("VAR1 ") + expectedVar1);
+    QVERIFY(!m_jomProcess->atEnd());
+    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()), QLatin1String("VAR2 ") + expectedVar2);
+    m_jomProcess->setEnvironment(QStringList());
+    m_bResetJomProcessEnvironment = false;
 }
 
 void ParserTest::ignoreExitCodes()
