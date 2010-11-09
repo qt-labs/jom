@@ -103,9 +103,8 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
 
-    QStringList systemEnvironment = QProcess::systemEnvironment();
     MakefileFactory mf;
-    mf.setEnvironment(systemEnvironment);
+    mf.setEnvironment(QProcess::systemEnvironment());
     if (!mf.apply(qApp->arguments().mid(1))) {
         switch (mf.errorType()) {
         case MakefileFactory::CommandLineError:
@@ -145,7 +144,7 @@ int main(int argc, char* argv[])
         mkfile->dumpTargets();
     }
 
-    TargetExecutor executor(systemEnvironment);
+    TargetExecutor executor(mkfile->macroTable()->environment());
     g_pTargetExecutor = &executor;
     try {
         executor.apply(mkfile, mf.activeTargets());
