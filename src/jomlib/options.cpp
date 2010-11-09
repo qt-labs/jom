@@ -98,7 +98,7 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
                 fprintf(stderr, "Error: The macro name %s is invalid.", qPrintable(name));
                 exit(128);
             }
-            macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1), overrideEnvVarMacros);
+            macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1), true);
         } else {
             // handle target
             if (!targets.contains(arg))
