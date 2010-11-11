@@ -17,37 +17,47 @@ find_package(Qt4 REQUIRED)
 
 # some general definitions & the directories that should be included
 add_definitions(${QT_DEFINITIONS})
-include_directories(${QT_INCLUDES} src/app ${CMAKE_BINARY_DIR})
-
-# when building in Debug mode, we shouldn't link in MSVCRT by default
+include_directories(
+  ${QT_INCLUDES}
+  ${CMAKE_BINARY_DIR}
+  src/jomlib
+)
 if(MSVC)
-    if(CMAKE_BUILD_TYPE STREQUAL Debug)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT")
-    endif(CMAKE_BUILD_TYPE STREQUAL Debug)
-
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:wchar_t-")
+    add_definitions(
+      -D_CRT_SECURE_NO_DEPRECATE
+    )
+   # Qt disables the native wchar_t type, do it too to avoid linking issues
+   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Zc:wchar_t-" )
 endif(MSVC)
-
+add_definitions(
+#  -DQT_NO_CAST_FROM_ASCII
+#  -DQT_NO_CAST_TO_ASCII
+#  -DQT_USE_FAST_CONCATENATION
+#  -DQT_USE_FAST_OPERATOR_PLUS
+)
 
 # in subdirectory src:
 # 
-set(JOM_MOCS src/app/targetexecutor.h
-             src/app/commandexecutor.h)
+set(JOM_MOCS src/jomlib/targetexecutor.h
+             src/jomlib/commandexecutor.h
+             )
 
-set(JOM_SRCS src/app/fileinfo.cpp
-             src/app/helperfunctions.cpp
-             src/app/macrotable.cpp
-             src/app/makefile.cpp
-             src/app/exception.cpp
-             src/app/dependencygraph.cpp
-             src/app/options.cpp
-             src/app/parser.cpp
-             src/app/preprocessor.cpp
-             src/app/ppexpr/ppexpr_grammar.cpp
-             src/app/ppexpr/ppexprparser.cpp
-             src/app/targetexecutor.cpp
-             src/app/commandexecutor.cpp
-             src/app/makefilelinereader.cpp)
+set(JOM_SRCS src/jomlib/commandexecutor.cpp
+             src/jomlib/dependencygraph.cpp
+             src/jomlib/exception.cpp
+             src/jomlib/fileinfo.cpp
+             src/jomlib/helperfunctions.cpp
+             src/jomlib/macrotable.cpp
+             src/jomlib/makefile.cpp
+             src/jomlib/makefilefactory.cpp
+             src/jomlib/makefilelinereader.cpp
+             src/jomlib/options.cpp
+             src/jomlib/parser.cpp
+             src/jomlib/ppexpr_grammar.cpp
+             src/jomlib/ppexprparser.cpp
+             src/jomlib/preprocessor.cpp
+             src/jomlib/targetexecutor.cpp
+             )
 
 # run moc on all headers and add the moc files to the SRCS
 qt4_wrap_cpp(JOM_SRCS ${JOM_MOCS})
@@ -62,8 +72,8 @@ install(TARGETS jom  RUNTIME DESTINATION bin
 # if we want to use tests:
 if(JOM_ENABLE_TESTS)
     # in subdirectory tests:
+    qt4_wrap_cpp(JOM_SRCS tests/tests.h)
     set(TESTS_SRCS tests/tests.cpp)
-    qt4_generate_moc(tests/tests.cpp ${CMAKE_BINARY_DIR}/tests.moc)
     add_executable(jom-test tests.moc ${TESTS_SRCS} ${JOM_SRCS})
     target_link_libraries(jom-test ${QT_QTMAIN_LIBRARY} 
                                    ${QT_QTCORE_LIBRARY} 
