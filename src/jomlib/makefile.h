@@ -148,7 +148,7 @@ public:
 
     void append(DescriptionBlock* target)
     {
-        m_targets[target->targetName()] = target;
+        m_targets[target->targetName().toLower()] = target;
         if (!m_firstTarget) m_firstTarget = target;
     }
 
@@ -159,13 +159,14 @@ public:
 
     DescriptionBlock* target(const QString& name) const
     {
-        DescriptionBlock* result = m_targets.value(name, 0);
+        const QString lowerName = name.toLower();
+        DescriptionBlock* result = m_targets.value(lowerName, 0);
         if(!result) {
-            QString systemName = name;
+            QString systemName = lowerName;
             result = m_targets.value(systemName.replace(QLatin1Char('/'), QLatin1Char('\\')), 0);
         }
         if (!result) {
-            QString alternativeName = name;
+            QString alternativeName = lowerName;
             if (name.startsWith('"') && name.endsWith('"')) {
                 alternativeName.remove(0, 1);
                 alternativeName.chop(1);

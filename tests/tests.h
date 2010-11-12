@@ -66,6 +66,7 @@ private slots:
     void windowsPathsInTargetName();
 
     // black-box tests
+    void caseInsensitiveDependents();
     void environmentVariables_data();
     void environmentVariables();
     void ignoreExitCodes();

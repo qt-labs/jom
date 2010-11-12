@@ -896,6 +896,12 @@ bool ParserTest::fileContentsEqual(const QString& fileName1, const QString& file
     return true;
 }
 
+void ParserTest::caseInsensitiveDependents()
+{
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/nologo", "blackbox/caseInsensitiveDependents"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+}
+
 void ParserTest::environmentVariables_data()
 {
     QTest::addColumn<QStringList>("environment");
