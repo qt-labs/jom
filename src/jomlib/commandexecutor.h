@@ -51,7 +51,11 @@ public:
     OutputMode outputMode() const { return m_outputMode; }
     void flushOutput();
 
+public slots:
+    void setEnvironment(const QStringList &environment);
+
 signals:
+    void environmentChanged(const QStringList &environment);
     void finished(CommandExecutor* process, bool abortMakeProcess);
 
 private slots:

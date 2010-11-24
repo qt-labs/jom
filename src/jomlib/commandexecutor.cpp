@@ -144,6 +144,13 @@ void CommandExecutor::waitForFinished()
     setOutputMode(DirectOutput);
 }
 
+inline bool commandLineStartsWithCommand(const QString &str, const QString &searchString)
+{
+    return str.length() > searchString.length()
+        && str.at(searchString.length()).isSpace()
+        && str.startsWith(searchString, Qt::CaseInsensitive);
+}
+
 void CommandExecutor::executeCurrentCommandLine()
 {
     const Command& cmd = m_pTarget->m_commands.at(m_currentCommandIdx);
@@ -194,10 +201,31 @@ void CommandExecutor::executeCurrentCommandLine()
     if (simpleCmdLine)
     {
         // handle builtins
-        if (commandLine.startsWith("cd ", Qt::CaseInsensitive) || commandLine.startsWith("cd\t", Qt::CaseInsensitive)) {
+        if (commandLineStartsWithCommand(commandLine, QLatin1String("cd"))) {
             bool success = exec_cd(commandLine);
             onProcessFinished(success ? 0 : 1, QProcess::NormalExit);
             return;
+        } else if (commandLineStartsWithCommand(commandLine, QLatin1String("set"))) {
+            QString variableAssignment = commandLine;
+            variableAssignment = variableAssignment.remove(0, 4).trimmed();
+            int idx = variableAssignment.indexOf(QLatin1Char('='));
+            if (idx >= 0) {
+                QString variableName = variableAssignment;
+                variableName.truncate(idx);
+                QStringList environment = m_process.environment();
+                bool found = false;
+                for (int i=0; i < environment.count(); ++i) {
+                    if (environment.at(i).compare(variableName, Qt::CaseInsensitive) == 0) {
+                        environment.replace(i, variableAssignment);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    environment.append(variableAssignment);
+                setEnvironment(environment);
+                emit environmentChanged(environment);
+            }
         }
     }
 
@@ -394,6 +422,11 @@ void CommandExecutor::flushOutput()
         }
         m_outputBuffer.clear();
     }
+}
+
+void CommandExecutor::setEnvironment(const QStringList &environment)
+{
+    m_process.setEnvironment(environment);
 }
 
 } // namespace NMakeFile

@@ -45,6 +45,13 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
         m_availableProcesses.append(process);
         m_processes.append(process);
     }
+
+    foreach (CommandExecutor *process, m_processes)
+        foreach (CommandExecutor *otherProcess, m_processes)
+            if (process != otherProcess)
+                connect(process, SIGNAL(environmentChanged(const QStringList&)),
+                        otherProcess, SLOT(setEnvironment(const QStringList&)));
+
     m_processes.first()->setOutputMode(CommandExecutor::DirectOutput);
 }
 
