@@ -235,7 +235,7 @@ void CommandExecutor::executeCurrentCommandLine()
         m_ignoreProcessErrors = true;
 #if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
         m_process.setNativeArguments(commandLine);
-        m_process.start(QString());
+        m_process.start(QString(), QStringList());
 #else
         m_process.start(commandLine);
 #endif
