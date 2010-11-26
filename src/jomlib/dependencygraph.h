@@ -67,8 +67,9 @@ private:
 
 private:
     Node* m_root;
-    QHash<DescriptionBlock*, Node*> m_nodeContainer;    //TODO: use vector and DescBlock ids instead
-    QSet<Node*> m_leaves;
+    QHash<DescriptionBlock*, Node*> m_nodeContainer;
+    QSet<Node*> m_leavesSet;
+    QList<Node*> m_leavesList;
     bool m_bDirtyLeaves;
 };
 
