@@ -137,6 +137,8 @@ void ParserTest::macros()
         QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION: not = of course )"), QLatin1String("is of course working"));
         QCOMPARE(macroTable.expandMacros("$(MACROSUBSTITUTION:not=(properly^))"), QLatin1String("is (properly) working"));
         QCOMPARE(macroTable.expandMacros("$(MKSPECDIR:root_dir=C:\\Qt\\4.7.0)"), QLatin1String("C:\\Qt\\4.7.0\\mkspecs"));
+        QCOMPARE(macroTable.macroValue("_STARTING_WITH_AN_UNDERSCORE"), QLatin1String("underscores are beautiful"));
+        QCOMPARE(macroTable.macroValue("__STARTING_WITH_TWO_UNDERSCORES"), QLatin1String("underscores are beautiful"));
     } catch (Exception e) {
         qDebug() << e.message();
         bExceptionCaught = true;

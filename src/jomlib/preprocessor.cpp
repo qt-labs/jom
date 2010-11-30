@@ -173,7 +173,7 @@ bool Preprocessor::parseMacro(const QString& line)
     if (line.isEmpty())
         return false;
 
-    static const QRegExp rex("^([a-z]|[0-9]|\\$)([a-z]|[0-9]|\\$|=|\\()?.*", Qt::CaseInsensitive, QRegExp::RegExp2);
+    static const QRegExp rex("^(_|[a-z]|[0-9]|\\$)([a-z]|[0-9]|\\$|=|\\()?.*", Qt::CaseInsensitive, QRegExp::RegExp2);
     if (!rex.exactMatch(line))
         return false;
 

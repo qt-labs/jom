@@ -33,3 +33,6 @@ XXX=$1$(1)$1
 
 MACROSUBSTITUTION=is not working
 MKSPECDIR=root_dir\mkspecs
+
+_STARTING_WITH_AN_UNDERSCORE=underscores are beautiful
+__STARTING_WITH_TWO_UNDERSCORES=underscores are beautiful
