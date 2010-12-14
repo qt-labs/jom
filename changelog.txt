@@ -1,4 +1,17 @@
-This is the changelog for jom 1.0.1, the parallel make tool.
+This is the changelog for jom 1.0.3, the parallel make tool.
+
+Changes since jom 1.0.2
+- Support variable names with underscores. (QTCREATORBUG-3235)
+- Keep order of dependencies on build. This is important for makefiles
+  lacking complete dependencies. These might fail in parallel builds
+  otherwise.
+- Fix issues wrt environment variables. (QTCREATORBUG-3108)
+
+Changes since jom 1.0.1
+- Make target names case insensitive. (QTCREATORBUG-3037)
+- Fix reading of include files without newline at the end.
+  (QTBUG-15021)
+- Repair the cmake project file for jom.
 
 Changes since jom 1.0.0
 - Cleaner and faster determination of targets that must be built.
