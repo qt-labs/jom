@@ -151,6 +151,12 @@ inline bool commandLineStartsWithCommand(const QString &str, const QString &sear
         && str.startsWith(searchString, Qt::CaseInsensitive);
 }
 
+static bool startsWithShellBuiltin(const QString &commandLine)
+{
+    static QRegExp rex("^(copy|del|echo|for|mkdir|md|rd|rmdir)\\s", Qt::CaseInsensitive, QRegExp::RegExp2);
+    return rex.indexIn(commandLine) >= 0;
+}
+
 void CommandExecutor::executeCurrentCommandLine()
 {
     const Command& cmd = m_pTarget->m_commands.at(m_currentCommandIdx);
@@ -232,7 +238,14 @@ void CommandExecutor::executeCurrentCommandLine()
     }
 
     bool executionSucceeded = false;
-    if (simpleCmdLine) {
+    if (simpleCmdLine && !startsWithShellBuiltin(commandLine)) {
+        // ### It would be cool if we would not try to start every command directly.
+        //     If its a shell builtin not handled by "startsWithShellBuiltin" IncrediBuild
+        //     might complain about the failed process.
+        //     Instead try to locate the binary using the PATH and so on and directly
+        //     start the program using the absolute path.
+        //     We code to locate the binary must be compatible to what CreateProcess does.
+
         //qDebug("+++ direct exec");
         m_ignoreProcessErrors = true;
 #if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
