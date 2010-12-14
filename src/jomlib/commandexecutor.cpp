@@ -187,7 +187,9 @@ void CommandExecutor::executeCurrentCommandLine()
         writeToStandardOutput(output);
     }
 
-    if (m_pTarget->makefile()->options()->dryRun) {
+    static QRegExp rexShellComment("^(:|rem\\s)", Qt::CaseInsensitive, QRegExp::RegExp2);
+    if (m_pTarget->makefile()->options()->dryRun || (rexShellComment.indexIn(commandLine) >= 0))
+    {
         onProcessFinished(0, QProcess::NormalExit);
         return;
     }
