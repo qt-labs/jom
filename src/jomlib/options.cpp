@@ -35,7 +35,8 @@ namespace NMakeFile {
 GlobalOptions g_options;
 
 GlobalOptions::GlobalOptions()
-:   maxNumberOfJobs(QThread::idealThreadCount())
+:   maxNumberOfJobs(QThread::idealThreadCount()),
+    isMaxNumberOfJobsSet(false)
 {
 }
 
@@ -263,8 +264,10 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                             return false;
                         }
                         g_options.maxNumberOfJobs = arguments.takeFirst().toUInt(&ok);
+                        g_options.isMaxNumberOfJobsSet = true;
                     } else {
                         g_options.maxNumberOfJobs = arg.toUInt(&ok);
+                        g_options.isMaxNumberOfJobsSet = true;
                         arg = QString();
                     }
                     if (!ok) {

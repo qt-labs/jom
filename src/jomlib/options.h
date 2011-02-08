@@ -72,6 +72,7 @@ class GlobalOptions
 public:
     GlobalOptions();
     int maxNumberOfJobs;
+    bool isMaxNumberOfJobsSet;
 };
 
 extern GlobalOptions g_options;
