@@ -70,7 +70,7 @@ void ParserTest::includeFiles()
     bool exceptionCaught = false;
     try {
         while (!pp.readLine().isNull());
-    } catch (Exception e) {
+    } catch (Exception &e) {
         qDebug() << e.message();
         exceptionCaught = true;
     }
@@ -94,7 +94,7 @@ void ParserTest::includeCycle()
     bool bExceptionCaught = false;
     try {
         while (!pp.readLine().isNull());
-    } catch (Exception e) {
+    } catch (Exception &e) {
         qDebug() << e.message();
         bExceptionCaught = true;
     }
@@ -139,7 +139,7 @@ void ParserTest::macros()
         QCOMPARE(macroTable.expandMacros("$(MKSPECDIR:root_dir=C:\\Qt\\4.7.0)"), QLatin1String("C:\\Qt\\4.7.0\\mkspecs"));
         QCOMPARE(macroTable.macroValue("_STARTING_WITH_AN_UNDERSCORE"), QLatin1String("underscores are beautiful"));
         QCOMPARE(macroTable.macroValue("__STARTING_WITH_TWO_UNDERSCORES"), QLatin1String("underscores are beautiful"));
-    } catch (Exception e) {
+    } catch (Exception &e) {
         qDebug() << e.message();
         bExceptionCaught = true;
     }
@@ -161,7 +161,8 @@ void ParserTest::invalidMacros()
     MacroTable macroTable;
     try {
         macroTable.expandMacros(expression);
-    } catch (Exception e) {
+    } catch (Exception &e) {
+        Q_UNUSED(e);
         exceptionCaught = true;
     }
     QVERIFY(exceptionCaught);
@@ -266,7 +267,7 @@ void ParserTest::preprocessorDivideByZero()
     bool exceptionCaught = false;
     try {
         m_preprocessor->evaluateExpression("1 / (156-156)");
-    } catch (NMakeFile::Exception e) {
+    } catch (NMakeFile::Exception &e) {
         exceptionCaught = true;
         error = e;
     }
@@ -296,7 +297,7 @@ void ParserTest::preprocessorInvalidExpressions()
     bool exceptionCaught = false;
     try {
         m_preprocessor->evaluateExpression(QString::fromLocal8Bit(expression));
-    } catch (NMakeFile::Exception e) {
+    } catch (NMakeFile::Exception &e) {
         error = e;
         exceptionCaught = true;
     }
