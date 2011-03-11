@@ -59,6 +59,7 @@ public:
     bool displayBuildInfo;
     bool debugMode;
     bool showVersionAndExit;
+    bool keepTemporaryFiles;
     QString fullAppPath;
     QString stderrFile;
 

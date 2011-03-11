@@ -60,7 +60,8 @@ static void showUsage()
            "This tool is meant to be an nmake clone.\n"
            "Please see the Microsoft nmake documentation for more options.\n"
            "/DUMPGRAPH show the generated dependency graph\n"
-           "/DUMPGRAPHDOT dump dependency graph in dot format\n");
+           "/DUMPGRAPHDOT dump dependency graph in dot format\n"
+           "/KEEPTEMPFILES keeps all temporary files\n");
 }
 
 static TargetExecutor* g_pTargetExecutor = 0;

@@ -27,7 +27,6 @@
 #include "exception.h"
 
 #include <QDebug>
-#include <QTemporaryFile>
 #include <QTextStream>
 #include <QCoreApplication>
 

@@ -29,7 +29,6 @@
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
 #include <QtCore/QRegExp>
-#include <QtCore/QTemporaryFile>
 #include <windows.h>
 
 namespace NMakeFile {
@@ -313,7 +312,7 @@ void CommandExecutor::createTempFiles()
                 fileName = inlineFile->m_filename;
 
             TempFile tempFile;
-            tempFile.keep = inlineFile->m_keep;
+            tempFile.keep = inlineFile->m_keep || m_pTarget->makefile()->options()->keepTemporaryFiles;
             tempFile.file = new QFile(fileName);
             if (!tempFile.file->open(QFile::WriteOnly)) {
                 delete tempFile.file;
