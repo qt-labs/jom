@@ -81,7 +81,7 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 {
     bool targetIsExistingFile = target->m_bFileExists;
     if (!targetIsExistingFile) {
-        FileInfo fi(target->targetName());
+        FastFileInfo fi(target->targetName());
         targetIsExistingFile = fi.exists();  // could've been created in the mean time
         if (targetIsExistingFile)
             target->m_timeStamp = fi.lastModified();
@@ -91,20 +91,20 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
         return false;
 
     // find latest timestamp of all dependents
-    QDateTime ts(QDate(1900, 1, 1));
+    FileTime ts;
     foreach (const QString& dependentName, target->m_dependents) {
-        FileInfo fi(dependentName);
+        FastFileInfo fi(dependentName);
         if (fi.exists()) {
-            QDateTime ts2 = fi.lastModified();
+            FileTime ts2 = fi.lastModified();
             if (ts < ts2)
                 ts = ts2;
         } else {
-            ts = QDateTime::currentDateTime();
+            ts = FileTime::currentTime();
             break;
         }
     }
 
-    bool isUpToDate = (target->m_timeStamp >= ts);
+    bool isUpToDate = (ts <= target->m_timeStamp);
     if (isUpToDate && !target->m_inferenceRules.isEmpty()) {
         // The target is up-to-date but it still has unapplied inference rules.
         // That means there could be dependents we didn't take into account yet.
@@ -116,7 +116,7 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
         bool inferredDependentAdded = false;
         foreach (InferenceRule *rule, savedRules) {
             QString inferredDependent = rule->inferredDependent(target->targetFilePath());
-            if (!target->m_dependents.contains(inferredDependent) && FileInfo(inferredDependent).exists()) {
+            if (!target->m_dependents.contains(inferredDependent) && FastFileInfo(inferredDependent).exists()) {
                 inferredDependentAdded = true;
                 target->m_dependents.append(inferredDependent);
             }
@@ -138,7 +138,7 @@ void DependencyGraph::internalBuild(Node* node)
         Makefile* const makefile = node->target->makefile();
         DescriptionBlock* dependent = makefile->target(dependentName);
         if (!dependent) {
-            if (!FileInfo(dependentName).exists()) {
+            if (!FastFileInfo(dependentName).exists()) {
                 QString msg = "Error: dependent '" + dependentName + "' does not exist.\n";
                 fputs(qPrintable(msg), stderr);
                 exit(2);
@@ -296,7 +296,7 @@ void DependencyGraph::displayNodeBuildInfo(Node* node, bool isUpToDate)
             msg = " ";
         else
             msg = "*";
-        msg += node->target->m_timeStamp.toString("yy/MM/dd hh:mm:ss") + " " +
+        msg += node->target->m_timeStamp.toString() + " " +
                node->target->targetName();
         msg += "\n";
         printf(qPrintable(msg));

@@ -22,9 +22,9 @@
  ****************************************************************************/
 #pragma once
 
+#include "fileinfo.h"
 #include "macrotable.h"
 #include <QStringList>
-#include <QDateTime>
 #include <QHash>
 
 namespace NMakeFile {
@@ -101,7 +101,7 @@ public:
     Makefile* makefile() const { return m_pMakefile; }
 
     QStringList m_dependents;
-    QDateTime m_timeStamp;
+    FileTime m_timeStamp;
     bool m_bFileExists;
     bool m_bVisitedByCycleCheck;
     QList<InferenceRule*> m_inferenceRules;

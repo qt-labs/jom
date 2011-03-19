@@ -23,6 +23,9 @@
 
 #include "fileinfo.h"
 
+#include <QtCore/QDebug>
+#include <windows.h>
+
 namespace NMakeFile {
 
 FileInfo::FileInfo(const QString& fileName)
@@ -35,6 +38,48 @@ FileInfo::FileInfo(const QString& fileName)
     } else {
         QFileInfo::setFile(fileName);
     }
+}
+
+template<bool> struct CompileTimeAssert;
+template<> struct CompileTimeAssert<true> {};
+static CompileTimeAssert<
+    sizeof(FastFileInfo::InternalType) == sizeof(WIN32_FILE_ATTRIBUTE_DATA)
+        > internal_type_has_wrong_size;
+
+inline WIN32_FILE_ATTRIBUTE_DATA* z(FastFileInfo::InternalType &internalData)
+{
+    return reinterpret_cast<WIN32_FILE_ATTRIBUTE_DATA*>(&internalData);
+}
+
+inline const WIN32_FILE_ATTRIBUTE_DATA* z(const FastFileInfo::InternalType &internalData)
+{
+    return reinterpret_cast<const WIN32_FILE_ATTRIBUTE_DATA*>(&internalData);
+}
+
+FastFileInfo::FastFileInfo(const QString &fileName)
+{
+    QString correctedFileName = fileName;
+    if (correctedFileName.startsWith(QLatin1Char('\"'))) {
+        correctedFileName.remove(0, 1);
+        correctedFileName.chop(1);
+    }
+
+    if (!GetFileAttributesEx(reinterpret_cast<const TCHAR*>(correctedFileName.utf16()),
+                             GetFileExInfoStandard, &m_attributes))
+    {
+        z(m_attributes)->dwFileAttributes = INVALID_FILE_ATTRIBUTES;
+    }
+}
+
+bool FastFileInfo::exists() const
+{
+    return z(m_attributes)->dwFileAttributes != INVALID_FILE_ATTRIBUTES; 
+}
+
+FileTime FastFileInfo::lastModified() const
+{
+    return FileTime(*reinterpret_cast<const FileTime::InternalType*>(
+        &z(m_attributes)->ftLastWriteTime));
 }
 
 } // NMakeFile

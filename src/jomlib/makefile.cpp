@@ -287,13 +287,13 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                 replacementLength = 1;
                 result = QLatin1String("");
                 bool firstAppend = true;
-                const QDateTime currentTimeStamp = QDateTime::currentDateTime();
-                QDateTime targetTimeStamp = FileInfo(targetFilePath()).lastModified();
+                const FileTime currentTimeStamp = FileTime::currentTime();
+                FileTime targetTimeStamp = FastFileInfo(targetFilePath()).lastModified();
                 if (!targetTimeStamp.isValid())
                     targetTimeStamp = currentTimeStamp;
 
                 foreach (const QString& dependentName, dependentCandidates) {
-                    QDateTime dependentTimeStamp = FileInfo(dependentName).lastModified();
+                    FileTime dependentTimeStamp = FastFileInfo(dependentName).lastModified();
                     if (!dependentTimeStamp.isValid())
                         dependentTimeStamp = currentTimeStamp;
 
@@ -535,7 +535,7 @@ void Makefile::invalidateTimeStamps()
     QHash<QString, DescriptionBlock*>::iterator itEnd = m_targets.end();
     for (; it != itEnd; ++it) {
         DescriptionBlock* target = it.value();
-        target->m_timeStamp = QDateTime();
+        target->m_timeStamp = FileTime();
         target->m_bFileExists = false;
     }
 }
@@ -548,7 +548,7 @@ void Makefile::updateTimeStamps(DescriptionBlock* target)
     if (target->m_timeStamp.isValid())
         return;
 
-    FileInfo fi(target->targetName());
+    FastFileInfo fi(target->targetName());
     target->m_bFileExists = fi.exists();
     if (target->m_bFileExists) {
         target->m_timeStamp = fi.lastModified();
@@ -556,13 +556,13 @@ void Makefile::updateTimeStamps(DescriptionBlock* target)
     }
 
     if (target->m_dependents.isEmpty()) {
-        target->m_timeStamp = QDateTime::currentDateTime();
+        target->m_timeStamp = FileTime::currentTime();
         return;
     }
 
-    target->m_timeStamp = QDateTime(QDate(1900, 1, 1));
+    target->m_timeStamp = FileTime();
     foreach (const QString& depname, target->m_dependents) {
-        QDateTime depTimeStamp;
+        FileTime depTimeStamp;
         DescriptionBlock* dep = m_targets.value(depname, 0);
         if (!dep)
             continue;
@@ -570,7 +570,7 @@ void Makefile::updateTimeStamps(DescriptionBlock* target)
         updateTimeStamps(dep);
         depTimeStamp = dep->m_timeStamp;
 
-        if (depTimeStamp > target->m_timeStamp)
+        if (target->m_timeStamp < depTimeStamp)
             target->m_timeStamp = depTimeStamp;
     }
 }

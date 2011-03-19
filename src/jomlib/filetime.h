@@ -20,34 +20,40 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
 
-#include "filetime.h"
-#include <QtCore/QFileInfo>
+#include <QtGlobal>
 
 namespace NMakeFile {
 
-class FileInfo : public QFileInfo
+class FileTime
 {
 public:
-    FileInfo(const QString& fileName);
-};
+    FileTime();
 
-class FastFileInfo
-{
-public:
-    FastFileInfo(const QString &fileName);
+    typedef quint64 InternalType;
 
-    bool exists() const;
-    FileTime lastModified() const;
+    FileTime(const InternalType &ft)
+        : m_fileTime(ft)
+    { }
 
-    struct InternalType
+    bool operator < (const FileTime &rhs) const;
+    bool operator <= (const FileTime &rhs) const
     {
-        quint8 z[36];
-    };
+        return operator < (rhs) || operator == (rhs);
+    }
+    bool operator == (const FileTime &rhs) const
+    {
+        return m_fileTime == rhs.m_fileTime;
+    }
+
+    bool isValid() const;
+    QString toString() const;
+
+    static FileTime currentTime();
 
 private:
-    InternalType m_attributes;
+    friend class FastFileInfo;
+    InternalType m_fileTime;
 };
 
-} // NMakeFile
+} // namespace NMakeFile

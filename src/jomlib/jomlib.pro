@@ -37,9 +37,10 @@ MSYSPATH=C:\\msys
 }
 
 HEADERS +=  fileinfo.h \
+            filetime.h \
             helperfunctions.h \
             makefile.h \
-            makefilefactory.h \
+            makefileiactory.h \
             makefilelinereader.h \
             macrotable.h \
             exception.h \
@@ -52,6 +53,7 @@ HEADERS +=  fileinfo.h \
             commandexecutor.h
 
 SOURCES +=  fileinfo.cpp \
+            filetime.cpp \
             helperfunctions.cpp \
             macrotable.cpp \
             makefile.cpp \

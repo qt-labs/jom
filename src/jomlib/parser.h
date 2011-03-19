@@ -80,7 +80,7 @@ private:
 
     uint                    m_conditionalDepth;
     bool                    m_followElseBranch;
-    QDateTime               m_latestTimeStamp;
+    FileTime          m_latestTimeStamp;
 };
 
 } // namespace NMakeFile
