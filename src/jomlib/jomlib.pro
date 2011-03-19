@@ -4,6 +4,7 @@ DESTDIR = ../../lib
 QT = core
 CONFIG += qt staticlib debug_and_release build_all
 DEFINES += _CRT_SECURE_NO_WARNINGS
+PRECOMPILED_HEADER = stable.h
 
 build_pass:CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
@@ -35,33 +36,34 @@ MSYSPATH=C:\\msys
     QMAKE_EXTRA_COMPILERS += qlalr
 }
 
-HEADERS += fileinfo.h \
-           helperfunctions.h \
-           makefile.h \
-           makefilefactory.h \
-           makefilelinereader.h \
-           macrotable.h \
-           exception.h \
-           dependencygraph.h \
-           options.h \
-           parser.h \
-           preprocessor.h \
-           ppexprparser.h \
-           targetexecutor.h \
-           commandexecutor.h
+HEADERS +=  fileinfo.h \
+            helperfunctions.h \
+            makefile.h \
+            makefilefactory.h \
+            makefilelinereader.h \
+            macrotable.h \
+            exception.h \
+            dependencygraph.h \
+            options.h \
+            parser.h \
+            preprocessor.h \
+            ppexprparser.h \
+            targetexecutor.h \
+            commandexecutor.h
 
-SOURCES += fileinfo.cpp \
-           helperfunctions.cpp \
-           macrotable.cpp \
-           makefile.cpp \
-           makefilefactory.cpp \
-           makefilelinereader.cpp \
-           exception.cpp \
-           dependencygraph.cpp \
-           options.cpp \
-           parser.cpp \
-           preprocessor.cpp \
-           ppexpr_grammar.cpp \
-           ppexprparser.cpp \
-           targetexecutor.cpp \
-           commandexecutor.cpp
+SOURCES +=  fileinfo.cpp \
+            helperfunctions.cpp \
+            macrotable.cpp \
+            makefile.cpp \
+            makefilefactory.cpp \
+            makefilelinereader.cpp \
+            exception.cpp \
+            dependencygraph.cpp \
+            options.cpp \
+            parser.cpp \
+            preprocessor.cpp \
+            ppexpr_grammar.cpp \
+            ppexprparser.cpp \
+            targetexecutor.cpp \
+            commandexecutor.cpp
+
