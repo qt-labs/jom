@@ -40,7 +40,7 @@ HEADERS +=  fileinfo.h \
             filetime.h \
             helperfunctions.h \
             makefile.h \
-            makefileiactory.h \
+            makefilefactory.h \
             makefilelinereader.h \
             macrotable.h \
             exception.h \
