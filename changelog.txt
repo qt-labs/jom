@@ -3,6 +3,7 @@ This is the changelog for jom 1.0.4, the parallel make tool.
 Changes since jom 1.0.3
 - Fix that -j1 wasn't passed to sub jom calls. (QTCREATORBUG-3729)
 - /KEEPTEMPFILES was added for debugging purposes. (QTCREATORBUG-3852)
+- Performance boost for incremental builds.
 
 Changes since jom 1.0.2
 - Support variable names with underscores. (QTCREATORBUG-3235)
