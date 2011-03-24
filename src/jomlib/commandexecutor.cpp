@@ -161,7 +161,7 @@ void CommandExecutor::executeCurrentCommandLine()
     const Command& cmd = m_pTarget->m_commands.at(m_currentCommandIdx);
     QString commandLine = cmd.m_commandLine;
     bool spawnJOM = false;
-    if (g_options.isMaxNumberOfJobsSet) {
+    if (g_options.isMaxNumberOfJobsSet || g_options.maxNumberOfJobs > 1) {
         int idx = commandLine.indexOf(m_pTarget->makefile()->options()->fullAppPath);
         if (idx > -1) {
             spawnJOM = true;
