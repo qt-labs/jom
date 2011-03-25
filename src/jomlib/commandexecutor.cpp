@@ -289,7 +289,7 @@ void CommandExecutor::executeCurrentCommandLine()
     if (!executionSucceeded)
         qFatal("Can't start command.");
     if (spawnJOM)
-        m_process.waitForFinished();
+        m_process.waitForFinished(-1);
 }
 
 void CommandExecutor::createTempFiles()
