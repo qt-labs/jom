@@ -57,6 +57,7 @@ public slots:
 signals:
     void environmentChanged(const QStringList &environment);
     void finished(CommandExecutor* process, bool abortMakeProcess);
+    void subJomStarted();
 
 private slots:
     void onProcessReadyReadStandardError();

@@ -33,7 +33,8 @@
 namespace NMakeFile {
 
 TargetExecutor::TargetExecutor(const QStringList& environment)
-:   m_bAborted(false)
+:   m_bAborted(false),
+    m_blockingCommand(0)
 {
     m_makefile = 0;
     m_depgraph = new DependencyGraph();
@@ -41,6 +42,7 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
     for (int i=0; i < g_options.maxNumberOfJobs; ++i) {
         CommandExecutor* process = new CommandExecutor(this, environment);
         connect(process, SIGNAL(finished(CommandExecutor*, bool)), this, SLOT(onChildFinished(CommandExecutor*, bool)));
+        connect(process, SIGNAL(subJomStarted()), this, SLOT(onSubJomStarted()));
         m_availableProcesses.append(process);
         m_processes.append(process);
     }
@@ -67,6 +69,7 @@ bool TargetExecutor::hasPendingTargets() const
 void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 {
     m_bAborted = false;
+    m_blockingCommand = 0;
     m_makefile = mkfile;
 
     DescriptionBlock* descblock;
@@ -95,7 +98,7 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 
 void TargetExecutor::startProcesses()
 {
-    if (m_bAborted)
+    if (m_bAborted || m_blockingCommand)
         return;
 
     try {
@@ -110,7 +113,7 @@ void TargetExecutor::startProcesses()
 
             CommandExecutor* process = m_availableProcesses.takeFirst();
             process->start(nextTarget);
-            if (m_bAborted)
+            if (m_bAborted || m_blockingCommand)
                 return;
         }
 
@@ -140,11 +143,22 @@ void TargetExecutor::waitForProcesses()
             process->waitForFinished();
 }
 
+void TargetExecutor::onSubJomStarted()
+{
+    m_blockingCommand = sender();
+    //qDebug() << "BLOCK" << QCoreApplication::applicationPid();
+}
+
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakeProcess)
 {
     Q_CHECK_PTR(executor->target());
     m_depgraph->removeLeaf(executor->target());
     m_availableProcesses.append(executor);
+
+    if (m_blockingCommand && m_blockingCommand == executor) {
+        //qDebug() << "UNBLOCK" << QCoreApplication::applicationPid();
+        m_blockingCommand = 0;
+    }
 
     bool directOutputProcessIsFinished = (executor->outputMode() == CommandExecutor::DirectOutput);
     if (directOutputProcessIsFinished) {

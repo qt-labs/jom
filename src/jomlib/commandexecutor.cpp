@@ -236,6 +236,9 @@ void CommandExecutor::executeCurrentCommandLine()
         }
     }
 
+    if (spawnJOM)
+        emit subJomStarted();
+
     bool executionSucceeded = false;
     if (simpleCmdLine && !startsWithShellBuiltin(commandLine)) {
         // ### It would be cool if we would not try to start every command directly.
@@ -288,8 +291,6 @@ void CommandExecutor::executeCurrentCommandLine()
 
     if (!executionSucceeded)
         qFatal("Can't start command.");
-    if (spawnJOM)
-        m_process.waitForFinished(-1);
 }
 
 void CommandExecutor::createTempFiles()
