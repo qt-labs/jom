@@ -59,6 +59,11 @@ TargetExecutor::~TargetExecutor()
     delete m_depgraph;
 }
 
+bool TargetExecutor::hasPendingTargets() const
+{
+    return !m_pendingTargets.isEmpty() || m_availableProcesses.count() < m_processes.count();
+}
+
 void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 {
     m_bAborted = false;
@@ -88,53 +93,44 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
     }
 }
 
-bool TargetExecutor::event(QEvent* e)
-{
-    if (e->type() == QEvent::User) {
-        try {
-            startProcesses();
-        } catch (Exception &e) {
-            m_bAborted = true;
-            QString msg = "Error: " + e.message() + "\n";
-            fprintf(stderr, qPrintable(msg));
-            QCoreApplication::exit(1);
-        }
-        return true;
-    }
-    return QObject::event(e);
-}
-
 void TargetExecutor::startProcesses()
 {
     if (m_bAborted)
         return;
 
-    DescriptionBlock* nextTarget = 0;
-    while (!m_availableProcesses.isEmpty() && (nextTarget = m_depgraph->findAvailableTarget())) {
-        if (nextTarget->m_commands.isEmpty()) {
-            // Short cut for targets without commands.
-            // We're not really interested in these.
-            m_depgraph->removeLeaf(nextTarget);
-            continue;
+    try {
+        DescriptionBlock* nextTarget = 0;
+        while (!m_availableProcesses.isEmpty() && (nextTarget = m_depgraph->findAvailableTarget())) {
+            if (nextTarget->m_commands.isEmpty()) {
+                // Short cut for targets without commands.
+                // We're not really interested in these.
+                m_depgraph->removeLeaf(nextTarget);
+                continue;
+            }
+
+            CommandExecutor* process = m_availableProcesses.takeFirst();
+            process->start(nextTarget);
+            if (m_bAborted)
+                return;
         }
 
-        CommandExecutor* process = m_availableProcesses.takeFirst();
-        process->start(nextTarget);
-        if (m_bAborted)
-            return;
-    }
-
-    if (m_availableProcesses.count() == g_options.maxNumberOfJobs) {
-        if (m_pendingTargets.isEmpty()) {
-            QCoreApplication::exit();
-        } else {
-            m_depgraph->clear();
-            nextTarget = m_pendingTargets.takeFirst();
-            m_makefile->invalidateTimeStamps();
-            m_makefile->updateTimeStamps(nextTarget);
-            m_depgraph->build(nextTarget);
-            qApp->postEvent(this, new StartEvent);
+        if (m_availableProcesses.count() == g_options.maxNumberOfJobs) {
+            if (m_pendingTargets.isEmpty()) {
+                QCoreApplication::exit();
+            } else {
+                m_depgraph->clear();
+                nextTarget = m_pendingTargets.takeFirst();
+                m_makefile->invalidateTimeStamps();
+                m_makefile->updateTimeStamps(nextTarget);
+                m_depgraph->build(nextTarget);
+                QMetaObject::invokeMethod(this, "startProcesses", Qt::QueuedConnection);
+            }
         }
+    } catch (Exception &e) {
+        m_bAborted = true;
+        QString msg = "Error: " + e.message() + "\n";
+        fprintf(stderr, qPrintable(msg));
+        QCoreApplication::exit(1);
     }
 }
 
@@ -182,7 +178,7 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
         QCoreApplication::exit(2);
     }
 
-    qApp->postEvent(this, new StartEvent);
+    QMetaObject::invokeMethod(this, "startProcesses", Qt::QueuedConnection);
 }
 
 void TargetExecutor::removeTempFiles()

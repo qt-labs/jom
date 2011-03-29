@@ -41,22 +41,15 @@ public:
 
     void apply(Makefile* mkfile, const QStringList& targets);
     void removeTempFiles();
+    bool hasPendingTargets() const;
 
-    struct StartEvent : public QEvent
-    {
-        StartEvent()
-            : QEvent(QEvent::User)
-        {}
-    };
-
-protected:
-    bool event(QEvent* e);
+public slots:
+   void startProcesses();
 
 private slots:
     void onChildFinished(CommandExecutor*, bool abortMakeProcess);
 
 private:
-    void startProcesses();
     void waitForProcesses();
 
 private:

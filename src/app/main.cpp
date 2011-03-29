@@ -155,8 +155,10 @@ int main(int argc, char* argv[])
         fprintf(stderr, qPrintable(msg));
     }
 
-    app.postEvent(&executor, new TargetExecutor::StartEvent());
-    int result = app.exec();
+    executor.startProcesses();
+    int result = 0;
+    if (executor.hasPendingTargets())
+        result = app.exec();
     g_pTargetExecutor = 0;
     delete mkfile;
     return result;
