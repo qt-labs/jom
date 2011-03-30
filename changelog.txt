@@ -4,6 +4,7 @@ Changes since jom 1.0.3
 - Fix that -j1 wasn't passed to sub jom calls. (QTCREATORBUG-3729)
 - /KEEPTEMPFILES was added for debugging purposes. (QTCREATORBUG-3852)
 - Performance boost for incremental builds.
+- Improved Ctrl-C handling for recursive make.
 
 Changes since jom 1.0.2
 - Support variable names with underscores. (QTCREATORBUG-3235)
