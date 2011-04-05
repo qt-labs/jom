@@ -985,7 +985,7 @@ void ParserTest::inlineFiles()
     QCOMPARE(m_jomProcess->exitCode(), 0);
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_basic_expected.txt", "blackbox/inlineFiles/output/test_basic.txt"));
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_multipleFiles_expected.txt", "blackbox/inlineFiles/output/test_multipleFiles.txt"));
-    QEXPECT_FAIL("", "QTCREATORBUG-2874, QTCREATORBUG-2875 must be fixed to make this work", Continue);
+    QEXPECT_FAIL("", "QTCREATORBUG-2875 must be fixed to make this work", Continue);
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_escaping_expected.txt", "blackbox/inlineFiles/output/test_escaping.txt"));
 }
 
