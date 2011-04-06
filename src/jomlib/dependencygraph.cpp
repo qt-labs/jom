@@ -79,32 +79,53 @@ void DependencyGraph::build(DescriptionBlock* target)
 
 bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 {
-    bool targetIsExistingFile = target->m_bFileExists;
-    if (!targetIsExistingFile) {
-        FastFileInfo fi(target->targetName());
-        targetIsExistingFile = fi.exists();  // could've been created in the mean time
-        if (targetIsExistingFile)
-            target->m_timeStamp = fi.lastModified();
+    FastFileInfo fi(target->targetName());
+    if (fi.exists()) {
+        target->m_bFileExists = true;
+        target->m_timeStamp = fi.lastModified();
     }
 
-    if (!targetIsExistingFile || !target->m_timeStamp.isValid())
-        return false;
+    bool isUpToDate;
+    if (target->m_dependents.isEmpty()) {
+        isUpToDate = target->m_bFileExists;
+    } else {
+        // find latest timestamp of all dependents
+        FileTime latestDependentTime;
+        foreach (const QString& dependentName, target->m_dependents) {
+            FileTime ts;
+            DescriptionBlock *dependent = target->makefile()->target(dependentName);
+            if (dependent) {
+                ts = dependent->m_timeStamp;
+                if (!dependent->m_bFileExists && !dependent->m_commands.isEmpty()) {
+                    // Mimic insane nmake behaviour: If the dependent is a pseudotarget
+                    // and has commands, then this target is out of date.
+                    latestDependentTime = FileTime::currentTime();
+                    break;
+                }
+            }
 
-    // find latest timestamp of all dependents
-    FileTime ts;
-    foreach (const QString& dependentName, target->m_dependents) {
-        FastFileInfo fi(dependentName);
-        if (fi.exists()) {
-            FileTime ts2 = fi.lastModified();
-            if (ts < ts2)
-                ts = ts2;
-        } else {
-            ts = FileTime::currentTime();
-            break;
+            if (!ts.isValid()) {
+                FastFileInfo fi(dependentName);
+                if (fi.exists())
+                    ts = fi.lastModified();
+            }
+
+            if (!ts.isValid()) {
+                // File does not exist, so it gets the latest time stamp.
+                latestDependentTime = FileTime::currentTime();
+                break;
+            }
+
+            if (latestDependentTime < ts)
+                latestDependentTime = ts;
         }
+
+        if (!target->m_timeStamp.isValid())
+            target->m_timeStamp = latestDependentTime;
+
+        isUpToDate = (target->m_bFileExists && latestDependentTime <= target->m_timeStamp);
     }
 
-    bool isUpToDate = (ts <= target->m_timeStamp);
     if (isUpToDate && !target->m_inferenceRules.isEmpty()) {
         // The target is up-to-date but it still has unapplied inference rules.
         // That means there could be dependents we didn't take into account yet.

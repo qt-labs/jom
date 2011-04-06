@@ -540,41 +540,6 @@ void Makefile::invalidateTimeStamps()
     }
 }
 
-/**
- * Updates the time stamps for this target and all dependent targets.
- */
-void Makefile::updateTimeStamps(DescriptionBlock* target)
-{
-    if (target->m_timeStamp.isValid())
-        return;
-
-    FastFileInfo fi(target->targetName());
-    target->m_bFileExists = fi.exists();
-    if (target->m_bFileExists) {
-        target->m_timeStamp = fi.lastModified();
-        return;
-    }
-
-    if (target->m_dependents.isEmpty()) {
-        target->m_timeStamp = FileTime::currentTime();
-        return;
-    }
-
-    target->m_timeStamp = FileTime();
-    foreach (const QString& depname, target->m_dependents) {
-        FileTime depTimeStamp;
-        DescriptionBlock* dep = m_targets.value(depname, 0);
-        if (!dep)
-            continue;
-
-        updateTimeStamps(dep);
-        depTimeStamp = dep->m_timeStamp;
-
-        if (target->m_timeStamp < depTimeStamp)
-            target->m_timeStamp = depTimeStamp;
-    }
-}
-
 void Makefile::applyInferenceRules(DescriptionBlock* target)
 {
     if (target->m_inferenceRules.isEmpty())

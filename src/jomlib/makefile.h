@@ -204,7 +204,6 @@ public:
     void dumpTargets() const;
     void dumpInferenceRules() const;
     void invalidateTimeStamps();
-    void updateTimeStamps(DescriptionBlock* target);
     void applyInferenceRules(QList<DescriptionBlock*> targets);
     void addInferenceRule(const InferenceRule& rule);
     void calculateInferenceRulePriorities(const QStringList &suffixes);
