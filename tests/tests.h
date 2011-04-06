@@ -77,11 +77,14 @@ private slots:
     void builtin_cd();
     void suffixes();
     void nonexistentDependent();
+    void outOfDateCheck();
 
 private:
     bool openMakefile(const QString& fileName);
     bool runJom(const QStringList &args, const QString &workingDirectory = QString());
     bool fileContentsEqual(const QString& fileName1, const QString& fileName2);
+    QStringList readJomStdOutput();
+    void touchFile(const QString &fileName);
 
 private:
     QString m_oldCurrentPath;

@@ -899,6 +899,29 @@ bool ParserTest::fileContentsEqual(const QString& fileName1, const QString& file
     return true;
 }
 
+QStringList ParserTest::readJomStdOutput()
+{
+    QList<QByteArray> lines = m_jomProcess->readAllStandardOutput().split('\n');
+    QStringList s;
+    s.reserve(lines.count());
+    foreach (const QByteArray &line, lines) {
+        QString str = QString::fromLocal8Bit(line.trimmed());
+        if (!str.isEmpty())
+            s.append(str);
+    }
+    return s;
+}
+
+void ParserTest::touchFile(const QString &fileName)
+{
+    QFile file(fileName);
+    QVERIFY(file.exists());
+    file.open(QFile::WriteOnly);
+    const qint64 s = file.size();
+    file.resize(s + 1);
+    file.resize(s);
+}
+
 void ParserTest::caseInsensitiveDependents()
 {
     QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/nologo", "blackbox/caseInsensitiveDependents"));
@@ -1048,6 +1071,69 @@ void ParserTest::nonexistentDependent()
     QVERIFY(!output.contains("we should not see this"));
     QEXPECT_FAIL("", "behaviour difference to nmake", Continue);
     QVERIFY(output.contains("yo ho ho ho"));
+}
+
+void ParserTest::outOfDateCheck()
+{
+    QVERIFY(runJom(QStringList() << "/nologo" << "/j1" << "/f" << "test.mk" << "clean" << "all",
+            "blackbox/outofdatecheck"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QStringList output = readJomStdOutput();
+
+    // The order of this output is different from nmake, because we're evaluating
+    // all leaves first before we're considering new nodes that became leaves.
+    QCOMPARE(output.takeFirst(), QLatin1String("one.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("two.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("five"));
+    QCOMPARE(output.takeFirst(), QLatin1String("two"));
+    QCOMPARE(output.takeFirst(), QLatin1String("four.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("three.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("four"));
+    QCOMPARE(output.takeFirst(), QLatin1String("six.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("three"));
+    QCOMPARE(output.takeFirst(), QLatin1String("six"));
+    QVERIFY(output.isEmpty());
+
+    // now try an incremental build without any changed files
+    QVERIFY(runJom(QStringList() << "/nologo" << "/j1" << "/f" << "test.mk",
+            "blackbox/outofdatecheck"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    output = readJomStdOutput();
+    QCOMPARE(output.takeFirst(), QLatin1String("five"));
+    QCOMPARE(output.takeFirst(), QLatin1String("two"));
+    QCOMPARE(output.takeFirst(), QLatin1String("four"));
+    QCOMPARE(output.takeFirst(), QLatin1String("three.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("six"));
+    QCOMPARE(output.takeFirst(), QLatin1String("three"));
+    QVERIFY(output.isEmpty());
+
+    touchFile("blackbox/outofdatecheck/one.txt");
+    QVERIFY(runJom(QStringList() << "/nologo" << "/j1" << "/f" << "test.mk",
+            "blackbox/outofdatecheck"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    output = readJomStdOutput();
+    QCOMPARE(output.takeFirst(), QLatin1String("five"));
+    QCOMPARE(output.takeFirst(), QLatin1String("two"));
+    QCOMPARE(output.takeFirst(), QLatin1String("four"));
+    QCOMPARE(output.takeFirst(), QLatin1String("three.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("six"));
+    QCOMPARE(output.takeFirst(), QLatin1String("three"));
+    QVERIFY(output.isEmpty());
+
+    touchFile("blackbox/outofdatecheck/two.txt");
+    QVERIFY(runJom(QStringList() << "/nologo" << "/j1" << "/f" << "test.mk",
+            "blackbox/outofdatecheck"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    output = readJomStdOutput();
+    QCOMPARE(output.takeFirst(), QLatin1String("five"));
+    QCOMPARE(output.takeFirst(), QLatin1String("two"));
+    QCOMPARE(output.takeFirst(), QLatin1String("four.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("three.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("four"));
+    QCOMPARE(output.takeFirst(), QLatin1String("six.txt"));
+    QCOMPARE(output.takeFirst(), QLatin1String("three"));
+    QCOMPARE(output.takeFirst(), QLatin1String("six"));
+    QVERIFY(output.isEmpty());
 }
 
 QTEST_MAIN(ParserTest)
