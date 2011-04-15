@@ -150,8 +150,8 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
         target->m_inferenceRules = savedRules;
     }
 
-    if (!isUpToDate)
-        target->m_timeStamp = FileTime::currentTime();
+    if (!isUpToDate && target->m_bFileExists)
+        target->m_timeStamp.clear();
 
     return isUpToDate;
 }

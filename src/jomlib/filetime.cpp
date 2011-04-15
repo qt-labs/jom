@@ -43,6 +43,11 @@ bool FileTime::operator < (const FileTime &rhs) const
     return CompareFileTime(t1, t2) < 0;
 }
 
+void FileTime::clear()
+{
+    m_fileTime = 0;
+}
+
 bool FileTime::isValid() const
 {
     return m_fileTime != 0;

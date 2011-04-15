@@ -46,6 +46,7 @@ public:
         return m_fileTime == rhs.m_fileTime;
     }
 
+    void clear();
     bool isValid() const;
     QString toString() const;
 
