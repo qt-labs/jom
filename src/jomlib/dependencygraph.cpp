@@ -120,7 +120,7 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
                 latestDependentTime = ts;
         }
 
-        if (!target->m_timeStamp.isValid())
+        if (!target->m_bFileExists)
             target->m_timeStamp = latestDependentTime;
 
         isUpToDate = (target->m_bFileExists && latestDependentTime <= target->m_timeStamp);
@@ -149,6 +149,9 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
         target->m_dependents = savedDependents;
         target->m_inferenceRules = savedRules;
     }
+
+    if (!isUpToDate)
+        target->m_timeStamp = FileTime::currentTime();
 
     return isUpToDate;
 }
