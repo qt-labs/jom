@@ -57,7 +57,6 @@ void Parser::apply(Preprocessor* pp,
     const Options* options = mkfile->options();
     m_silentCommands = options->suppressOutputMessages;
     m_ignoreExitCodes = !options->stopOnErrors;
-    m_latestTimeStamp = FileTime::currentTime();
     m_suffixes.clear();
     m_suffixes << ".exe" << ".obj" << ".asm" << ".c" << ".cpp" << ".cxx"
                << ".bas" << ".cbl" << ".for" << ".pas" << ".res" << ".rc";
