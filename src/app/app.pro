@@ -22,3 +22,8 @@ INCLUDEPATH += ../jomlib
 HEADERS = application.h
 SOURCES = main.cpp application.cpp
 
+!CONFIG(static) {
+    !build_pass:warning("You're building jom with a shared Qt.")
+    LIBS += user32.lib
+}
+
