@@ -143,8 +143,11 @@ void TargetExecutor::waitForProcesses()
 
 void TargetExecutor::onSubJomStarted()
 {
-    m_blockingCommand = sender();
     //qDebug() << "BLOCK" << QCoreApplication::applicationPid();
+    m_blockingCommand = sender();
+    foreach (CommandExecutor *cmdex, m_processes)
+        if (cmdex != sender())
+            cmdex->block();
 }
 
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakeProcess)
@@ -156,6 +159,8 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
     if (m_blockingCommand && m_blockingCommand == executor) {
         //qDebug() << "UNBLOCK" << QCoreApplication::applicationPid();
         m_blockingCommand = 0;
+        foreach (CommandExecutor *cmdex, m_processes)
+            cmdex->unblock();
     }
 
     bool directOutputProcessIsFinished = (executor->outputMode() == CommandExecutor::DirectOutput);

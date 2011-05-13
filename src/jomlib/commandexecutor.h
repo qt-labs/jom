@@ -37,6 +37,8 @@ public:
 
     void start(DescriptionBlock* target);
     DescriptionBlock* target() { return m_pTarget; }
+    void block();
+    void unblock();
     bool isActive() const { return m_active; }
     void waitForFinished();
     void cleanupTempFiles();
@@ -80,6 +82,8 @@ private:
     static QString      m_tempPath;
     QProcess            m_process;
     DescriptionBlock*   m_pTarget;
+    bool                m_blocked;
+    bool                m_processFinishedWhileBlocked;
 
     struct TempFile
     {

@@ -39,6 +39,8 @@ QString CommandExecutor::m_tempPath;
 CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
 :   QObject(parent),
     m_pTarget(0),
+    m_blocked(false),
+    m_processFinishedWhileBlocked(false),
     m_ignoreProcessErrors(false),
     m_active(false),
     m_outputMode(BufferingOutput)
@@ -88,6 +90,22 @@ void CommandExecutor::start(DescriptionBlock* target)
     executeCurrentCommandLine();
 }
 
+void CommandExecutor::block()
+{
+    m_blocked = true;
+}
+
+void CommandExecutor::unblock()
+{
+    if (m_blocked) {
+        m_blocked = false;
+        if (m_processFinishedWhileBlocked) {
+            m_processFinishedWhileBlocked = false;
+            onProcessFinished(m_process.exitCode(), m_process.exitStatus());
+        }
+    }
+}
+
 void CommandExecutor::onProcessError(QProcess::ProcessError error)
 {
     //qDebug() << "onProcessError" << error;
@@ -98,6 +116,10 @@ void CommandExecutor::onProcessError(QProcess::ProcessError error)
 void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     //qDebug() << "onProcessFinished" << m_pTarget->m_targetName;
+    if (m_blocked) {
+        m_processFinishedWhileBlocked = true;
+        return;
+    }
 
     if (exitStatus != QProcess::NormalExit)
         exitCode = 2;
@@ -158,6 +180,7 @@ static bool startsWithShellBuiltin(const QString &commandLine)
 
 void CommandExecutor::executeCurrentCommandLine()
 {
+    m_processFinishedWhileBlocked = false;
     const Command& cmd = m_pTarget->m_commands.at(m_currentCommandIdx);
     QString commandLine = cmd.m_commandLine;
     bool spawnJOM = false;
