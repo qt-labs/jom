@@ -180,8 +180,7 @@ int main(int argc, char* argv[])
         executor.apply(mkfile, mf.activeTargets());
     }
     catch (Exception &e) {
-        QString msg = "Error in executor: " + e.message() + "\n";
-        fprintf(stderr, qPrintable(msg));
+        fprintf(stderr, "Error in executor: %s\n", qPrintable(e.message()));
     }
 
     executor.startProcesses();

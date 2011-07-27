@@ -64,7 +64,7 @@ bool MacroTable::isMacroNameValid(const QString& name) const
 {
     static QRegExp rexMacroIdentifier;
     if (rexMacroIdentifier.isEmpty()) {
-        rexMacroIdentifier.setPattern("([A-Z]|_|)(\\w|\\.)+");
+        rexMacroIdentifier.setPattern(QLatin1String("([A-Z]|_|)(\\w|\\.)+"));
         rexMacroIdentifier.setCaseSensitivity(Qt::CaseInsensitive);
     }
 
@@ -81,8 +81,10 @@ bool MacroTable::isMacroNameValid(const QString& name) const
 void MacroTable::setMacroValue(const QString& name, const QString& value)
 {
     MacroData* macroData = internalSetMacroValue(name, value);
-    if (!macroData)
-        throw Exception(QString("macro name %1 is invalid").arg(name));
+    if (!macroData) {
+        QString msg = QLatin1String("macro name %1 is invalid");
+        throw Exception(msg.arg(name));
+    }
 
     if (macroData->isEnvironmentVariable)
         setEnvironmentVariable(name, value);
@@ -167,7 +169,7 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                     }
                 }
                 if (!closingParenthesisFound)
-                    throw Exception("Macro invocation $( without closing ) found");
+                    throw Exception(QLatin1String("Macro invocation $( without closing ) found"));
 
                 if (macroNameEnd < 0) {
                     // found standard macro invocation a la $(MAKE)
@@ -176,7 +178,7 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
 
                 const QString macroName = str.mid(i + 1, macroNameEnd - i - 1);
                 if (macroName.isEmpty())
-                    throw Exception("Macro name is missing from invocation");
+                    throw Exception(QLatin1String("Macro name is missing from invocation"));
 
                 switch (macroName.at(0).toLatin1())
                 {
@@ -213,7 +215,7 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                     case '*':
                     case '@':
                     case '?':
-                        ret.append('$');
+                        ret.append(QLatin1Char('$'));
                         break;
                     }
                 }
@@ -235,7 +237,7 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                     ret.append(str.at(i));
                     break;
                 default:
-                    throw Exception("Invalid macro invocation found");
+                    throw Exception(QLatin1String("Invalid macro invocation found"));
                 }
             }
         } else {
@@ -300,7 +302,7 @@ void MacroTable::parseSubstitutionStatement(const QString &str, int substitution
     }
 
     if (equalsSignIdx < 0 || macroInvokationEndIdx < 0)
-        throw Exception("Cannot find = after : in macro substitution.");
+        throw Exception(QLatin1String("Cannot find = after : in macro substitution."));
 
     QString before = str.mid(substitutionStartIdx, equalsSignIdx - substitutionStartIdx);
     QString after = str.mid(equalsSignIdx + 1, macroInvokationEndIdx - equalsSignIdx - 1);

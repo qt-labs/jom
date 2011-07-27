@@ -41,6 +41,8 @@ public:
     QString macroValue(const QString& macroName) const;
     void defineEnvironmentMacroValue(const QString& name, const QString& value, bool readOnly = false);
     void setMacroValue(const QString& name, const QString& value);
+    void setMacroValue(const char *szStr, const QString& value) { setMacroValue(QString::fromLatin1(szStr), value); }
+    void setMacroValue(const char *szStr, const char *szValue) { setMacroValue(QString::fromLatin1(szStr), QString::fromLatin1(szValue)); }
     void undefineMacro(const QString& name);
     QString expandMacros(const QString& str) const;
     void dump() const;

@@ -385,10 +385,10 @@ void Makefile::clear()
 
 void Makefile::dumpTarget(DescriptionBlock* db, uchar level) const
 {
-    QString indent = "";
+    QString indent;
     if (level > 0)
         for (int i=0; i < level; ++i)
-            indent.append("  ");
+            indent.append(QLatin1String("  "));
 
     qDebug() << indent + db->targetName() << db->m_timeStamp.toString();
     foreach (const QString depname, db->m_dependents)
@@ -421,13 +421,13 @@ void Makefile::dumpTargets() const
 void Makefile::dumpInferenceRules() const
 {
     foreach (const InferenceRule& ir, m_inferenceRules) {
-        if (ir.m_fromSearchPath != ".") {
+        if (ir.m_fromSearchPath != QLatin1String(".")) {
             printf("{");
             printf(qPrintable(ir.m_fromSearchPath));
             printf("}");
         }
         printf(qPrintable(ir.m_fromExtension));
-        if (ir.m_toSearchPath != ".") {
+        if (ir.m_toSearchPath != QLatin1String(".")) {
             printf("{");
             printf(qPrintable(ir.m_toSearchPath));
             printf("}");

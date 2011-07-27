@@ -53,7 +53,7 @@ const QString FileException::toString() const
     }
 
     if (m_line > 0) {
-        output += QString("line %1").arg(m_line);
+        output += QString::fromLatin1("line %1").arg(m_line);
     }
 
     return output;

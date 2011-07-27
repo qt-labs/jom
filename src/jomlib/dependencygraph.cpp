@@ -163,8 +163,10 @@ void DependencyGraph::internalBuild(Node* node)
         DescriptionBlock* dependent = makefile->target(dependentName);
         if (!dependent) {
             if (!FastFileInfo(dependentName).exists()) {
-                QString msg = "Error: dependent '" + dependentName + "' does not exist.\n";
-                fputs(qPrintable(msg), stderr);
+                QByteArray msg = "Error: dependent '";
+                msg += dependentName.toLocal8Bit();
+                msg += "' does not exist.\n";
+                fputs(msg.constData(), stderr);
                 exit(2);
             }
             continue;
@@ -194,8 +196,8 @@ void DependencyGraph::dump()
 
 void DependencyGraph::internalDump(Node* node, QString& indent)
 {
-    printf(qPrintable(indent + node->target->targetName() + "\n"));
-    indent.append(' ');
+    printf(qPrintable(indent + node->target->targetName() + QLatin1Char('\n')));
+    indent.append(QLatin1Char(' '));
     foreach (Node* child, node->children) {
         internalDump(child, indent);
     }
@@ -213,8 +215,8 @@ void DependencyGraph::dotDump()
 void DependencyGraph::internalDotDump(Node* node, const QString& parent)
 {
     if (!parent.isNull()) {
-        QString line = "  \"" + parent + "\" -> \"" + node->target->targetName() + "\";\n";
-        printf(line.toAscii());
+        QByteArray line = "  \"" + parent.toLocal8Bit() + "\" -> \"" + node->target->targetName().toLocal8Bit() + "\";\n";
+        printf(line);
     }
     foreach (Node* child, node->children) {
         internalDotDump(child, node->target->targetName());
@@ -315,15 +317,15 @@ DescriptionBlock* DependencyGraph::findAvailableTarget()
 void DependencyGraph::displayNodeBuildInfo(Node* node, bool isUpToDate)
 {
     if (node->target->makefile()->options()->displayBuildInfo) {
-        QString msg;
+        QByteArray msg;
         if (isUpToDate)
             msg = " ";
         else
             msg = "*";
-        msg += node->target->m_timeStamp.toString() + " " +
-               node->target->targetName();
+        msg += node->target->m_timeStamp.toString().toLocal8Bit() + " " +
+               node->target->targetName().toLocal8Bit();
         msg += "\n";
-        printf(qPrintable(msg));
+        printf(msg);
     }
 }
 

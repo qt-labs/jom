@@ -30,7 +30,7 @@ namespace NMakeFile {
 
 FileInfo::FileInfo(const QString& fileName)
 {
-    if (fileName.startsWith('\"')) {
+    if (fileName.startsWith(QLatin1Char('"'))) {
         QString correctedFileName = fileName;
         correctedFileName.remove(0, 1);
         correctedFileName.chop(1);

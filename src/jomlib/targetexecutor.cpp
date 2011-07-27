@@ -75,7 +75,7 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
     DescriptionBlock* descblock;
     if (targets.isEmpty()) {
         if (mkfile->targets().isEmpty())
-            throw Exception("no targets in makefile");
+            throw Exception(QLatin1String("no targets in makefile"));
 
         descblock = mkfile->firstTarget();
     } else {
@@ -129,7 +129,7 @@ void TargetExecutor::startProcesses()
         }
     } catch (Exception &e) {
         m_bAborted = true;
-        QString msg = "Error: " + e.message() + "\n";
+        QString msg = QLatin1String("Error: ") + e.message() + QLatin1Char('\n');
         fprintf(stderr, qPrintable(msg));
         QCoreApplication::exit(1);
     }

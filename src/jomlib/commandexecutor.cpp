@@ -53,7 +53,7 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
         DWORD count = GetTempPathW(MAX_PATH, buf);
         if (count) {
             m_tempPath = QString::fromWCharArray(buf, count);
-            if (!m_tempPath.endsWith('\\')) m_tempPath.append('\\');
+            if (!m_tempPath.endsWith(QLatin1Char('\\'))) m_tempPath.append(QLatin1Char('\\'));
         }
     }
 
@@ -174,7 +174,8 @@ inline bool commandLineStartsWithCommand(const QString &str, const QString &sear
 
 static bool startsWithShellBuiltin(const QString &commandLine)
 {
-    static QRegExp rex("^(copy|del|echo|for|mkdir|md|rd|rmdir)\\s", Qt::CaseInsensitive, QRegExp::RegExp2);
+    static QRegExp rex(QLatin1String("^(copy|del|echo|for|mkdir|md|rd|rmdir)\\s"),
+                       Qt::CaseInsensitive, QRegExp::RegExp2);
     return rex.indexIn(commandLine) >= 0;
 }
 
@@ -189,14 +190,14 @@ void CommandExecutor::executeCurrentCommandLine()
         if (idx > -1) {
             spawnJOM = true;
             const int appPathLength = m_pTarget->makefile()->options()->fullAppPath.length();
-            QString arg = " -nologo -j " + QString().setNum(g_options.maxNumberOfJobs);
+            QString arg = QLatin1String(" -nologo -j ") + QString().setNum(g_options.maxNumberOfJobs);
             if (m_pTarget->makefile()->options()->displayBuildInfo)
-                arg += " /D";
+                arg += QLatin1String(" /D");
 
             // Check if the jom call is enclosed by double quotes.
             const int idxRight = idx + appPathLength;
-            if (idx > 0 && commandLine.at(idx-1) == '"' &&
-                idxRight < commandLine.length() && commandLine.at(idxRight) == '"')
+            if (idx > 0 && commandLine.at(idx-1) == QLatin1Char('"') &&
+                idxRight < commandLine.length() && commandLine.at(idxRight) == QLatin1Char('"'))
             {
                 idx++;  // to insert behind the double quote
             }
@@ -206,7 +207,7 @@ void CommandExecutor::executeCurrentCommandLine()
     }
 
     // Unescape commandline characters.
-    commandLine.replace("%%", "%");
+    commandLine.replace(QLatin1String("%%"), QLatin1String("%"));
 
     if (!cmd.m_silent && !m_pTarget->makefile()->options()->suppressExecutedCommandsDisplay) {
         QByteArray output = commandLine.toLocal8Bit();
@@ -215,7 +216,8 @@ void CommandExecutor::executeCurrentCommandLine()
         writeToStandardOutput(output);
     }
 
-    static QRegExp rexShellComment("^(:|rem\\s)", Qt::CaseInsensitive, QRegExp::RegExp2);
+    static QRegExp rexShellComment(QLatin1String("^(:|rem\\s)"),
+                                   Qt::CaseInsensitive, QRegExp::RegExp2);
     if (m_pTarget->makefile()->options()->dryRun || (rexShellComment.indexIn(commandLine) >= 0))
     {
         onProcessFinished(0, QProcess::NormalExit);
@@ -302,7 +304,7 @@ void CommandExecutor::executeCurrentCommandLine()
 
 #if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
         m_process.setNativeArguments(commandLine);
-        m_process.start("cmd", QStringList() << "/c");
+        m_process.start(QLatin1String("cmd"), QStringList() << QLatin1String("/c"));
 #else
         m_process.start(QLatin1String("cmd /C ") + commandLine);
 #endif
@@ -328,9 +330,10 @@ void CommandExecutor::createTempFiles()
                 do {
                     QString simplifiedTargetName = m_pTarget->targetFilePath();
                     simplifiedTargetName = fileNameFromFilePath(simplifiedTargetName);
-                    fileName = m_tempPath + QString("%1.%2.%3.jom").arg(simplifiedTargetName)
-                                                                   .arg(GetCurrentProcessId())
-                                                                   .arg(GetTickCount() - m_startUpTickCount);
+                    fileName = m_tempPath + simplifiedTargetName + QLatin1Char('.')
+                               + QString::number(GetCurrentProcessId()) + QLatin1Char('.')
+                               + QString::number(GetTickCount() - m_startUpTickCount)
+                               + QLatin1String(".jom");
                 } while (QFile::exists(fileName));
             } else
                 fileName = inlineFile->m_filename;
@@ -340,17 +343,18 @@ void CommandExecutor::createTempFiles()
             tempFile.file = new QFile(fileName);
             if (!tempFile.file->open(QFile::WriteOnly)) {
                 delete tempFile.file;
-                throw Exception(QString("cannot open %1 for write").arg(fileName));
+                QString msg = QLatin1String("cannot open %1 for write");
+                throw Exception(msg.arg(fileName));
             }
 
             // TODO: do something with inlineFile->m_unicode;
             tempFile.file->write(inlineFile->m_content.toLocal8Bit());
             tempFile.file->close();
 
-            QString replacement = QString(tempFile.file->fileName()).replace('/', '\\');
-            if (replacement.contains(' ') || replacement.contains('\t')) {
-                replacement.prepend("\"");
-                replacement.append("\"");
+            QString replacement = QString(tempFile.file->fileName()).replace(QLatin1Char('/'), QLatin1Char('\\'));
+            if (replacement.contains(QLatin1Char(' ')) || replacement.contains(QLatin1Char('\t'))) {
+                replacement.prepend(QLatin1Char('"'));
+                replacement.append(QLatin1Char('"'));
             }
 
             int idx = cmd.m_commandLine.indexOf(QLatin1String("<<"));
@@ -396,7 +400,7 @@ void CommandExecutor::writeToStandardError(const QByteArray& output)
 
 bool CommandExecutor::isSimpleCommandLine(const QString &commandLine)
 {
-    static QRegExp rex("\\||>|<|&");
+    static QRegExp rex(QLatin1String("\\||>|<|&"));
     return rex.indexIn(commandLine) == -1;
 }
 

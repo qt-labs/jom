@@ -38,7 +38,7 @@ Preprocessor::Preprocessor()
     m_expressionParser(0),
     m_bInlineFileMode(false)
 {
-    m_rexPreprocessingDirective.setPattern("^!\\s*(\\S+)(.*)");
+    m_rexPreprocessingDirective.setPattern(QLatin1String("^!\\s*(\\S+)(.*)"));
 }
 
 Preprocessor::~Preprocessor()
@@ -64,15 +64,15 @@ bool Preprocessor::openFile(const QString& fileName)
 
 bool Preprocessor::internalOpenFile(QString fileName)
 {
-    if (fileName.startsWith('"') && fileName.endsWith('"'))
+    if (fileName.startsWith(QLatin1Char('"')) && fileName.endsWith(QLatin1Char('"')))
         fileName = fileName.mid(1, fileName.length() - 2);
-    else if (fileName.startsWith('<') && fileName.endsWith('>')) {
+    else if (fileName.startsWith(QLatin1Char('<')) && fileName.endsWith(QLatin1Char('>'))) {
         fileName = fileName.mid(1, fileName.length() - 2);
-        QString includeVar = m_macroTable->macroValue("INCLUDE").replace('\t', ' ');
-        QStringList includeDirs = includeVar.split(' ', QString::SkipEmptyParts);
+        QString includeVar = m_macroTable->macroValue(QLatin1String("INCLUDE")).replace(QLatin1Char('\t'), QLatin1Char(' '));
+        QStringList includeDirs = includeVar.split(QLatin1Char(' '), QString::SkipEmptyParts);
         QString fullFileName;
         foreach (const QString& includeDir, includeDirs) {
-            fullFileName = includeDir + '\\' + fileName;
+            fullFileName = includeDir + QLatin1Char('\\') + fileName;
             if (QFile::exists(fullFileName)) {
                 fileName = fullFileName;
                 break;
@@ -88,7 +88,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
             }
             TextFile textFile = m_fileStack.pop();
             tmpStack.push(textFile);
-            fullFileName = textFile.fileDirectory + '\\' + fileName;
+            fullFileName = textFile.fileDirectory + QLatin1Char('\\') + fileName;
         }
         while (!tmpStack.isEmpty())
             m_fileStack.push(tmpStack.pop());
@@ -97,8 +97,10 @@ bool Preprocessor::internalOpenFile(QString fileName)
     // make file name absolute for safe cycle detection
     const QString origFileName = fileName;
     FileInfo fileInfo(fileName);
-    if (!fileInfo.exists())
-        error(QString("File %1 doesn't exist.").arg(origFileName));
+    if (!fileInfo.exists()) {
+        QString msg = QLatin1String("File %1 doesn't exist.");
+        error(msg.arg(origFileName));
+    }
     fileName = fileInfo.absoluteFilePath();
 
     // detect include cycles
@@ -173,7 +175,8 @@ bool Preprocessor::parseMacro(const QString& line)
     if (line.isEmpty())
         return false;
 
-    static const QRegExp rex("^(_|[a-z]|[0-9]|\\$)([a-z]|[0-9]|\\$|=|\\()?.*", Qt::CaseInsensitive, QRegExp::RegExp2);
+    static const QRegExp rex(QLatin1String("^(_|[a-z]|[0-9]|\\$)([a-z]|[0-9]|\\$|=|\\()?.*"),
+                             Qt::CaseInsensitive, QRegExp::RegExp2);
     if (!rex.exactMatch(line))
         return false;
 
@@ -209,43 +212,43 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
     if (!isPreprocessingDirective(expandedLine, directive, value))
         return false;
 
-    if (directive == "CMDSWITCHES") {
-    } else if (directive == "ERROR") {
-        error("ERROR: " + value);
-    } else if (directive == "MESSAGE") {
+    if (directive == QLatin1String("CMDSWITCHES")) {
+    } else if (directive == QLatin1String("ERROR")) {
+        error(QLatin1String("ERROR: ") + value);
+    } else if (directive == QLatin1String("MESSAGE")) {
         printf(qPrintable(value));
         printf("\n");
-    } else if (directive == "INCLUDE") {
+    } else if (directive == QLatin1String("INCLUDE")) {
         internalOpenFile(value);
-    } else if (directive == "IF") {
+    } else if (directive == QLatin1String("IF")) {
         bool followElseBranch = evaluateExpression(value) == 0;
         enterConditional(followElseBranch);
         if (followElseBranch) {
             skipUntilNextMatchingConditional();
         }
-    } else if (directive == "IFDEF") {
+    } else if (directive == QLatin1String("IFDEF")) {
         bool followElseBranch = !m_macroTable->isMacroDefined(value);
         enterConditional(followElseBranch);
         if (followElseBranch) {
             skipUntilNextMatchingConditional();
         }
-    } else if (directive == "IFNDEF") {
+    } else if (directive == QLatin1String("IFNDEF")) {
         bool followElseBranch = m_macroTable->isMacroDefined(value);
         enterConditional(followElseBranch);
         if (followElseBranch) {
             skipUntilNextMatchingConditional();
         }
-    } else if (directive == "ELSE") {
+    } else if (directive == QLatin1String("ELSE")) {
         if (conditionalDepth() == 0) {
-            error("unexpected ELSE");
+            error(QLatin1String("unexpected ELSE"));
             return true;
         }
         if (!m_conditionalStack.top()) {
             skipUntilNextMatchingConditional();
         }
-    } else if (directive == "ELSEIF") {
+    } else if (directive == QLatin1String("ELSEIF")) {
         if (conditionalDepth() == 0) {
-            error("unexpected ELSE");
+            error(QLatin1String("unexpected ELSE"));
             return true;
         }
         if (!m_conditionalStack.top() || evaluateExpression(value) == 0) {
@@ -254,9 +257,9 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
             m_conditionalStack.pop();
             m_conditionalStack.push(false);
         }
-    } else if (directive == "ELSEIFDEF") {
+    } else if (directive == QLatin1String("ELSEIFDEF")) {
         if (conditionalDepth() == 0) {
-            error("unexpected ELSE");
+            error(QLatin1String("unexpected ELSE"));
             return true;
         }
         if (!m_conditionalStack.top() || !m_macroTable->isMacroDefined(value)) {
@@ -265,9 +268,9 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
             m_conditionalStack.pop();
             m_conditionalStack.push(false);
         }
-    } else if (directive == "ELSEIFNDEF") {
+    } else if (directive == QLatin1String("ELSEIFNDEF")) {
         if (conditionalDepth() == 0) {
-            error("unexpected ELSE");
+            error(QLatin1String("unexpected ELSE"));
             return true;
         }
         if (!m_conditionalStack.top() || m_macroTable->isMacroDefined(value)) {
@@ -276,9 +279,9 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
             m_conditionalStack.pop();
             m_conditionalStack.push(false);
         }
-    } else if (directive == "ENDIF") {
+    } else if (directive == QLatin1String("ENDIF")) {
         exitConditional();
-    } else if (directive == "UNDEF") {
+    } else if (directive == QLatin1String("UNDEF")) {
         m_macroTable->undefineMacro(value);
     }
 
@@ -295,9 +298,9 @@ bool Preprocessor::isPreprocessingDirective(const QString& line, QString& direct
         return false;
 
     bool oldStyleIncludeDirectiveFound = false;
-    if (firstChar != '!' && line.length() > 8) {
+    if (firstChar != QLatin1Char('!') && line.length() > 8) {
         const char ch = line.at(7).toLatin1();
-        if (!isSpaceOrTab(ch))
+        if (!isSpaceOrTab(QLatin1Char(ch)))
             return false;
 
         if (line.left(7).toLower() == QLatin1String("include"))
@@ -308,7 +311,7 @@ bool Preprocessor::isPreprocessingDirective(const QString& line, QString& direct
 
     bool result = true;
     if (oldStyleIncludeDirectiveFound) {
-        directive = "INCLUDE";
+        directive = QLatin1String("INCLUDE");
         value = line.mid(8);
     } else {
         result = m_rexPreprocessingDirective.exactMatch(line);
@@ -339,11 +342,11 @@ void Preprocessor::skipUntilNextMatchingConditional()
         if (!isPreprocessingDirective(expandedLine, directive, value))
             continue;
 
-        if (directive == "ENDIF")
+        if (directive == QLatin1String("ENDIF"))
             token = TOK_ENDIF;
-        else if (directive.startsWith("IF"))
+        else if (directive.startsWith(QLatin1String("IF")))
             token = TOK_IF;
-        else if (directive.startsWith("ELSE"))
+        else if (directive.startsWith(QLatin1String("ELSE")))
             token = TOK_ELSE;
         else
             token = TOK_UNINTERESTING;

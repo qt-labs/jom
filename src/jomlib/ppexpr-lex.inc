@@ -556,9 +556,7 @@ char *yytext;
 #define YY_DECL int PPExprParser::yylex()
 #define ECHO
 #define YY_SKIP_YYWRAP
-#ifndef __GNUC__
 #define fileno _fileno
-#endif
 
 static int isatty (int)
 {
@@ -977,7 +975,7 @@ YY_RULE_SETUP
             macroName.remove(0, 1);
         if (macroName.endsWith('\"'))
             macroName.chop(1);
-        yylval.num = m_macroTable->isMacroDefined(macroName) ? 1 : 0;
+        yylval.num = m_macroTable->isMacroDefined(QString::fromLatin1(macroName.constData())) ? 1 : 0;
         return T_NUMBER;
     }
 	YY_BREAK
@@ -1000,7 +998,7 @@ YY_RULE_SETUP
             fileName.remove(0, 1);
         if (fileName.endsWith('\"'))
             fileName.chop(1);
-        yylval.num = QFile::exists(fileName) ? 1 : 0;
+        yylval.num = QFile::exists(QString::fromLatin1(fileName.constData())) ? 1 : 0;
         return T_NUMBER;
     }
 	YY_BREAK
@@ -1018,7 +1016,7 @@ YY_RULE_SETUP
         fileName.remove(0, 1);
     if (fileName.endsWith('\"'))
         fileName.chop(1);
-    yylval.num = QFile::exists(fileName) ? 1 : 0;
+    yylval.num = QFile::exists(QString::fromLatin1(fileName.constData())) ? 1 : 0;
     return T_NUMBER;
 }
 	YY_BREAK

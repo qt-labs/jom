@@ -105,7 +105,7 @@ static int yywrap()
             macroName.remove(0, 1);
         if (macroName.endsWith('\"'))
             macroName.chop(1);
-        yylval.num = m_macroTable->isMacroDefined(macroName) ? 1 : 0;
+        yylval.num = m_macroTable->isMacroDefined(QString::fromLatin1(macroName.constData())) ? 1 : 0;
         return T_NUMBER;
     }
 }
@@ -124,7 +124,7 @@ static int yywrap()
             fileName.remove(0, 1);
         if (fileName.endsWith('\"'))
             fileName.chop(1);
-        yylval.num = QFile::exists(fileName) ? 1 : 0;
+        yylval.num = QFile::exists(QString::fromLatin1(fileName.constData())) ? 1 : 0;
         return T_NUMBER;
     }
 }
@@ -140,7 +140,7 @@ static int yywrap()
         fileName.remove(0, 1);
     if (fileName.endsWith('\"'))
         fileName.chop(1);
-    yylval.num = QFile::exists(fileName) ? 1 : 0;
+    yylval.num = QFile::exists(QString::fromLatin1(fileName.constData())) ? 1 : 0;
     return T_NUMBER;
 }
 

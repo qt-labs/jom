@@ -30,7 +30,7 @@ static void readEnvironment(const QStringList& environment, MacroTable *macroTab
 {
     foreach (const QString& env, environment) {
         QString lhs, rhs;
-        int idx = env.indexOf('=');
+        int idx = env.indexOf(QLatin1Char('='));
         lhs = env.left(idx);
         rhs = env.right(env.length() - idx - 1);
         macroTable->defineEnvironmentMacroValue(lhs, rhs, forceReadOnly);
@@ -56,9 +56,9 @@ static bool isComplexPathName(const QString& path)
 static QString encloseInDoubleQuotesIfNeeded(const QString& path)
 {
     if (isComplexPathName(path)) {
-        QString result = "\"";
+        QString result = QLatin1Char('"');
         result.append(path);
-        result.append('"');
+        result.append(QLatin1Char('"'));
         return result;
     }
     return path;
@@ -89,13 +89,13 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments)
         const wchar_t *wszFileName = reinterpret_cast<const wchar_t*>(options->stderrFile.utf16());
         FILE *f = _wfopen(wszFileName, L"w");
         if (!f) {
-            m_errorString = "Cannot open stderr file for writing.";
+            m_errorString = QLatin1String("Cannot open stderr file for writing.");
             m_errorType = IOError;
             return false;
         }
         fclose(f);
         if (!_wfreopen(wszFileName, L"w", stderr)) {
-            m_errorString = "Cannot reopen stderr handle for writing.";
+            m_errorString = QLatin1String("Cannot reopen stderr handle for writing.");
             m_errorType = IOError;
             return false;
         }

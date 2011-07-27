@@ -5,7 +5,7 @@
 
 inline QString fileNameFromFilePath(const QString& filePath)
 {
-    int idx = qMax(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
+    int idx = qMax(filePath.lastIndexOf(QLatin1Char('/')), filePath.lastIndexOf(QLatin1Char('\\')));
     if (idx == -1)
         return filePath;
     QString fileName = filePath;
@@ -26,7 +26,7 @@ inline bool startsWithSpaceOrTab(const QString& str)
 
 inline void removeDirSeparatorAtEnd(QString& directory)
 {
-    if (directory.endsWith('/') || directory.endsWith('\\'))
+    if (directory.endsWith(QLatin1Char('/')) || directory.endsWith(QLatin1Char('\\')))
         directory.chop(1);
 }
 

@@ -33,9 +33,9 @@ namespace NMakeFile {
 Parser::Parser()
 :   m_preprocessor(0)
 {
-    m_rexDotDirective.setPattern("^\\.(IGNORE|PRECIOUS|SILENT|SUFFIXES)\\s*:(.*)");
-    m_rexInferenceRule.setPattern("^(\\{.*\\})?(\\.\\w+)(\\{.*\\})?(\\.\\w+)(:{1,2})");
-    m_rexSingleWhiteSpace.setPattern("\\s");
+    m_rexDotDirective.setPattern(QLatin1String("^\\.(IGNORE|PRECIOUS|SILENT|SUFFIXES)\\s*:(.*)"));
+    m_rexInferenceRule.setPattern(QLatin1String("^(\\{.*\\})?(\\.\\w+)(\\{.*\\})?(\\.\\w+)(:{1,2})"));
+    m_rexSingleWhiteSpace.setPattern(QLatin1String("\\s"));
 }
 
 Parser::~Parser()
@@ -58,8 +58,18 @@ void Parser::apply(Preprocessor* pp,
     m_silentCommands = options->suppressOutputMessages;
     m_ignoreExitCodes = !options->stopOnErrors;
     m_suffixes.clear();
-    m_suffixes << ".exe" << ".obj" << ".asm" << ".c" << ".cpp" << ".cxx"
-               << ".bas" << ".cbl" << ".for" << ".pas" << ".res" << ".rc";
+    m_suffixes << QLatin1String(".exe")
+               << QLatin1String(".obj")
+               << QLatin1String(".asm")
+               << QLatin1String(".c")
+               << QLatin1String(".cpp")
+               << QLatin1String(".cxx")
+               << QLatin1String(".bas")
+               << QLatin1String(".cbl")
+               << QLatin1String(".for")
+               << QLatin1String(".pas")
+               << QLatin1String(".res")
+               << QLatin1String(".rc");
     int dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos;
 
     try {
@@ -79,7 +89,7 @@ void Parser::apply(Preprocessor* pp,
             } else if (isDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos)) {
                 parseDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos);
             } else {
-                error("syntax error");
+                error(QLatin1String("syntax error"));
                 readLine();
             }
         }
@@ -95,9 +105,12 @@ void Parser::apply(Preprocessor* pp,
         return;
 
     // make sure that all active targets exist
-    foreach (const QString& targetName, m_activeTargets)
-        if (!m_makefile->target(targetName))
-            throw Exception(QString("Target %1 doesn't exist.").arg(targetName));
+    foreach (const QString& targetName, m_activeTargets) {
+        if (!m_makefile->target(targetName)) {
+            QString msg = QLatin1String("Target %1 doesn't exist.");
+            throw Exception(msg.arg(targetName));
+        }
+    }
 
     // if no active target is defined, use the first one
     if (m_activeTargets.isEmpty()) {
@@ -213,7 +226,7 @@ bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength, int& co
             // Is it a drive letter somewhere in the line?
             if (i > 1 && m_line.at(i-1).isLetter()) {
                 const QChar &ch2 = m_line.at(i-2);
-                if (ch2.isSpace() || ch2 == '"')
+                if (ch2.isSpace() || ch2 == QLatin1Char('"'))
                     continue;
             }
             // No further objections. We've found the separator.
@@ -226,7 +239,7 @@ bool Parser::isDescriptionBlock(int& separatorPos, int& separatorLength, int& co
         return false;
 
     const int idx = separatorPos + 1;
-    if (idx < lineLength && m_line.at(idx) == ':')
+    if (idx < lineLength && m_line.at(idx) == QLatin1Char(':'))
         separatorLength = 2;
     else
         separatorLength = 1;
@@ -268,9 +281,9 @@ static QStringList splitTargetNames(const QString& str)
     int from = 0, to = 0;
     for (int i=0; i < str.length(); ++i) {
         const QChar ch = str.at(i);
-        if (ch == '\"')
+        if (ch == QLatin1Char('\"'))
             inDoubleQuotes = !inDoubleQuotes;
-        else if ((ch == ' ' || ch == '\t') && !inDoubleQuotes)
+        else if ((ch == QLatin1Char(' ') || ch == QLatin1Char('\t')) && !inDoubleQuotes)
             to = i;
         if (from < to) {
             split_append_helper(lst, str, from, to);
@@ -323,7 +336,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
             if (canAddCommands != descblock->m_canAddCommands &&
                 descblock->m_canAddCommands != DescriptionBlock::ACSUnknown)
             {
-                error("cannot have : and :: dependents for same target");
+                error(QLatin1String("cannot have : and :: dependents for same target"));
                 return;
             }
             descblock->m_canAddCommands = canAddCommands;
@@ -377,21 +390,21 @@ void Parser::parseCommandLine(const QString& cmdLine, QList<Command>& commands, 
 
     bool noCommandModifiersFound = false;
     do {
-        if (cmd.m_commandLine.startsWith('-')) {
+        if (cmd.m_commandLine.startsWith(QLatin1Char('-'))) {
             cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
             cmd.m_maxExitCode = 255;
-            int idx = cmd.m_commandLine.indexOf(' ');
-            if (idx == -1) idx = cmd.m_commandLine.indexOf('\t');
+            int idx = cmd.m_commandLine.indexOf(QLatin1Char(' '));
+            if (idx == -1) idx = cmd.m_commandLine.indexOf(QLatin1Char('\t'));
             if (idx > -1) {
                 QString numstr = cmd.m_commandLine.left(idx+1);
                 bool ok;
                 int exitCode = numstr.toInt(&ok);
                 if (ok) cmd.m_maxExitCode = (unsigned char)exitCode;
             }
-        } else if (cmd.m_commandLine.startsWith('@')) {
+        } else if (cmd.m_commandLine.startsWith(QLatin1Char('@'))) {
             cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
             cmd.m_silent = true;
-        } else if (cmd.m_commandLine.startsWith('!')) {
+        } else if (cmd.m_commandLine.startsWith(QLatin1Char('!'))) {
             cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
             cmd.m_singleExecution = true;
         } else {
@@ -439,11 +452,11 @@ void Parser::parseInlineFiles(Command& cmd, bool inferenceRule)
     foreach (InlineFile* inlineFile, cmd.m_inlineFiles) {
         readLine();
         while (!m_line.isNull()) {
-            if (m_line.startsWith("<<")) {
+            if (m_line.startsWith(QLatin1String("<<"))) {
                 QStringList options = m_line.right(m_line.length() - 2).split(m_rexSingleWhiteSpace);
-                if (options.contains("KEEP"))
+                if (options.contains(QLatin1String("KEEP")))
                     inlineFile->m_keep = true;
-                if (options.contains("UNICODE"))
+                if (options.contains(QLatin1String("UNICODE")))
                     inlineFile->m_unicode = true;
                 break;
             }
@@ -454,11 +467,11 @@ void Parser::parseInlineFiles(Command& cmd, bool inferenceRule)
             else
                 contentLine = m_preprocessor->macroTable()->expandMacros(m_line);
 
-            if (!contentLine.endsWith("\r\n")) {
+            if (!contentLine.endsWith(QLatin1String("\r\n"))) {
                 if (contentLine.endsWith(QLatin1Char('\n')))
                     contentLine.insert(contentLine.length() - 1, QLatin1Char('\r'));
                 else
-                    contentLine.append("\r\n");
+                    contentLine.append(QLatin1String("\r\n"));
             }
 
             inlineFile->m_content.append(contentLine);
@@ -511,7 +524,7 @@ void Parser::parseDotDirective()
     QString value = m_rexDotDirective.cap(2);
     //qDebug() << m_rexDotDirective.cap(1) << m_rexDotDirective.cap(2);
 
-    if (directive == "SUFFIXES") {
+    if (directive == QLatin1String("SUFFIXES")) {
         QStringList splitvalues = value.simplified().split(m_rexSingleWhiteSpace, QString::SkipEmptyParts);
         //qDebug() << "splitvalues" << splitvalues;
         if (splitvalues.isEmpty())
@@ -519,14 +532,14 @@ void Parser::parseDotDirective()
         else
             m_suffixes.append(splitvalues);
         //qDebug() << ".SUFFIXES" << m_suffixes;
-    } else if (directive == "IGNORE") {
+    } else if (directive == QLatin1String("IGNORE")) {
         m_ignoreExitCodes = true;
-    } else if (directive == "PRECIOUS") {
+    } else if (directive == QLatin1String("PRECIOUS")) {
         const QStringList& splitvalues = value.split(m_rexSingleWhiteSpace);
         foreach (QString str, splitvalues)
             if (!str.isEmpty())
                 m_makefile->addPreciousTarget(str);
-    } else if (directive == "SILENT") {
+    } else if (directive == QLatin1String("SILENT")) {
         m_silentCommands = true;
     }
 
@@ -560,7 +573,7 @@ QList<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFilePat
         QString directory = targetFilePath.left(targetFilePath.length() - fileName.length());
         removeDirSeparatorAtEnd(directory);
         if (directory.isEmpty())
-            directory = ".";
+            directory = QLatin1Char('.');
         if (directory != rule.m_toSearchPath)
             continue;
 

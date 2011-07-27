@@ -167,12 +167,13 @@ public:
         }
         if (!result) {
             QString alternativeName = lowerName;
-            if (name.startsWith('"') && name.endsWith('"')) {
+            const QChar doubleQuote = QLatin1Char('"');
+            if (name.startsWith(doubleQuote) && name.endsWith(doubleQuote)) {
                 alternativeName.remove(0, 1);
                 alternativeName.chop(1);
             } else {
-                alternativeName.prepend('"');
-                alternativeName.append('"');
+                alternativeName.prepend(doubleQuote);
+                alternativeName.append(doubleQuote);
             }
             result = m_targets.value(alternativeName, 0);
         }

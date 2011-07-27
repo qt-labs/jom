@@ -2,6 +2,7 @@ TEMPLATE = app
 DESTDIR = ../../bin
 QT = core
 CONFIG += console debug_and_release build_all
+DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
 TARGET = jom
 DEPENDPATH += .
 
