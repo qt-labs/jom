@@ -196,7 +196,7 @@ void DependencyGraph::dump()
 
 void DependencyGraph::internalDump(Node* node, QString& indent)
 {
-    printf(qPrintable(indent + node->target->targetName() + QLatin1Char('\n')));
+    printf(qPrintable(QString(indent + node->target->targetName() + QLatin1Char('\n'))));
     indent.append(QLatin1Char(' '));
     foreach (Node* child, node->children) {
         internalDump(child, indent);

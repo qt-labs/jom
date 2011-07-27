@@ -5,6 +5,7 @@ QT = core
 CONFIG += qt staticlib debug_and_release build_all
 DEFINES += _CRT_SECURE_NO_WARNINGS
 DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
+DEFINES += QT_USE_FAST_CONCATENATION QT_USE_FAST_OPERATOR_PLUS
 PRECOMPILED_HEADER = stable.h
 
 build_pass:CONFIG(debug, debug|release) {

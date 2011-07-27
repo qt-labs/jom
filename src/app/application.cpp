@@ -38,6 +38,7 @@ Application::Application(int argc, char** argv)
 
 bool Application::winEventFilter(MSG *msg, long *result)
 {
+    Q_UNUSED(result);
     if (m_shutDownByUserMessage == msg->message &&
         msg->lParam != GetCurrentProcessId())
     {

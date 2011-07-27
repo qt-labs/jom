@@ -462,7 +462,7 @@ void ParserTest::inferenceRules_data()
     filesToCreate << "subdir\\foo5.cpp" << "foo6.cpp";
     foreach (const QString& fileName, filesToCreate)
         if (QFile::exists(fileName))
-            system(qPrintable(QLatin1String("del ") + fileName));
+            system("del " + fileName.toLocal8Bit());
 }
 
 void ParserTest::inferenceRules()
@@ -492,10 +492,10 @@ void ParserTest::inferenceRules()
     QVERIFY(target);
     if (mode == IRTM_DeferredRule) {
         QVERIFY(target->m_commands.count() == 0);
-        system(qPrintable(QLatin1String("echo.>") + fileToCreate));
+        system("echo.>" + fileToCreate.toLocal8Bit());
         QVERIFY(QFile::exists(fileToCreate));
         mkfile->applyInferenceRules(QList<DescriptionBlock*>() << target);
-        system(qPrintable(QLatin1String("del ") + fileToCreate));
+        system("del " + fileToCreate.toLocal8Bit());
         QVERIFY(!QFile::exists(fileToCreate));
     }
     QCOMPARE(target->m_commands.count(), 1);

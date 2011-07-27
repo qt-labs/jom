@@ -114,7 +114,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
     MakefileLineReader* reader = new MakefileLineReader(fileName);
     if (!reader->open()) {
         delete reader;
-        error(QLatin1String("Can't open ") + origFileName);
+        error(QLatin1Literal("Can't open ") + origFileName);
         return false;
     }
 
@@ -214,7 +214,7 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
 
     if (directive == QLatin1String("CMDSWITCHES")) {
     } else if (directive == QLatin1String("ERROR")) {
-        error(QLatin1String("ERROR: ") + value);
+        error(QLatin1Literal("ERROR: ") + value);
     } else if (directive == QLatin1String("MESSAGE")) {
         printf(qPrintable(value));
         printf("\n");

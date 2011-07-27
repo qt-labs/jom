@@ -190,7 +190,7 @@ void CommandExecutor::executeCurrentCommandLine()
         if (idx > -1) {
             spawnJOM = true;
             const int appPathLength = m_pTarget->makefile()->options()->fullAppPath.length();
-            QString arg = QLatin1String(" -nologo -j ") + QString().setNum(g_options.maxNumberOfJobs);
+            QString arg = QLatin1Literal(" -nologo -j ") + QString().setNum(g_options.maxNumberOfJobs);
             if (m_pTarget->makefile()->options()->displayBuildInfo)
                 arg += QLatin1String(" /D");
 
@@ -333,7 +333,7 @@ void CommandExecutor::createTempFiles()
                     fileName = m_tempPath + simplifiedTargetName + QLatin1Char('.')
                                + QString::number(GetCurrentProcessId()) + QLatin1Char('.')
                                + QString::number(GetTickCount() - m_startUpTickCount)
-                               + QLatin1String(".jom");
+                               + QLatin1Literal(".jom");
                 } while (QFile::exists(fileName));
             } else
                 fileName = inlineFile->m_filename;

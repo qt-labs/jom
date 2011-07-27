@@ -115,7 +115,7 @@ MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, co
         return 0;
 
     MacroData* result = 0;
-    const QString instantiatedName = QLatin1String("$(") + expandedName + QLatin1String(")");
+    const QString instantiatedName = QLatin1Literal("$(") + expandedName + QLatin1Literal(")");
     QString newValue = value;
     if (value.contains(instantiatedName))
         newValue.replace(instantiatedName, macroValue(expandedName));
