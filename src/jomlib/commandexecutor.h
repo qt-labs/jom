@@ -43,16 +43,6 @@ public:
     void waitForFinished();
     void cleanupTempFiles();
 
-    enum OutputMode
-    {
-        DirectOutput,
-        BufferingOutput
-    };
-
-    void setOutputMode(OutputMode mode);
-    OutputMode outputMode() const { return m_outputMode; }
-    void flushOutput();
-
 public slots:
     void setEnvironment(const QStringList &environment);
 
@@ -62,8 +52,6 @@ signals:
     void subJomStarted();
 
 private slots:
-    void onProcessReadyReadStandardError();
-    void onProcessReadyReadStandardOutput();
     void onProcessError(QProcess::ProcessError error);
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
@@ -96,15 +84,6 @@ private:
     QString             m_nextWorkingDir;
     bool                m_ignoreProcessErrors;
     bool                m_active;
-
-    struct OutputChunk
-    {
-        QByteArray data;
-        FILE *channel;
-    };
-
-    OutputMode          m_outputMode;
-    QList<OutputChunk>  m_outputBuffer;
 };
 
 } // namespace NMakeFile

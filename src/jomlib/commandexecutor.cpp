@@ -42,8 +42,7 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
     m_blocked(false),
     m_processFinishedWhileBlocked(false),
     m_ignoreProcessErrors(false),
-    m_active(false),
-    m_outputMode(BufferingOutput)
+    m_active(false)
 {
     if (m_startUpTickCount == 0)
         m_startUpTickCount = GetTickCount();
@@ -57,11 +56,10 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
         }
     }
 
+    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
     m_process.setEnvironment(environment);
     connect(&m_process, SIGNAL(error(QProcess::ProcessError)), SLOT(onProcessError(QProcess::ProcessError)));
     connect(&m_process, SIGNAL(finished(int, QProcess::ExitStatus)), SLOT(onProcessFinished(int, QProcess::ExitStatus)));
-    connect(&m_process, SIGNAL(readyReadStandardError()), SLOT(onProcessReadyReadStandardError()));
-    connect(&m_process, SIGNAL(readyReadStandardOutput()), SLOT(onProcessReadyReadStandardOutput()));
 }
 
 CommandExecutor::~CommandExecutor()
@@ -143,16 +141,6 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
     }
 }
 
-void CommandExecutor::onProcessReadyReadStandardError()
-{
-    writeToStandardError(m_process.readAllStandardError());
-}
-
-void CommandExecutor::onProcessReadyReadStandardOutput()
-{
-    writeToStandardOutput(m_process.readAllStandardOutput());
-}
-
 void CommandExecutor::finishExecution(bool abortMakeProcess)
 {
     m_active = false;
@@ -162,7 +150,6 @@ void CommandExecutor::finishExecution(bool abortMakeProcess)
 void CommandExecutor::waitForFinished()
 {
     m_process.waitForFinished();
-    setOutputMode(DirectOutput);
 }
 
 inline bool commandLineStartsWithCommand(const QString &str, const QString &searchString)
@@ -377,15 +364,8 @@ void CommandExecutor::cleanupTempFiles()
 
 void CommandExecutor::writeToChannel(const QByteArray& data, FILE *channel)
 {
-    if (m_outputMode == DirectOutput) {
-        fputs(data, channel);
-        fflush(channel);
-    } else {
-        OutputChunk chunk;
-        chunk.data = data;
-        chunk.channel = channel;
-        m_outputBuffer.append(chunk);
-    }
+    fputs(data, channel);
+    fflush(channel);
 }
 
 void CommandExecutor::writeToStandardOutput(const QByteArray& output)
@@ -442,28 +422,6 @@ bool CommandExecutor::exec_cd(const QString &commandLine)
 
     m_nextWorkingDir = fi.absoluteFilePath();
     return true;
-}
-
-void CommandExecutor::setOutputMode(CommandExecutor::OutputMode mode)
-{
-    switch (mode) {
-    case DirectOutput:
-        flushOutput();
-        break;
-    }
-
-    m_outputMode = mode;
-}
-
-void CommandExecutor::flushOutput()
-{
-    if (!m_outputBuffer.isEmpty()) {
-        foreach (const OutputChunk &chunk, m_outputBuffer) {
-            fputs(chunk.data.data(), chunk.channel);
-            fflush(chunk.channel);
-        }
-        m_outputBuffer.clear();
-    }
 }
 
 void CommandExecutor::setEnvironment(const QStringList &environment)

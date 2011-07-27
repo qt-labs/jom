@@ -52,8 +52,6 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
             if (process != otherProcess)
                 connect(process, SIGNAL(environmentChanged(const QStringList&)),
                         otherProcess, SLOT(setEnvironment(const QStringList&)));
-
-    m_processes.first()->setOutputMode(CommandExecutor::DirectOutput);
 }
 
 TargetExecutor::~TargetExecutor()
@@ -161,30 +159,6 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
         m_blockingCommand = 0;
         foreach (CommandExecutor *cmdex, m_processes)
             cmdex->unblock();
-    }
-
-    bool directOutputProcessIsFinished = (executor->outputMode() == CommandExecutor::DirectOutput);
-    if (directOutputProcessIsFinished) {
-        bool directOutputSet = false;
-        executor->setOutputMode(CommandExecutor::BufferingOutput);
-
-        foreach (CommandExecutor *process, m_processes) {
-            switch (process->outputMode()) {
-            case CommandExecutor::BufferingOutput:
-                if (process->isActive()) {
-                    if (!directOutputSet) {
-                        directOutputSet = true;
-                        process->setOutputMode(CommandExecutor::DirectOutput);
-                    }
-                } else {
-                    process->flushOutput();
-                }
-                break;
-            }
-        }
-
-        if (!directOutputSet)
-            m_availableProcesses.first()->setOutputMode(CommandExecutor::DirectOutput);
     }
 
     if (abortMakeProcess) {
