@@ -78,8 +78,12 @@ bool FastFileInfo::exists() const
 
 FileTime FastFileInfo::lastModified() const
 {
-    return FileTime(*reinterpret_cast<const FileTime::InternalType*>(
-        &z(m_attributes)->ftLastWriteTime));
+    const WIN32_FILE_ATTRIBUTE_DATA *fattr = z(m_attributes);
+    if (fattr->dwFileAttributes == INVALID_FILE_ATTRIBUTES) {
+        return FileTime();
+    } else {
+        return FileTime(reinterpret_cast<const FileTime::InternalType&>(fattr->ftLastWriteTime));
+    }
 }
 
 } // NMakeFile
