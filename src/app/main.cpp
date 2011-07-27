@@ -45,7 +45,7 @@ using namespace NMakeFile;
 
 const int nVersionMajor = 1;
 const int nVersionMinor = 0;
-const int nVersionPatch = 6;
+const int nVersionPatch = 7;
 
 static void showLogo()
 {
