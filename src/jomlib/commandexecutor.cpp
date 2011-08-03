@@ -171,26 +171,24 @@ void CommandExecutor::executeCurrentCommandLine()
     m_processFinishedWhileBlocked = false;
     const Command& cmd = m_pTarget->m_commands.at(m_currentCommandIdx);
     QString commandLine = cmd.m_commandLine;
-    bool spawnJOM = false;
-    if (g_options.isMaxNumberOfJobsSet || g_options.maxNumberOfJobs > 1) {
-        int idx = commandLine.indexOf(m_pTarget->makefile()->options()->fullAppPath);
-        if (idx > -1) {
-            spawnJOM = true;
-            const int appPathLength = m_pTarget->makefile()->options()->fullAppPath.length();
-            QString arg = QLatin1Literal(" -nologo -j ") + QString().setNum(g_options.maxNumberOfJobs);
-            if (m_pTarget->makefile()->options()->displayBuildInfo)
-                arg += QLatin1String(" /D");
+    int jomCallIdx = commandLine.indexOf(m_pTarget->makefile()->options()->fullAppPath);
+    bool spawnJOM = (jomCallIdx >= 0);
+    if (spawnJOM && (g_options.isMaxNumberOfJobsSet || g_options.maxNumberOfJobs > 1)) {
+        int idx = jomCallIdx;
+        const int appPathLength = m_pTarget->makefile()->options()->fullAppPath.length();
+        QString arg = QLatin1Literal(" -nologo -j ") + QString().setNum(g_options.maxNumberOfJobs);
+        if (m_pTarget->makefile()->options()->displayBuildInfo)
+            arg += QLatin1String(" /D");
 
-            // Check if the jom call is enclosed by double quotes.
-            const int idxRight = idx + appPathLength;
-            if (idx > 0 && commandLine.at(idx-1) == QLatin1Char('"') &&
-                idxRight < commandLine.length() && commandLine.at(idxRight) == QLatin1Char('"'))
-            {
-                idx++;  // to insert behind the double quote
-            }
-
-            commandLine.insert(idx + appPathLength, arg);
+        // Check if the jom call is enclosed by double quotes.
+        const int idxRight = idx + appPathLength;
+        if (idx > 0 && commandLine.at(idx-1) == QLatin1Char('"') &&
+            idxRight < commandLine.length() && commandLine.at(idxRight) == QLatin1Char('"'))
+        {
+            idx++;  // to insert behind the double quote
         }
+
+        commandLine.insert(idx + appPathLength, arg);
     }
 
     // Unescape commandline characters.
