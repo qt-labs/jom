@@ -24,29 +24,13 @@
 #include "application.h"
 #include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
-#include <qt_windows.h>
 
 namespace NMakeFile {
 
 Application::Application(int argc, char** argv)
-:   QCoreApplication(argc, argv),
-    m_ctrl_c_generated(false)
+:   QCoreApplication(argc, argv)
 {
-    m_shutDownByUserMessage = RegisterWindowMessage(L"jom_shut_down_by_user");
     m_exeName = QFileInfo(QCoreApplication::applicationFilePath()).fileName();
-}
-
-bool Application::winEventFilter(MSG *msg, long *result)
-{
-    Q_UNUSED(result);
-    if (m_shutDownByUserMessage == msg->message &&
-        msg->lParam != GetCurrentProcessId())
-    {
-        m_ctrl_c_generated = true;
-        GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
-        return true;
-    }
-    return false;
 }
 
 } // namespace NMakeFile

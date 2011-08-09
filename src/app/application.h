@@ -33,15 +33,10 @@ public:
     static Application *instance() { return static_cast<Application*>(QCoreApplication::instance()); }
 
     Application(int argc, char** argv);
-    uint shutDownByUserMessage() const { return m_shutDownByUserMessage; }
     const QString &exeName() const { return m_exeName; }
-    bool ctrl_c_generated() const { return m_ctrl_c_generated; }
-    bool winEventFilter(MSG *msg, long *result);
 
 private:
-    uint m_shutDownByUserMessage;
     QString m_exeName;
-    bool m_ctrl_c_generated;
 };
 
 } // namespace NMakeFile

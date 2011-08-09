@@ -66,60 +66,11 @@ static void showUsage()
 
 static TargetExecutor* g_pTargetExecutor = 0;
 
-BOOL CALLBACK sendShutDownMessageToAllWindowsOfProcess_enumWnd(HWND hwnd, LPARAM lParam)
-{
-    DWORD dwProcessID;
-    GetWindowThreadProcessId(hwnd, &dwProcessID);
-    if (lParam == dwProcessID)
-        SendNotifyMessage(hwnd, Application::instance()->shutDownByUserMessage(), 0, GetCurrentProcessId());
-    return TRUE;
-}
-
-void sendShutDownMessageToAllWindowsOfProcess(DWORD dwProcessID)
-{
-    EnumWindows(sendShutDownMessageToAllWindowsOfProcess_enumWnd, dwProcessID);
-}
-
-void sendShutDownMessageToSubJoms(DWORD dwPID)
-{
-    static QString exeName = Application::instance()->exeName();
-    HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnapShot == INVALID_HANDLE_VALUE)
-        return;
-    BOOL bSuccess;
-    PROCESSENTRY32 processEntry;
-    processEntry.dwSize = sizeof(processEntry);
-    bSuccess = Process32First(hSnapShot, &processEntry);
-    while (bSuccess) {
-        if (processEntry.th32ParentProcessID == dwPID) {
-            sendShutDownMessageToSubJoms(processEntry.th32ProcessID);
-            if (wcscmp(exeName.utf16(), processEntry.szExeFile) == 0) {
-                // found a subjom
-                sendShutDownMessageToAllWindowsOfProcess(processEntry.th32ProcessID);
-            } else {
-                // found another subprocess
-                HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, TRUE, processEntry.th32ProcessID);
-                if (hProcess != INVALID_HANDLE_VALUE) {
-                    //fprintf(stderr, "terminating process %u\n", processEntry.th32ProcessID);
-                    TerminateProcess(hProcess, 5);
-                    CloseHandle(hProcess);
-                }
-            }
-
-        }
-        bSuccess = Process32Next(hSnapShot, &processEntry);
-    }
-    CloseHandle(hSnapShot);
-}
-
 BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
 {
     fprintf(stderr, "jom terminated by user (pid=%u)\n", QCoreApplication::applicationPid());
 
-    Application *app = Application::instance();
-    if (!app->ctrl_c_generated())
-        sendShutDownMessageToSubJoms(app->applicationPid());
-
+    GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
     if (g_pTargetExecutor)
         g_pTargetExecutor->removeTempFiles();
 
