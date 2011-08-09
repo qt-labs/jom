@@ -23,7 +23,7 @@
 #pragma once
 
 #include "makefile.h"
-#include <QProcess>
+#include "process.h"
 #include <QFile>
 
 namespace NMakeFile {
@@ -52,8 +52,8 @@ signals:
     void subJomStarted();
 
 private slots:
-    void onProcessError(QProcess::ProcessError error);
-    void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void onProcessError(Process::ProcessError error);
+    void onProcessFinished(int exitCode, Process::ExitStatus exitStatus);
 
 private:
     void finishExecution(bool abortMakeProcess);
@@ -68,7 +68,7 @@ private:
 private:
     static ulong        m_startUpTickCount;
     static QString      m_tempPath;
-    QProcess            m_process;
+    Process             m_process;
     DescriptionBlock*   m_pTarget;
     bool                m_blocked;
     bool                m_processFinishedWhileBlocked;

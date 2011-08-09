@@ -56,10 +56,9 @@ CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment
         }
     }
 
-    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
     m_process.setEnvironment(environment);
-    connect(&m_process, SIGNAL(error(QProcess::ProcessError)), SLOT(onProcessError(QProcess::ProcessError)));
-    connect(&m_process, SIGNAL(finished(int, QProcess::ExitStatus)), SLOT(onProcessFinished(int, QProcess::ExitStatus)));
+    connect(&m_process, SIGNAL(error(Process::ProcessError)), SLOT(onProcessError(Process::ProcessError)));
+    connect(&m_process, SIGNAL(finished(int, Process::ExitStatus)), SLOT(onProcessFinished(int, Process::ExitStatus)));
 }
 
 CommandExecutor::~CommandExecutor()
@@ -104,14 +103,14 @@ void CommandExecutor::unblock()
     }
 }
 
-void CommandExecutor::onProcessError(QProcess::ProcessError error)
+void CommandExecutor::onProcessError(Process::ProcessError error)
 {
     //qDebug() << "onProcessError" << error;
     if (!m_ignoreProcessErrors)
-        onProcessFinished(2, (error == QProcess::Crashed) ? QProcess::CrashExit : QProcess::NormalExit);
+        onProcessFinished(2, (error == Process::Crashed) ? Process::CrashExit : Process::NormalExit);
 }
 
-void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
+void CommandExecutor::onProcessFinished(int exitCode, Process::ExitStatus exitStatus)
 {
     //qDebug() << "onProcessFinished" << m_pTarget->m_targetName;
     if (m_blocked) {
@@ -119,7 +118,7 @@ void CommandExecutor::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
         return;
     }
 
-    if (exitStatus != QProcess::NormalExit)
+    if (exitStatus != Process::NormalExit)
         exitCode = 2;
 
     const Command &currentCommand = m_pTarget->m_commands.at(m_currentCommandIdx);
@@ -205,7 +204,7 @@ void CommandExecutor::executeCurrentCommandLine()
                                    Qt::CaseInsensitive, QRegExp::RegExp2);
     if (m_pTarget->makefile()->options()->dryRun || (rexShellComment.indexIn(commandLine) >= 0))
     {
-        onProcessFinished(0, QProcess::NormalExit);
+        onProcessFinished(0, Process::NormalExit);
         return;
     }
 
@@ -220,7 +219,7 @@ void CommandExecutor::executeCurrentCommandLine()
         // handle builtins
         if (commandLineStartsWithCommand(commandLine, QLatin1String("cd"))) {
             bool success = exec_cd(commandLine);
-            onProcessFinished(success ? 0 : 1, QProcess::NormalExit);
+            onProcessFinished(success ? 0 : 1, Process::NormalExit);
             return;
         } else if (commandLineStartsWithCommand(commandLine, QLatin1String("set"))) {
             QString variableAssignment = commandLine;
@@ -260,43 +259,28 @@ void CommandExecutor::executeCurrentCommandLine()
 
         //qDebug("+++ direct exec");
         m_ignoreProcessErrors = true;
-#if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
-        m_process.setNativeArguments(commandLine);
-        m_process.start(QString(), QStringList());
-#else
         m_process.start(commandLine);
-#endif
-        executionSucceeded = m_process.waitForStarted();
+        executionSucceeded = m_process.isStarted();
         m_ignoreProcessErrors = false;
-#if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
-        m_process.setNativeArguments(QString());
-#endif
     }
 
     if (!executionSucceeded) {
         //qDebug("+++ shell exec");
 
+        // Check if there are more than three double quotes in the command.
+        // We must properly escape it. See "cmd /?" for the reason.
         int doubleQuoteCount(0), idx(0);
         const QChar doubleQuote = QLatin1Char('"');
         while (doubleQuoteCount < 3 && (commandLine.indexOf(doubleQuote, idx) >= 0))
             ++doubleQuoteCount;
 
         if (doubleQuoteCount >= 3) {
-            // There are more than three double quotes in the command. We must properly escape it.
-            commandLine.prepend(QLatin1String("\" "));
-            commandLine.append(QLatin1String(" \""));
+            commandLine.prepend(doubleQuote);
+            commandLine.append(doubleQuote);
         }
 
-#if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
-        m_process.setNativeArguments(commandLine);
-        m_process.start(QLatin1String("cmd"), QStringList() << QLatin1String("/c"));
-#else
-        m_process.start(QLatin1String("cmd /C ") + commandLine);
-#endif
-        executionSucceeded = m_process.waitForStarted();
-#if QT_VERSION >= QT_VERSION_CHECK(4,7,0)
-        m_process.setNativeArguments(QString());
-#endif
+        m_process.start(QLatin1Literal("cmd /C ") + commandLine);
+        executionSucceeded = m_process.isStarted();
     }
 
     if (!executionSucceeded)

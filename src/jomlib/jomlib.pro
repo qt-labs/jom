@@ -38,36 +38,39 @@ MSYSPATH=C:\\msys
     QMAKE_EXTRA_COMPILERS += qlalr
 }
 
-HEADERS +=  fileinfo.h \
-            filetime.h \
-            helperfunctions.h \
-            makefile.h \
-            makefilefactory.h \
-            makefilelinereader.h \
-            macrotable.h \
-            exception.h \
-            dependencygraph.h \
-            options.h \
-            parser.h \
-            preprocessor.h \
-            ppexprparser.h \
-            targetexecutor.h \
-            commandexecutor.h
+HEADERS +=  \
+    fileinfo.h \
+    filetime.h \
+    helperfunctions.h \
+    makefile.h \
+    makefilefactory.h \
+    makefilelinereader.h \
+    macrotable.h \
+    exception.h \
+    dependencygraph.h \
+    options.h \
+    parser.h \
+    preprocessor.h \
+    ppexprparser.h \
+    targetexecutor.h \
+    commandexecutor.h \
+    process.h
 
-SOURCES +=  fileinfo.cpp \
-            filetime.cpp \
-            helperfunctions.cpp \
-            macrotable.cpp \
-            makefile.cpp \
-            makefilefactory.cpp \
-            makefilelinereader.cpp \
-            exception.cpp \
-            dependencygraph.cpp \
-            options.cpp \
-            parser.cpp \
-            preprocessor.cpp \
-            ppexpr_grammar.cpp \
-            ppexprparser.cpp \
-            targetexecutor.cpp \
-            commandexecutor.cpp
-
+SOURCES += \
+    fileinfo.cpp \
+    filetime.cpp \
+    helperfunctions.cpp \
+    macrotable.cpp \
+    makefile.cpp \
+    makefilefactory.cpp \
+    makefilelinereader.cpp \
+    exception.cpp \
+    dependencygraph.cpp \
+    options.cpp \
+    parser.cpp \
+    preprocessor.cpp \
+    ppexpr_grammar.cpp \
+    ppexprparser.cpp \
+    targetexecutor.cpp \
+    commandexecutor.cpp \
+    process.cpp
