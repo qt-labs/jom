@@ -1,6 +1,7 @@
 jom - the parallel make tool for Windows
 
 "jom" is "let's go" in Malay.
+Its aimed to be an nmake clone with support for parallel builds.
 
 == How to compile jom ==
 This is a Qt program, so the usual steps to compile jom on command line are:
@@ -33,3 +34,18 @@ We assume that everything we do happens in the folder X:\build-jom
 
     X:\build-jom\> nmake test
     ...
+
+== .SYNC dependents ==
+
+You can use the .SYNC directive on the right side of a description block definition T to
+prevent jom from running all of T's dependents in parallel.
+For example the following description block adds further dependencies between its dependents.
+
+    all: Init Prebuild .SYNC Build .SYNC Postbuild
+
+This adds these additional dependencies:
+    Build -> Init Prebuild
+    Postbuild -> Build
+
+Now the 'Init' and 'Prebuild' targets are built before 'Build'.
+ 

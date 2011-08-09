@@ -65,21 +65,19 @@ private:
     void error(const QString& msg);
 
 private:
-    Preprocessor*           m_preprocessor;
-    QString                 m_line;
-    bool                    m_silentCommands;
-    bool                    m_ignoreExitCodes;
+    Preprocessor*               m_preprocessor;
+    QString                     m_line;
+    bool                        m_silentCommands;
+    bool                        m_ignoreExitCodes;
 
-    QRegExp                 m_rexDotDirective;
-    QRegExp                 m_rexInferenceRule;
-    QRegExp                 m_rexSingleWhiteSpace;
+    QRegExp                     m_rexDotDirective;
+    QRegExp                     m_rexInferenceRule;
+    QRegExp                     m_rexSingleWhiteSpace;
 
-    Makefile*               m_makefile;
-    QStringList             m_suffixes;
-    QStringList             m_activeTargets;
-
-    uint                    m_conditionalDepth;
-    bool                    m_followElseBranch;
+    Makefile*                   m_makefile;
+    QStringList                 m_suffixes;
+    QStringList                 m_activeTargets;
+    QHash<QString, QStringList> m_syncPoints;
 };
 
 } // namespace NMakeFile

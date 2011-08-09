@@ -53,7 +53,6 @@ void Parser::apply(Preprocessor* pp,
     m_makefile = mkfile;
     m_activeTargets = activeTargets;
     m_preprocessor = pp;
-    m_conditionalDepth = 0;
     const Options* options = mkfile->options();
     m_silentCommands = options->suppressOutputMessages;
     m_ignoreExitCodes = !options->stopOnErrors;
@@ -70,6 +69,7 @@ void Parser::apply(Preprocessor* pp,
                << QLatin1String(".pas")
                << QLatin1String(".res")
                << QLatin1String(".rc");
+    m_syncPoints.clear();
     int dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos;
 
     try {
@@ -118,6 +118,17 @@ void Parser::apply(Preprocessor* pp,
     }
 
     m_makefile->calculateInferenceRulePriorities(m_suffixes);
+
+    // translate sync points from .SYNC targets into real dependencies
+    for (QHash<QString, QStringList>::const_iterator it = m_syncPoints.constBegin();
+        it != m_syncPoints.constEnd(); ++it)
+    {
+        DescriptionBlock *target = m_makefile->target(it.key());
+        if (!target)
+            break;
+        target->m_dependents += it.value();
+        target->m_dependents.removeDuplicates();
+    }
 
     // check for cycles in active targets
     foreach (const QString& targetName, m_activeTargets) {
@@ -328,7 +339,26 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
     }
 
     const QStringList targets = splitTargetNames(target);
-    const QStringList dependents = splitTargetNames(value);
+    QStringList dependents = splitTargetNames(value);
+
+    // handle the special .SYNC dependents
+    {
+        QStringList syncDeps;
+        int k = 0;
+        for (int i=0; i < dependents.count();) {
+            if (dependents.at(i) == QLatin1String(".SYNC")) {
+                dependents.removeAt(i);
+                if (dependents.count() == i)
+                    break;
+                syncDeps = dependents.mid(k, i - k);
+                k = i;
+            } else {
+                m_syncPoints[dependents.at(i)] += syncDeps;
+                ++i;
+            }
+        }
+    }
+
     foreach (const QString& t, targets) {
         DescriptionBlock* descblock = m_makefile->target(t);
         DescriptionBlock::AddCommandsState canAddCommands = separatorLength > 1 ? DescriptionBlock::ACSEnabled : DescriptionBlock::ACSDisabled;
