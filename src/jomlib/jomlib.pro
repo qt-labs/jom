@@ -54,6 +54,7 @@ HEADERS +=  \
     ppexprparser.h \
     targetexecutor.h \
     commandexecutor.h \
+    consolecolorrestorer.h \
     process.h
 
 SOURCES += \
@@ -73,4 +74,5 @@ SOURCES += \
     ppexprparser.cpp \
     targetexecutor.cpp \
     commandexecutor.cpp \
+    consolecolorrestorer.cpp \
     process.cpp

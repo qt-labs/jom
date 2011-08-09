@@ -22,6 +22,7 @@
  ****************************************************************************/
 #include "targetexecutor.h"
 #include "commandexecutor.h"
+#include "consolecolorrestorer.h"
 #include "dependencygraph.h"
 #include "options.h"
 #include "exception.h"
@@ -33,7 +34,8 @@
 namespace NMakeFile {
 
 TargetExecutor::TargetExecutor(const QStringList& environment)
-:   m_bAborted(false),
+:   m_consoleColorRestorer(new ConsoleColorRestorer),
+    m_bAborted(false),
     m_blockingCommand(0)
 {
     m_makefile = 0;
@@ -57,6 +59,8 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
 TargetExecutor::~TargetExecutor()
 {
     delete m_depgraph;
+    delete m_consoleColorRestorer;
+    m_consoleColorRestorer = 0;
 }
 
 bool TargetExecutor::hasPendingTargets() const
@@ -136,7 +140,7 @@ void TargetExecutor::startProcesses()
 void TargetExecutor::waitForProcesses()
 {
     foreach (CommandExecutor* process, findChildren<CommandExecutor*>())
-            process->waitForFinished();
+        process->waitForFinished();
 }
 
 void TargetExecutor::onSubJomStarted()
@@ -153,6 +157,9 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
     Q_CHECK_PTR(executor->target());
     m_depgraph->removeLeaf(executor->target());
     m_availableProcesses.append(executor);
+
+    if (m_consoleColorRestorer)
+        m_consoleColorRestorer->restore();
 
     if (m_blockingCommand && m_blockingCommand == executor) {
         //qDebug() << "UNBLOCK" << QCoreApplication::applicationPid();

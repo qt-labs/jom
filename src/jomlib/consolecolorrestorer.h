@@ -20,49 +20,24 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
 
-#include "makefile.h"
-#include <QEvent>
-
-class QProcess;
-class QFile;
+#ifndef CONSOLECOLORRESTORER_H
+#define CONSOLECOLORRESTORER_H
 
 namespace NMakeFile {
 
-class CommandExecutor;
-class ConsoleColorRestorer;
-class DependencyGraph;
-
-class TargetExecutor : public QObject {
-    Q_OBJECT
+class ConsoleColorRestorer
+{
 public:
-    TargetExecutor(const QStringList& environment);
-    ~TargetExecutor();
+    ConsoleColorRestorer();
+    ~ConsoleColorRestorer();
 
-    void apply(Makefile* mkfile, const QStringList& targets);
-    void removeTempFiles();
-    bool hasPendingTargets() const;
-
-public slots:
-   void startProcesses();
-
-private slots:
-    void onSubJomStarted();
-    void onChildFinished(CommandExecutor*, bool abortMakeProcess);
+    void restore();
 
 private:
-    void waitForProcesses();
-
-private:
-    ConsoleColorRestorer* m_consoleColorRestorer;
-    Makefile* m_makefile;
-    DependencyGraph* m_depgraph;
-    QList<DescriptionBlock*> m_pendingTargets;
-    bool m_bAborted;
-    QObject *m_blockingCommand;
-    QList<CommandExecutor*> m_availableProcesses;
-    QList<CommandExecutor*> m_processes;
+    struct ConsoleColorRestorerPrivate *d;
 };
 
-} //namespace NMakeFile
+} // namespace NMakeFile
+
+#endif // CONSOLECOLORRESTORER_H

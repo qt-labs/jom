@@ -20,49 +20,43 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
 
-#include "makefile.h"
-#include <QEvent>
-
-class QProcess;
-class QFile;
+#include "stable.h"
+#include "consolecolorrestorer.h"
+#include <qt_windows.h>
 
 namespace NMakeFile {
 
-class CommandExecutor;
-class ConsoleColorRestorer;
-class DependencyGraph;
-
-class TargetExecutor : public QObject {
-    Q_OBJECT
-public:
-    TargetExecutor(const QStringList& environment);
-    ~TargetExecutor();
-
-    void apply(Makefile* mkfile, const QStringList& targets);
-    void removeTempFiles();
-    bool hasPendingTargets() const;
-
-public slots:
-   void startProcesses();
-
-private slots:
-    void onSubJomStarted();
-    void onChildFinished(CommandExecutor*, bool abortMakeProcess);
-
-private:
-    void waitForProcesses();
-
-private:
-    ConsoleColorRestorer* m_consoleColorRestorer;
-    Makefile* m_makefile;
-    DependencyGraph* m_depgraph;
-    QList<DescriptionBlock*> m_pendingTargets;
-    bool m_bAborted;
-    QObject *m_blockingCommand;
-    QList<CommandExecutor*> m_availableProcesses;
-    QList<CommandExecutor*> m_processes;
+struct ConsoleColorRestorerPrivate
+{
+    HANDLE hStdOut;
+    WORD wAttributes;
 };
 
-} //namespace NMakeFile
+ConsoleColorRestorer::ConsoleColorRestorer()
+:   d(new ConsoleColorRestorerPrivate)
+{
+    d->hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+    if (d->hStdOut != INVALID_HANDLE_VALUE) {
+        if (GetConsoleScreenBufferInfo(d->hStdOut, &csbiInfo))
+            d->wAttributes = csbiInfo.wAttributes;
+        else
+            d->hStdOut = INVALID_HANDLE_VALUE;
+    }
+}
+
+ConsoleColorRestorer::~ConsoleColorRestorer()
+{
+    delete d;
+}
+
+void ConsoleColorRestorer::restore()
+{
+    if (d->hStdOut == INVALID_HANDLE_VALUE)
+        return;
+
+    SetConsoleTextAttribute(d->hStdOut, d->wAttributes);
+}
+
+} // namespace NMakeFile
