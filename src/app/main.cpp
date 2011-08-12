@@ -78,6 +78,15 @@ BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
     return TRUE;
 }
 
+QStringList getCommandLineArguments()
+{
+    QStringList commandLineArguments = qApp->arguments().mid(1);
+    QByteArray makeFlags = qgetenv("MAKEFLAGS");
+    if (!makeFlags.isEmpty())
+        commandLineArguments.prepend(QString::fromLatin1('/' + makeFlags));
+    return commandLineArguments;
+}
+
 int main(int argc, char* argv[])
 {
     SetConsoleCtrlHandler(&ConsoleCtrlHandlerRoutine, TRUE);
@@ -86,7 +95,7 @@ int main(int argc, char* argv[])
 
     MakefileFactory mf;
     mf.setEnvironment(QProcess::systemEnvironment());
-    if (!mf.apply(qApp->arguments().mid(1))) {
+    if (!mf.apply(getCommandLineArguments())) {
         switch (mf.errorType()) {
         case MakefileFactory::CommandLineError:
             showUsage();
