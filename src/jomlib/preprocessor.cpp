@@ -104,18 +104,14 @@ bool Preprocessor::internalOpenFile(QString fileName)
     fileName = fileInfo.absoluteFilePath();
 
     // detect include cycles
-    foreach (const TextFile& tf, m_fileStack) {
-        if (tf.reader->fileName() == fileName) {
+    foreach (const TextFile& tf, m_fileStack)
+        if (tf.reader->fileName() == fileName)
             error(QLatin1String("cycle in include files: ") + fileInfo.fileName());
-            return false;
-        }
-    }
 
     MakefileLineReader* reader = new MakefileLineReader(fileName);
     if (!reader->open()) {
         delete reader;
         error(QLatin1Literal("Can't open ") + origFileName);
-        return false;
     }
 
     m_fileStack.push(TextFile());
@@ -239,18 +235,14 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
             skipUntilNextMatchingConditional();
         }
     } else if (directive == QLatin1String("ELSE")) {
-        if (conditionalDepth() == 0) {
+        if (conditionalDepth() == 0)
             error(QLatin1String("unexpected ELSE"));
-            return true;
-        }
         if (!m_conditionalStack.top()) {
             skipUntilNextMatchingConditional();
         }
     } else if (directive == QLatin1String("ELSEIF")) {
-        if (conditionalDepth() == 0) {
+        if (conditionalDepth() == 0)
             error(QLatin1String("unexpected ELSE"));
-            return true;
-        }
         if (!m_conditionalStack.top() || evaluateExpression(value) == 0) {
             skipUntilNextMatchingConditional();
         } else {
@@ -258,10 +250,8 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
             m_conditionalStack.push(false);
         }
     } else if (directive == QLatin1String("ELSEIFDEF")) {
-        if (conditionalDepth() == 0) {
+        if (conditionalDepth() == 0)
             error(QLatin1String("unexpected ELSE"));
-            return true;
-        }
         if (!m_conditionalStack.top() || !m_macroTable->isMacroDefined(value)) {
             skipUntilNextMatchingConditional();
         } else {
@@ -269,10 +259,8 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
             m_conditionalStack.push(false);
         }
     } else if (directive == QLatin1String("ELSEIFNDEF")) {
-        if (conditionalDepth() == 0) {
+        if (conditionalDepth() == 0)
             error(QLatin1String("unexpected ELSE"));
-            return true;
-        }
         if (!m_conditionalStack.top() || m_macroTable->isMacroDefined(value)) {
             skipUntilNextMatchingConditional();
         } else {

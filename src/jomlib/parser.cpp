@@ -90,7 +90,6 @@ void Parser::apply(Preprocessor* pp,
                 parseDescriptionBlock(dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos);
             } else {
                 error(QLatin1String("syntax error"));
-                readLine();
             }
         }
     } catch (FileException&) {
