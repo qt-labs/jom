@@ -293,6 +293,7 @@ void MacroTable::parseSubstitutionStatement(const QString &str, int substitution
         } else if (ch == QLatin1Char(')') && !quoted) {
             quoted = false;
             macroInvokationEndIdx = i;
+            break;
         } else if (ch == QLatin1Char('^')) {
             quoted = true;
             quotePositions.append(i);
