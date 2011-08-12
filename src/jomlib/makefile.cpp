@@ -282,7 +282,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
         case '?':
             {
                 if (dependentsForbidden) {
-                    throw Exception(QLatin1String("Macro $** not allowed here."));
+                    throw Exception(QLatin1String("Macro $? not allowed here."));
                 }
                 replacementLength = 1;
                 result = QLatin1String("");
