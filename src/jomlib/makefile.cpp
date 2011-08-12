@@ -90,8 +90,6 @@ void DescriptionBlock::expandFileNameMacrosForDependents()
     QStringList::iterator it = m_dependents.begin();
     for (; it != m_dependents.end(); ++it) {
         QString& dependent = *it;
-        dependent.replace(QLatin1String("$$@"), QLatin1String("$@"));
-        dependent.replace(QLatin1String("$$(@"), QLatin1String("$(@"));
         expandFileNameMacros(dependent, -1, true);
     }
 }
@@ -150,7 +148,7 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
     int idx = 0;
     int lastEscapedIdx = -1;
     forever {
-        idx = str.indexOf(QLatin1Char('$'), idx);
+        idx = str.indexOf(MacroTable::fileNameMacroMagicEscape, idx);
         if (idx == -1 || ++idx >= str.count() + 1)
             break;
 
@@ -161,12 +159,6 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
             char chBefore = str.at(idx - 2).toLatin1();
             if (chBefore == '^') {
                 lastEscapedIdx = idx - 1;
-                continue;
-            }
-            if (chBefore == '$' && lastEscapedIdx < idx - 2) {
-                idx -= 2;
-                lastEscapedIdx = idx;
-                str.remove(idx, 1);
                 continue;
             }
         }
@@ -578,16 +570,17 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
 
     //qDebug() << "----> inferredDependent:" << inferredDependent;
 
+    const QString fileNameMacroString = MacroTable::fileNameMacroMagicEscape + QLatin1Char('<');
     QList<Command>::iterator it = target->m_commands.begin();
     QList<Command>::iterator itEnd = target->m_commands.end();
     for (; it != itEnd; ++it) {
         Command& command = *it;
         foreach (InlineFile* inlineFile, command.m_inlineFiles) {
-            inlineFile->m_content.replace(QLatin1String("$<"), inferredDependent);
+            inlineFile->m_content.replace(fileNameMacroString, inferredDependent);
             inlineFile->m_content = m_macroTable->expandMacros(inlineFile->m_content);
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
-        command.m_commandLine.replace(QLatin1String("$<"), inferredDependent);
+        command.m_commandLine.replace(fileNameMacroString, inferredDependent);
     }
 }
 
@@ -608,14 +601,15 @@ void Makefile::applyInferenceRule(QList<DescriptionBlock*> &batch, const Inferen
     executingTarget->m_commands = rule->m_commands;
     QList<Command>::iterator it = executingTarget->m_commands.begin();
     QList<Command>::iterator itEnd = executingTarget->m_commands.end();
+    const QString fileNameMacroString = MacroTable::fileNameMacroMagicEscape + QLatin1Char('<');
     for (; it != itEnd; ++it) {
         Command& command = *it;
         foreach (InlineFile* inlineFile, command.m_inlineFiles) {
-            inlineFile->m_content.replace(QLatin1String("$<"), inferredDependents);
+            inlineFile->m_content.replace(fileNameMacroString, inferredDependents);
             inlineFile->m_content = m_macroTable->expandMacros(inlineFile->m_content);
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
-        command.m_commandLine.replace(QLatin1String("$<"), inferredDependents);
+        command.m_commandLine.replace(fileNameMacroString, inferredDependents);
     }
 }
 

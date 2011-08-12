@@ -30,6 +30,8 @@ namespace NMakeFile {
 class MacroTable
 {
 public:
+    static const QChar fileNameMacroMagicEscape;
+
     MacroTable();
     ~MacroTable();
 
@@ -44,7 +46,7 @@ public:
     void setMacroValue(const char *szStr, const QString& value) { setMacroValue(QString::fromLatin1(szStr), value); }
     void setMacroValue(const char *szStr, const char *szValue) { setMacroValue(QString::fromLatin1(szStr), QString::fromLatin1(szValue)); }
     void undefineMacro(const QString& name);
-    QString expandMacros(const QString& str) const;
+    QString expandMacros(const QString& str, bool inDependentsLine = false) const;
     void dump() const;
 
     static void parseSubstitutionStatement(const QString &str, int substitutionStartIdx, QString &value, int &macroInvokationEndIdx);
@@ -63,7 +65,7 @@ private:
 
     MacroData* internalSetMacroValue(const QString& name, const QString& value);
     void setEnvironmentVariable(const QString& name, const QString& value);
-    QString expandMacros(const QString& str, QSet<QString>& usedMacros) const;
+    QString expandMacros(const QString& str, bool inDependentsLine, QSet<QString>& usedMacros) const;
     QString cycleCheckedMacroValue(const QString& macroName, QSet<QString>& usedMacros) const;
 
     QHash<QString, MacroData>   m_macros;

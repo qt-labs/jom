@@ -26,9 +26,12 @@
 #include <QStringList>
 #include <QRegExp>
 #include <QDebug>
-#include <windows.h>
+#include <qt_windows.h>
 
 namespace NMakeFile {
+
+// set this to some visible character if you're debugging filename macros
+const QChar MacroTable::fileNameMacroMagicEscape = QChar::ByteOrderMark;
 
 MacroTable::MacroTable()
 {
@@ -137,13 +140,13 @@ void MacroTable::undefineMacro(const QString& name)
     m_macros.remove(name);
 }
 
-QString MacroTable::expandMacros(const QString& str) const
+QString MacroTable::expandMacros(const QString& str, bool inDependentsLine) const
 {
     QSet<QString> usedMacros;
-    return expandMacros(str, usedMacros);
+    return expandMacros(str, inDependentsLine, usedMacros);
 }
 
-QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) const
+QString MacroTable::expandMacros(const QString& str, bool inDependentsLine, QSet<QString>& usedMacros) const
 {
     QString ret;
     ret.reserve(str.count());
@@ -187,14 +190,15 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                 case '@':
                 case '?':
                     {
-                        ret.append(QLatin1String("$("));
+                        ret.append(fileNameMacroMagicEscape);
+                        ret.append(QLatin1String("("));
                         ret.append(str.mid(i + 1, macroInvokationEnd - i));
                     }
                     break;
                 default:
                     {
                         QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
-                        macroValue = expandMacros(macroValue, usedMacros);
+                        macroValue = expandMacros(macroValue, inDependentsLine, usedMacros);
                         if (macroNameEnd != macroInvokationEnd)
                             parseSubstitutionStatement(str, macroNameEnd + 1, macroValue, macroInvokationEnd);
                         usedMacros.remove(macroName);
@@ -203,27 +207,33 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                 }
                 i = macroInvokationEnd;
             } else if (str.at(i) == QLatin1Char('$')) {
-                // found escaped $ char
-                ret.append(QLatin1Char('$'));
-                if (i < max_i) {
-                    char ch = str.at(i+1).toLatin1();
-                    if (ch == '(' && i + 1 < max_i)
-                        ch = str.at(i+2).toLatin1();
-                    switch (ch)
-                    {
-                    case '<':
-                    case '*':
-                    case '@':
-                    case '?':
-                        ret.append(QLatin1Char('$'));
-                        break;
+                bool fileNameMacroFound = false;
+                if (inDependentsLine) {
+                    // in a dependents line detect $$@ and handle as $@
+                    int j = i + 1;
+                    bool parenthesisFound = false;
+                    if (str.count() > j && str.at(j) == QLatin1Char('(')) {
+                        parenthesisFound = true;
+                        ++j;
                     }
+                    if (str.count() > j && str.at(j) == QLatin1Char('@')) {
+                        fileNameMacroFound = true;
+                        ret.append(fileNameMacroMagicEscape);
+                        if (parenthesisFound)
+                            ret.append(QLatin1Char('('));
+                        ret.append(QLatin1Char('@'));
+                        i = j;
+                    }
+                }
+                if (!fileNameMacroFound) {
+                    // found escaped $ char
+                    ret.append(QLatin1Char('$'));
                 }
             } else if (str.at(i).isLetterOrNumber()) {
                 // found single character macro invocation a la $X
                 const QString macroName = str.at(i);
                 QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
-                macroValue = expandMacros(macroValue, usedMacros);
+                macroValue = expandMacros(macroValue, inDependentsLine, usedMacros);
                 usedMacros.remove(macroName);
                 ret.append(macroValue);
             } else {
@@ -233,7 +243,7 @@ QString MacroTable::expandMacros(const QString& str, QSet<QString>& usedMacros) 
                 case '*':
                 case '@':
                 case '?':
-                    ret.append(QLatin1Char('$'));
+                    ret.append(fileNameMacroMagicEscape);
                     ret.append(str.at(i));
                     break;
                 default:

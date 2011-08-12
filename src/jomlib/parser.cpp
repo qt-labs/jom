@@ -316,7 +316,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
     QString value = m_line;
     if (commandSeparatorPos >= 0) value.truncate(commandSeparatorPos);
     value.remove(0, separatorPos + separatorLength);
-    value = m_preprocessor->macroTable()->expandMacros(value.trimmed());
+    value = m_preprocessor->macroTable()->expandMacros(value.trimmed(), true);
     target.replace(QLatin1Char('/'), QLatin1Char('\\'));
     value.replace(QLatin1Char('/'), QLatin1Char('\\'));
 
