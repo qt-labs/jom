@@ -261,24 +261,31 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                 break;
             case 'J':
                 {
-                    bool ok;
+                    QString nJobsStr;
                     if (arg.isEmpty()) {
                         if (arguments.isEmpty()) {
                             fprintf(stderr, "Error: no process count specified for option -j\n");
                             return false;
                         }
-                        g_options.maxNumberOfJobs = arguments.takeFirst().toUInt(&ok);
-                        g_options.isMaxNumberOfJobsSet = true;
+                        nJobsStr = arguments.takeFirst();
                     } else {
-                        g_options.maxNumberOfJobs = arg.toUInt(&ok);
-                        g_options.isMaxNumberOfJobsSet = true;
-                        arg = QString();
+                        for (int i=0; i < arg.count(); ++i) {
+                            const QChar &c = arg.at(i);
+                            if (!c.isDigit())
+                                break;
+                            nJobsStr += arg.at(i);
+                        }
+                        arg.clear();
                     }
+                    bool ok;
+                    g_options.maxNumberOfJobs = nJobsStr.toUInt(&ok);
                     if (!ok) {
                         fprintf(stderr, "Error: option -j expects a numerical argument\n");
                         return false;
                     }
-                    makeflags.chop(1);
+                    g_options.isMaxNumberOfJobsSet = true;
+                    if (makeflags.at(makeflags.count() - 1) == QLatin1Char('j'))
+                        makeflags += nJobsStr;
                     break;
                 }
             case 'K':
