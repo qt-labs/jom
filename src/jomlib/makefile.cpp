@@ -277,7 +277,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                     throw Exception(QLatin1String("Macro $? not allowed here."));
                 }
                 replacementLength = 1;
-                result = QLatin1String("");
+                result.clear();
                 bool firstAppend = true;
                 const FileTime currentTimeStamp = FileTime::currentTime();
                 FileTime targetTimeStamp = FastFileInfo(targetFilePath()).lastModified();
