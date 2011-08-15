@@ -576,8 +576,8 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
     for (; it != itEnd; ++it) {
         Command& command = *it;
         foreach (InlineFile* inlineFile, command.m_inlineFiles) {
-            inlineFile->m_content.replace(fileNameMacroString, inferredDependent);
             inlineFile->m_content = m_macroTable->expandMacros(inlineFile->m_content);
+            inlineFile->m_content.replace(fileNameMacroString, inferredDependent);
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
         command.m_commandLine.replace(fileNameMacroString, inferredDependent);
@@ -605,8 +605,8 @@ void Makefile::applyInferenceRule(QList<DescriptionBlock*> &batch, const Inferen
     for (; it != itEnd; ++it) {
         Command& command = *it;
         foreach (InlineFile* inlineFile, command.m_inlineFiles) {
-            inlineFile->m_content.replace(fileNameMacroString, inferredDependents);
             inlineFile->m_content = m_macroTable->expandMacros(inlineFile->m_content);
+            inlineFile->m_content.replace(fileNameMacroString, inferredDependents);
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
         command.m_commandLine.replace(fileNameMacroString, inferredDependents);
