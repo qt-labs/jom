@@ -173,13 +173,11 @@ void Process::start(const QString &commandLine)
 {
     m_state = Starting;
 
-    SECURITY_ATTRIBUTES sa;
-    ZeroMemory(&sa, sizeof(sa));
+    SECURITY_ATTRIBUTES sa = {0};
     sa.nLength = sizeof(sa);
     sa.bInheritHandle = TRUE;
 
-    STARTUPINFO si;
-    ZeroMemory(&si, sizeof(si));
+    STARTUPINFO si = {0};
     si.cb = sizeof(si);
 
     DWORD dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
