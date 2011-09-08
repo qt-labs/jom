@@ -160,8 +160,10 @@ inline bool commandLineStartsWithCommand(const QString &str, const QString &sear
 
 static bool startsWithShellBuiltin(const QString &commandLine)
 {
-    static QRegExp rex(QLatin1String("^(copy|del|echo|for|mkdir|md|rd|rmdir)\\s"),
-                       Qt::CaseInsensitive, QRegExp::RegExp2);
+    static QRegExp rex(QLatin1String(
+        "^(assoc|break|call|chdir|cd|cls|color|copy|del|dir|echo|endlocal|erase|exit|for|ftype|goto"
+        "|if|md|move|path|pause|popd|prompt|pushd|ren|rename|setlocal|shift|time|title|type|ver|verify|vol)\\s"
+        ), Qt::CaseInsensitive, QRegExp::RegExp2);
     return rex.indexIn(commandLine) >= 0;
 }
 
@@ -238,7 +240,7 @@ void CommandExecutor::executeCurrentCommandLine()
         //     might complain about the failed process.
         //     Instead try to locate the binary using the PATH and so on and directly
         //     start the program using the absolute path.
-        //     We code to locate the binary must be compatible to what CreateProcess does.
+        //     Code to locate the binary must be compatible to what CreateProcess does.
 
         //qDebug("+++ direct exec");
         m_ignoreProcessErrors = true;

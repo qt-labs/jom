@@ -12,6 +12,8 @@ Changes since jom 1.0.6
   (QTCREATORBUG-3257)
 - Handle quoted dollar signs in inline files correctly. (QTCREATORBUG-2875)
 - Respect the MAKEFLAGS environment variable. (QTCREATORBUG-5028)
+- Complete detection of cmd builtins. This fixes annoying warnings when building
+  with IncrediBuild.
 
 Changes since jom 1.0.5
 - Fix mean monster spawn issue.
