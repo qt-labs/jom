@@ -123,7 +123,10 @@ void CommandExecutor::onProcessFinished(int exitCode, Process::ExitStatus exitSt
 
     const Command &currentCommand = m_pTarget->m_commands.at(m_currentCommandIdx);
     if (exitCode > currentCommand.m_maxExitCode) {
-        QByteArray msg = "command failed with exit code ";
+        QByteArray msg = "jom: ";
+        msg += QDir::toNativeSeparators(QDir::currentPath()).toLocal8Bit() + "\\";
+        msg += m_pTarget->makefile()->fileName().toLocal8Bit();
+        msg += " [" + m_pTarget->targetName().toLocal8Bit() + "] Error ";
         msg += QByteArray::number(exitCode);
         msg += "\n";
         writeToStandardError(msg);
