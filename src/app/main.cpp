@@ -143,10 +143,8 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Error in executor: %s\n", qPrintable(e.message()));
     }
 
-    executor.startProcesses();
-    int result = 0;
-    if (executor.hasPendingTargets())
-        result = app.exec();
+    QMetaObject::invokeMethod(&executor, "startProcesses", Qt::QueuedConnection);
+    int result = app.exec();
     g_pTargetExecutor = 0;
     delete mkfile;
     return result;
