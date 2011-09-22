@@ -505,7 +505,7 @@ void ParserTest::inferenceRules()
 void ParserTest::cycleInTargets()
 {
     MacroTable *macroTable = new MacroTable;
-    Makefile mkfile;
+    Makefile mkfile(QLatin1String("cycle_in_targets.mk"));
     mkfile.setOptions(new Options);
     mkfile.setMacroTable(macroTable);
     Preprocessor pp;

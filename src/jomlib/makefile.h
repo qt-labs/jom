@@ -141,7 +141,7 @@ public:
 class Makefile
 {
 public:
-    Makefile();
+    Makefile(const QString &fileName);
     ~Makefile();
 
     void clear();
@@ -195,6 +195,7 @@ public:
         return m_inferenceRules;
     }
 
+    const QString &fileName() const { return m_fileName; }
     void setOptions(Options *o) { m_options = o; }
     const Options* options() const { return m_options; }
 
@@ -218,6 +219,7 @@ private:
     void applyInferenceRule(QList<DescriptionBlock*> &batch, const InferenceRule *rule);
 
 private:
+    QString m_fileName;
     DescriptionBlock* m_firstTarget;
     QHash<QString, DescriptionBlock*> m_targets;
     QStringList m_preciousTargets;

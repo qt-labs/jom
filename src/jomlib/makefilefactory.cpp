@@ -94,9 +94,6 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments)
     Options *options = new Options;
     MacroTable *macroTable = new MacroTable;
     macroTable->setEnvironment(m_environment);
-    m_makefile = new Makefile;
-    m_makefile->setOptions(options);
-    m_makefile->setMacroTable(macroTable);
 
     QString filename;
     if (!options->readCommandLineArguments(commandLineArguments, filename, m_activeTargets, *macroTable)) {
@@ -151,6 +148,9 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments)
     }
 
     try {
+        m_makefile = new Makefile(filename);
+        m_makefile->setOptions(options);
+        m_makefile->setMacroTable(macroTable);
         Preprocessor preprocessor;
         preprocessor.setMacroTable(macroTable);
         preprocessor.openFile(filename);
