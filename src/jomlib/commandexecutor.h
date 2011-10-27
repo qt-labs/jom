@@ -32,7 +32,7 @@ class CommandExecutor : public QObject
 {
     Q_OBJECT
 public:
-    CommandExecutor(QObject* parent, const QStringList& environment);
+    CommandExecutor(bool directOutput, QObject* parent, const QStringList& environment);
     ~CommandExecutor();
 
     void start(DescriptionBlock* target);

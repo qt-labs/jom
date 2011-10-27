@@ -22,14 +22,34 @@
  ****************************************************************************/
 
 #include "process.h"
+#include <QByteArray>
 #include <qt_windows.h>
+
+struct Pipe
+{
+    Pipe()
+        : hWrite(INVALID_HANDLE_VALUE)
+        , hRead(INVALID_HANDLE_VALUE)
+    {}
+
+    ~Pipe()
+    {
+        if (hWrite != INVALID_HANDLE_VALUE)
+            CloseHandle(hWrite);
+        if (hRead != INVALID_HANDLE_VALUE)
+            CloseHandle(hRead);
+    }
+
+    HANDLE hWrite;
+    HANDLE hRead;
+};
 
 struct ProcessPrivate
 {
     ProcessPrivate()
-        : hWatcherThread(0),
-          hProcess(0),
-          hProcessThread(0)
+        : hWatcherThread(INVALID_HANDLE_VALUE),
+          hProcess(INVALID_HANDLE_VALUE),
+          hProcessThread(INVALID_HANDLE_VALUE)
     {}
 
     void closeAndReset(HANDLE &h)
@@ -48,14 +68,18 @@ struct ProcessPrivate
     HANDLE hWatcherThread;
     HANDLE hProcess;
     HANDLE hProcessThread;
+    Pipe stdoutPipe;
+    Pipe stderrPipe;
+    QByteArray outputBuffer;
 };
 
-Process::Process(QObject *parent)
+Process::Process(bool directOutput, QObject *parent)
     : QObject(parent),
       d(new ProcessPrivate),
       m_state(NotRunning),
       m_exitCode(0),
-      m_exitStatus(NormalExit)
+      m_exitStatus(NormalExit),
+      m_directOutput(directOutput)
 {
 }
 
@@ -149,7 +173,31 @@ void Process::setEnvironment(const QStringList &environment)
 DWORD WINAPI Process::processWatcherThread(void *lpParameter)
 {
     Process *process = reinterpret_cast<Process*>(lpParameter);
-    WaitForSingleObject(process->d->hProcess, INFINITE);
+    ProcessPrivate *d = process->d;
+
+    DWORD dwRead, dwWritten;
+    const size_t buflen = 4096;
+    char chBuf[buflen];
+    BOOL bSuccess = FALSE;
+    HANDLE hParentStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    for (;;)
+    {
+        bSuccess = ReadFile(d->stdoutPipe.hRead, chBuf, buflen, &dwRead, NULL);
+        if (!bSuccess || dwRead == 0)
+            break;
+
+        if (process->m_directOutput) {
+            bSuccess = WriteFile(hParentStdOut, chBuf, dwRead, &dwWritten, NULL);
+            if (!bSuccess)
+                break;
+        } else {
+            d->outputBuffer.append(QByteArray(chBuf, dwRead));
+        }
+    }
+
+    CloseHandle(d->stdoutPipe.hRead);
+    WaitForSingleObject(d->hProcess, INFINITE);
 
     DWORD exitCode = 0;
     bool crashed;
@@ -164,9 +212,26 @@ DWORD WINAPI Process::processWatcherThread(void *lpParameter)
 
 void Process::onProcessFinished(int exitCode, bool crashed)
 {
+    if (!d->outputBuffer.isEmpty()) {
+        puts(d->outputBuffer.data());
+        d->outputBuffer.clear();
+    }
     d->reset();
     ExitStatus exitStatus = crashed ? Process::CrashExit : Process::NormalExit;
     emit finished(exitCode, exitStatus);
+}
+
+static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa)
+{
+    if (!CreatePipe(&pipe.hRead, &pipe.hWrite, sa, 0)) {
+        qDebug() << "CreatePipe failed with error code" << GetLastError();
+        return false;
+    }
+    if (!SetHandleInformation(pipe.hRead, HANDLE_FLAG_INHERIT, 0)) {
+        qDebug() << "SetHandleInformation failed with error code" << GetLastError();
+        return false;
+    }
+    return true;
 }
 
 void Process::start(const QString &commandLine)
@@ -177,8 +242,18 @@ void Process::start(const QString &commandLine)
     sa.nLength = sizeof(sa);
     sa.bInheritHandle = TRUE;
 
+    if (!setupPipe(d->stdoutPipe, &sa))
+        qFatal("Cannot setup pipe for stdout.");
+
+    // Let the child process write to the same handle, like QProcess::MergedChannels.
+    DuplicateHandle(GetCurrentProcess(), d->stdoutPipe.hWrite, GetCurrentProcess(),
+                    &d->stderrPipe.hWrite, 0, TRUE, DUPLICATE_SAME_ACCESS);
+
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
+    si.hStdOutput = d->stdoutPipe.hWrite;
+    si.hStdError = d->stderrPipe.hWrite;
+    si.dwFlags = STARTF_USESTDHANDLES;
 
     DWORD dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     PROCESS_INFORMATION pi;
@@ -199,6 +274,12 @@ void Process::start(const QString &commandLine)
         emit error(FailedToStart);
         return;
     }
+
+    // Close the pipe handles. This process doesn't need them anymore.
+    CloseHandle(d->stdoutPipe.hWrite);
+    d->stdoutPipe.hWrite = INVALID_HANDLE_VALUE;
+    CloseHandle(d->stderrPipe.hWrite);
+    d->stderrPipe.hWrite = INVALID_HANDLE_VALUE;
 
     // TODO: use a global notifier object instead of creating a thread for every starting process
     d->hProcess = pi.hProcess;

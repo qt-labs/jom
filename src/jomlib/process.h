@@ -30,7 +30,7 @@ class Process : public QObject
 {
     Q_OBJECT
 public:
-    explicit Process(QObject *parent = 0);
+    explicit Process(bool directOutput, QObject *parent = 0);
     ~Process();
 
     enum ProcessError
@@ -81,6 +81,7 @@ private:
     ProcessState m_state;
     int m_exitCode;
     ExitStatus m_exitStatus;
+    bool m_directOutput;
 };
 
 #endif // PROCESS_H

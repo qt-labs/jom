@@ -42,7 +42,7 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
     m_depgraph = new DependencyGraph();
 
     for (int i=0; i < g_options.maxNumberOfJobs; ++i) {
-        CommandExecutor* process = new CommandExecutor(this, environment);
+        CommandExecutor* process = new CommandExecutor(i == 0, this, environment);
         connect(process, SIGNAL(finished(CommandExecutor*, bool)), this, SLOT(onChildFinished(CommandExecutor*, bool)));
         connect(process, SIGNAL(subJomStarted()), this, SLOT(onSubJomStarted()));
         m_availableProcesses.append(process);

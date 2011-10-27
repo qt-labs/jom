@@ -3,9 +3,6 @@ This is the changelog for jom 1.0.7, the parallel make tool.
 Changes since jom 1.0.6
 - Small performance improvement due to compilation with
   QT_USE_FAST_CONCATENATION and QT_USE_FAST_OPERATOR_PLUS.
-- Removed the 'separated output' feature. Separating the output didn't give us
-  much and made jom only unresponsive.
-- Colored output (e.g. from CMake) is now supported.
 - Ctrl-C handling has been revisited. Much simpler and more correct.
   Before the compiler jobs didn't get a Ctrl-C but were terminated.
 - Special .SYNC dependents implemented. See README for a small description.
