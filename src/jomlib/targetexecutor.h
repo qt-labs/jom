@@ -31,7 +31,6 @@ class QFile;
 namespace NMakeFile {
 
 class CommandExecutor;
-class ConsoleColorRestorer;
 class DependencyGraph;
 
 class TargetExecutor : public QObject {
@@ -55,7 +54,6 @@ private:
     void waitForProcesses();
 
 private:
-    ConsoleColorRestorer* m_consoleColorRestorer;
     Makefile* m_makefile;
     DependencyGraph* m_depgraph;
     QList<DescriptionBlock*> m_pendingTargets;
