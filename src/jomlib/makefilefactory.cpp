@@ -100,8 +100,6 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments)
         m_errorType = CommandLineError;
         return false;
     }
-    if (options->showUsageAndExit || options->showVersionAndExit)
-        return true;
 
     if (!options->stderrFile.isEmpty()) {
         // Try to open the file for writing.
