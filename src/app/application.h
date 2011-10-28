@@ -33,10 +33,10 @@ public:
     static Application *instance() { return static_cast<Application*>(QCoreApplication::instance()); }
 
     Application(int argc, char** argv);
-    const QString &exeName() const { return m_exeName; }
+    const bool isSubJOM() const { return m_bIsSubJOM; }
 
 private:
-    QString m_exeName;
+    bool m_bIsSubJOM;
 };
 
 } // namespace NMakeFile

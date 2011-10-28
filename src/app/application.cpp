@@ -24,13 +24,52 @@
 #include "application.h"
 #include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
+#include <qt_windows.h>
+#include <Tlhelp32.h>
 
 namespace NMakeFile {
+
+static bool isSubJOM(const QString &processExeName)
+{
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE)
+        return false;
+    bool result = false;
+    PROCESSENTRY32 pe = {0};
+    pe.dwSize = sizeof(pe);
+
+    const DWORD dwCurrentProcessId = GetCurrentProcessId();
+    DWORD dwProcessId = dwCurrentProcessId;
+    while (dwProcessId) {
+        bool parentFound = false;
+        if (!Process32First(hSnapshot, &pe))
+            goto done;
+        do {
+            if (pe.th32ProcessID == dwProcessId) {
+                QString exeName = QString::fromUtf16(pe.szExeFile);
+                if (dwProcessId != dwCurrentProcessId && exeName == processExeName) {
+                    result = true;
+                    goto done;
+                }
+                dwProcessId = pe.th32ParentProcessID;
+                parentFound = true;
+                break;
+            }
+        } while(Process32Next(hSnapshot, &pe));
+        if (!parentFound)
+            break;
+    }
+
+done:
+    CloseHandle(hSnapshot);
+    return result;
+}
 
 Application::Application(int argc, char** argv)
 :   QCoreApplication(argc, argv)
 {
-    m_exeName = QFileInfo(QCoreApplication::applicationFilePath()).fileName();
+    QString exeName = QFileInfo(QCoreApplication::applicationFilePath()).fileName();
+    m_bIsSubJOM = NMakeFile::isSubJOM(exeName);
 }
 
 } // namespace NMakeFile

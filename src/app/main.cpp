@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    if (options->showLogo)
+    if (options->showLogo && !app.isSubJOM())
         showLogo();
 
     if (options->displayMakeInformation) {
