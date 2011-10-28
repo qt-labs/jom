@@ -165,7 +165,7 @@ void DependencyGraph::internalBuild(Node* node)
             if (!FastFileInfo(dependentName).exists()) {
                 QByteArray msg = "Error: dependent '";
                 msg += dependentName.toLocal8Bit();
-                msg += "' does not exist.\n";
+                msg += "' does not exist.";
                 fputs(msg.constData(), stderr);
                 exit(2);
             }

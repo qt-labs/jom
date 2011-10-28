@@ -335,8 +335,7 @@ void CommandExecutor::cleanupTempFiles()
 
 void CommandExecutor::writeToChannel(const QByteArray& data, FILE *channel)
 {
-    fputs(data, channel);
-    fflush(channel);
+    fprintf(channel, data);
 }
 
 void CommandExecutor::writeToStandardOutput(const QByteArray& output)
@@ -366,6 +365,7 @@ bool CommandExecutor::exec_cd(const QString &commandLine)
         if (cwd.isNull())
             cwd = QDir::currentPath();
         writeToStandardOutput(QDir::toNativeSeparators(cwd).toLocal8Bit());
+        writeToStandardOutput("\n");
         return true;
     }
 

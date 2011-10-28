@@ -1,6 +1,7 @@
 This is the changelog for jom 1.0.7, the parallel make tool.
 
 Changes since jom 1.0.6
+- Fix blank lines in output. (QTCREATORBUG-3974)
 - Small performance improvement due to compilation with
   QT_USE_FAST_CONCATENATION and QT_USE_FAST_OPERATOR_PLUS.
 - Ctrl-C handling has been revisited. Much simpler and more correct.

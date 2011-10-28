@@ -213,7 +213,7 @@ DWORD WINAPI Process::processWatcherThread(void *lpParameter)
 void Process::onProcessFinished(int exitCode, bool crashed)
 {
     if (!d->outputBuffer.isEmpty()) {
-        puts(d->outputBuffer.data());
+        printf(d->outputBuffer.data());
         d->outputBuffer.clear();
     }
     d->reset();
