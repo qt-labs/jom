@@ -27,13 +27,14 @@
 namespace NMakeFile {
 
 class Makefile;
+class Options;
 
 class MakefileFactory
 {
 public:
     MakefileFactory();
     void setEnvironment(const QStringList& env) { m_environment = env; }
-    bool apply(const QStringList& commandLineArguments);
+    bool apply(const QStringList& commandLineArguments, Options **outopt = 0);
 
     enum ErrorType {
         NoError,

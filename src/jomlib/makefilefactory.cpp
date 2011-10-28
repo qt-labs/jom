@@ -86,12 +86,14 @@ static QString encloseInDoubleQuotesIfNeeded(const QString& path)
     return path;
 }
 
-bool MakefileFactory::apply(const QStringList& commandLineArguments)
+bool MakefileFactory::apply(const QStringList& commandLineArguments, Options **outopt)
 {
     if (m_makefile)
         clear();
 
     Options *options = new Options;
+    if (outopt)
+        *outopt = options;
     MacroTable *macroTable = new MacroTable;
     macroTable->setEnvironment(m_environment);
 
@@ -100,6 +102,8 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments)
         m_errorType = CommandLineError;
         return false;
     }
+    if (options->showUsageAndExit || options->showVersionAndExit)
+        return true;
 
     if (!options->stderrFile.isEmpty()) {
         // Try to open the file for writing.

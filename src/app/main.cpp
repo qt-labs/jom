@@ -95,7 +95,8 @@ int main(int argc, char* argv[])
 
     MakefileFactory mf;
     mf.setEnvironment(QProcess::systemEnvironment());
-    if (!mf.apply(getCommandLineArguments())) {
+    Options* options = 0;
+    if (!mf.apply(getCommandLineArguments(), &options)) {
         switch (mf.errorType()) {
         case MakefileFactory::CommandLineError:
             showUsage();
@@ -108,9 +109,6 @@ int main(int argc, char* argv[])
             return 2;
         }
     }
-
-    Makefile* mkfile = mf.makefile();
-    const Options* options = mkfile->options();
 
     if (options->showUsageAndExit) {
         if (options->showLogo)
@@ -125,6 +123,7 @@ int main(int argc, char* argv[])
     if (options->showLogo && !app.isSubJOM())
         showLogo();
 
+    Makefile* mkfile = mf.makefile();
     if (options->displayMakeInformation) {
         printf("MACROS:\n\n");
         mkfile->macroTable()->dump();
