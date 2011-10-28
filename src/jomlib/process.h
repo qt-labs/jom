@@ -30,7 +30,7 @@ class Process : public QObject
 {
     Q_OBJECT
 public:
-    explicit Process(bool directOutput, QObject *parent = 0);
+    explicit Process(QObject *parent = 0);
     ~Process();
 
     enum ProcessError
@@ -53,6 +53,8 @@ public:
         Running
     };
 
+    void setDirectOutput(bool b) { m_directOutput = b; }
+    bool isDirectOutputSet() const { return m_directOutput; }
     void setWorkingDirectory(const QString &path);
     const QString &workingDirectory() const { return m_workingDirectory; }
     void setEnvironment(const QStringList &environment);

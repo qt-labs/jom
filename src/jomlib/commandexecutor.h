@@ -32,7 +32,7 @@ class CommandExecutor : public QObject
 {
     Q_OBJECT
 public:
-    CommandExecutor(bool directOutput, QObject* parent, const QStringList& environment);
+    CommandExecutor(QObject* parent, const QStringList& environment);
     ~CommandExecutor();
 
     void start(DescriptionBlock* target);
@@ -42,6 +42,8 @@ public:
     bool isActive() const { return m_active; }
     void waitForFinished();
     void cleanupTempFiles();
+    void setDirectOutput(bool b) { m_process.setDirectOutput(b); }
+    bool isDirectOutputSet() const { return m_process.isDirectOutputSet(); }
 
 public slots:
     void setEnvironment(const QStringList &environment);

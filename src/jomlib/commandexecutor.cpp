@@ -36,9 +36,8 @@ namespace NMakeFile {
 ulong CommandExecutor::m_startUpTickCount = 0;
 QString CommandExecutor::m_tempPath;
 
-CommandExecutor::CommandExecutor(bool directOutput, QObject* parent, const QStringList& environment)
+CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
 :   QObject(parent),
-    m_process(directOutput),
     m_pTarget(0),
     m_blocked(false),
     m_processFinishedWhileBlocked(false),

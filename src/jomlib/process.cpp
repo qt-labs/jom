@@ -73,13 +73,13 @@ struct ProcessPrivate
     QByteArray outputBuffer;
 };
 
-Process::Process(bool directOutput, QObject *parent)
+Process::Process(QObject *parent)
     : QObject(parent),
       d(new ProcessPrivate),
       m_state(NotRunning),
       m_exitCode(0),
       m_exitStatus(NormalExit),
-      m_directOutput(directOutput)
+      m_directOutput(false)
 {
 }
 
