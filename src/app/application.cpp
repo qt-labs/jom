@@ -55,7 +55,7 @@ static bool isSubJOM(const QString &processExeName)
                 parentFound = true;
                 break;
             }
-        } while(Process32Next(hSnapshot, &pe));
+        } while (Process32Next(hSnapshot, &pe));
         if (!parentFound)
             break;
     }
