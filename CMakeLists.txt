@@ -124,15 +124,39 @@ set(JOM_SRCS
 
      # add one unit test per function:
      # you can run the unittests all at once using 'make test' from the build directory
-     add_test(includeFiles jom-test includeFiles)
-     add_test(includeCycle jom-test includeCycle)
-     add_test(macros jom-test macros)
-     add_test(inferenceRules jom-test inferenceRules)
-     add_test(cycleInTargets jom-test cycleInTargets)
-     add_test(multipleTargets jom-test multipleTargets)
-     add_test(multipleTargetsFail jom-test multipleTargetsFail)
-     add_test(comments jom-test comments)
-     add_test(fileNameMacros jom-test fileNameMacros)
+	 # to produce the list: jom-test --functions | sed 's|[(][)]||'
+	 set(TEST_NAMES
+		includeFiles
+		includeCycle
+		macros
+		invalidMacros
+		preprocessorExpressions
+		preprocessorDivideByZero
+		preprocessorInvalidExpressions
+		conditionals
+		dotDirectives
+		descriptionBlocks
+		inferenceRules
+		cycleInTargets
+		dependentsWithSpace
+		multipleTargets
+		comments
+		fileNameMacros
+		fileNameMacrosInDependents
+		windowsPathsInTargetName
+		caseInsensitiveDependents
+		environmentVariables
+		ignoreExitCodes
+		inlineFiles
+		unicodeFiles
+		builtin_cd
+		suffixes
+		nonexistentDependent
+		outOfDateCheck
+	 )
+	 foreach(TEST_NAME ${TEST_NAMES})
+		add_test(${TEST_NAME} jom-test ${TEST_NAME})
+	 endforeach()
 
  endif(JOM_ENABLE_TESTS)
 
