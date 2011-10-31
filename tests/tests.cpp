@@ -26,6 +26,7 @@
 #include <QDir>
 #include <QScopedPointer>
 #include <QDebug>
+#include <QStringBuilder>
 
 #include <ppexprparser.h>
 #include <makefilefactory.h>

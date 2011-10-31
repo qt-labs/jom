@@ -29,6 +29,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
 #include <QtCore/QRegExp>
+#include <QStringList>
 #include <windows.h>
 
 namespace NMakeFile {

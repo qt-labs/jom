@@ -25,6 +25,8 @@
 #include "makefile.h"
 #include "process.h"
 #include <QFile>
+#include <QString>
+class QStringList;
 
 namespace NMakeFile {
 
