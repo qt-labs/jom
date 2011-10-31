@@ -39,44 +39,44 @@ add_definitions(
 # in subdirectory src:
 #
 set(JOM_MOCS
-	src/jomlib/targetexecutor.h
-	src/jomlib/process.h
-	src/jomlib/commandexecutor.h
+    src/jomlib/targetexecutor.h
+    src/jomlib/process.h
+    src/jomlib/commandexecutor.h
 )
 
 set(JOM_SRCS
-	src/jomlib/commandexecutor.cpp
-	src/jomlib/dependencygraph.cpp
-	src/jomlib/exception.cpp
-	src/jomlib/fileinfo.cpp
-	src/jomlib/filetime.cpp
-	src/jomlib/helperfunctions.cpp
-	src/jomlib/macrotable.cpp
-	src/jomlib/makefile.cpp
-	src/jomlib/makefilefactory.cpp
-	src/jomlib/makefilelinereader.cpp
-	src/jomlib/options.cpp
-	src/jomlib/parser.cpp
-	src/jomlib/ppexpr_grammar.cpp
-	src/jomlib/ppexprparser.cpp
-	src/jomlib/preprocessor.cpp
-	src/jomlib/process.cpp
-	src/jomlib/targetexecutor.cpp
-	src/jomlib/dependencygraph.h
-	src/jomlib/exception.h
-	src/jomlib/fileinfo.h
-	src/jomlib/filetime.h
-	src/jomlib/helperfunctions.h
-	src/jomlib/macrotable.h
-	src/jomlib/makefile.h
-	src/jomlib/makefilefactory.h
-	src/jomlib/makefilelinereader.h
-	src/jomlib/options.h
-	src/jomlib/parser.h
-	src/jomlib/ppexpr_grammar_p.h
-	src/jomlib/ppexprparser.h
-	src/jomlib/preprocessor.h
-	src/jomlib/stable.h
+    src/jomlib/commandexecutor.cpp
+    src/jomlib/dependencygraph.cpp
+    src/jomlib/exception.cpp
+    src/jomlib/fileinfo.cpp
+    src/jomlib/filetime.cpp
+    src/jomlib/helperfunctions.cpp
+    src/jomlib/macrotable.cpp
+    src/jomlib/makefile.cpp
+    src/jomlib/makefilefactory.cpp
+    src/jomlib/makefilelinereader.cpp
+    src/jomlib/options.cpp
+    src/jomlib/parser.cpp
+    src/jomlib/ppexpr_grammar.cpp
+    src/jomlib/ppexprparser.cpp
+    src/jomlib/preprocessor.cpp
+    src/jomlib/process.cpp
+    src/jomlib/targetexecutor.cpp
+    src/jomlib/dependencygraph.h
+    src/jomlib/exception.h
+    src/jomlib/fileinfo.h
+    src/jomlib/filetime.h
+    src/jomlib/helperfunctions.h
+    src/jomlib/macrotable.h
+    src/jomlib/makefile.h
+    src/jomlib/makefilefactory.h
+    src/jomlib/makefilelinereader.h
+    src/jomlib/options.h
+    src/jomlib/parser.h
+    src/jomlib/ppexpr_grammar_p.h
+    src/jomlib/ppexprparser.h
+    src/jomlib/preprocessor.h
+    src/jomlib/stable.h
 )
 
  # run moc on all headers and add the moc files to the SRCS
@@ -85,11 +85,11 @@ set(JOM_SRCS
 
 
  set(JOM_APP_MOCS
-	src/app/application.h
+    src/app/application.h
 )
  set(JOM_APP_SRCS
-	src/app/main.cpp
-	src/app/application.cpp
+    src/app/main.cpp
+    src/app/application.cpp
 )
  qt4_wrap_cpp(JOM_APP_GENERATED_SRCS ${JOM_APP_MOCS})
  list(APPEND JOM_APP_SRCS ${JOM_APP_GENERATED_SRCS} ${JOM_APP_MOCS})
@@ -122,39 +122,39 @@ set(JOM_SRCS
 
      # add one unit test per function:
      # you can run the unittests all at once using 'make test' from the build directory
-	 # to produce the list: jom-test --functions | sed 's|[(][)]||'
-	 set(TEST_NAMES
-		includeFiles
-		includeCycle
-		macros
-		invalidMacros
-		preprocessorExpressions
-		preprocessorDivideByZero
-		preprocessorInvalidExpressions
-		conditionals
-		dotDirectives
-		descriptionBlocks
-		inferenceRules
-		cycleInTargets
-		dependentsWithSpace
-		multipleTargets
-		comments
-		fileNameMacros
-		fileNameMacrosInDependents
-		windowsPathsInTargetName
-		caseInsensitiveDependents
-		environmentVariables
-		ignoreExitCodes
-		inlineFiles
-		unicodeFiles
-		builtin_cd
-		suffixes
-		nonexistentDependent
-		outOfDateCheck
-	 )
-	 foreach(TEST_NAME ${TEST_NAMES})
-		add_test(${TEST_NAME} jom-test ${TEST_NAME})
-	 endforeach()
+     # to produce the list: jom-test --functions | sed 's|[(][)]||'
+     set(TEST_NAMES
+        includeFiles
+        includeCycle
+        macros
+        invalidMacros
+        preprocessorExpressions
+        preprocessorDivideByZero
+        preprocessorInvalidExpressions
+        conditionals
+        dotDirectives
+        descriptionBlocks
+        inferenceRules
+        cycleInTargets
+        dependentsWithSpace
+        multipleTargets
+        comments
+        fileNameMacros
+        fileNameMacrosInDependents
+        windowsPathsInTargetName
+        caseInsensitiveDependents
+        environmentVariables
+        ignoreExitCodes
+        inlineFiles
+        unicodeFiles
+        builtin_cd
+        suffixes
+        nonexistentDependent
+        outOfDateCheck
+     )
+     foreach(TEST_NAME ${TEST_NAMES})
+        add_test(${TEST_NAME} jom-test ${TEST_NAME})
+     endforeach()
 
  endif(JOM_ENABLE_TESTS)
 

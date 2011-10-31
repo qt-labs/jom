@@ -839,12 +839,12 @@ bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory
     const QLatin1String jomBinaryName("jom.exe");
 #endif
     QString jomBinary = QFileInfo(QCoreApplication::applicationDirPath() + "/" + jomBinaryName).absoluteFilePath();
-	if (!QFile::exists(jomBinary)) {
-		jomBinary = QFileInfo("../../bin/" + jomBinaryName).absoluteFilePath();
-		if (!QFile::exists(jomBinary)) {
-			qDebug("could not find jom");
-		}
-	}
+    if (!QFile::exists(jomBinary)) {
+        jomBinary = QFileInfo("../../bin/" + jomBinaryName).absoluteFilePath();
+        if (!QFile::exists(jomBinary)) {
+            qDebug("could not find jom");
+        }
+    }
     QString oldWorkingDirectory;
     if (!workingDirectory.isNull()) {
         oldWorkingDirectory = QDir::currentPath();
