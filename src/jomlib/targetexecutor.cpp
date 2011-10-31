@@ -22,7 +22,6 @@
  ****************************************************************************/
 #include "targetexecutor.h"
 #include "commandexecutor.h"
-#include "consolecolorrestorer.h"
 #include "dependencygraph.h"
 #include "options.h"
 #include "exception.h"

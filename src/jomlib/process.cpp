@@ -226,11 +226,11 @@ void Process::onProcessFinished(int exitCode, bool crashed)
 static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa)
 {
     if (!CreatePipe(&pipe.hRead, &pipe.hWrite, sa, 0)) {
-        qDebug() << "CreatePipe failed with error code" << GetLastError();
+        qWarning("CreatePipe failed with error code %d.", GetLastError());
         return false;
     }
     if (!SetHandleInformation(pipe.hRead, HANDLE_FLAG_INHERIT, 0)) {
-        qDebug() << "SetHandleInformation failed with error code" << GetLastError();
+        qWarning("SetHandleInformation failed with error code %d.", GetLastError());
         return false;
     }
     return true;

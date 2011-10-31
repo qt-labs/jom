@@ -46,7 +46,6 @@ set(JOM_MOCS
 
 set(JOM_SRCS
 	src/jomlib/commandexecutor.cpp
-	src/jomlib/consolecolorrestorer.cpp
 	src/jomlib/dependencygraph.cpp
 	src/jomlib/exception.cpp
 	src/jomlib/fileinfo.cpp
@@ -63,7 +62,6 @@ set(JOM_SRCS
 	src/jomlib/preprocessor.cpp
 	src/jomlib/process.cpp
 	src/jomlib/targetexecutor.cpp
-	src/jomlib/consolecolorrestorer.h
 	src/jomlib/dependencygraph.h
 	src/jomlib/exception.h
 	src/jomlib/fileinfo.h
