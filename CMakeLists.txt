@@ -37,66 +37,102 @@ add_definitions(
 )
 
 # in subdirectory src:
-# 
-set(JOM_MOCS src/jomlib/targetexecutor.h
-             src/jomlib/commandexecutor.h
-             )
+#
+set(JOM_MOCS
+	src/jomlib/targetexecutor.h
+	src/jomlib/process.h
+	src/jomlib/commandexecutor.h
+)
 
-set(JOM_SRCS src/jomlib/commandexecutor.cpp
-             src/jomlib/dependencygraph.cpp
-             src/jomlib/exception.cpp
-             src/jomlib/fileinfo.cpp
-             src/jomlib/helperfunctions.cpp
-             src/jomlib/macrotable.cpp
-             src/jomlib/makefile.cpp
-             src/jomlib/makefilefactory.cpp
-             src/jomlib/makefilelinereader.cpp
-             src/jomlib/options.cpp
-             src/jomlib/parser.cpp
-             src/jomlib/ppexpr_grammar.cpp
-             src/jomlib/ppexprparser.cpp
-             src/jomlib/preprocessor.cpp
-             src/jomlib/targetexecutor.cpp
-             )
+set(JOM_SRCS
+	src/jomlib/commandexecutor.cpp
+	src/jomlib/consolecolorrestorer.cpp
+	src/jomlib/dependencygraph.cpp
+	src/jomlib/exception.cpp
+	src/jomlib/fileinfo.cpp
+	src/jomlib/filetime.cpp
+	src/jomlib/helperfunctions.cpp
+	src/jomlib/macrotable.cpp
+	src/jomlib/makefile.cpp
+	src/jomlib/makefilefactory.cpp
+	src/jomlib/makefilelinereader.cpp
+	src/jomlib/options.cpp
+	src/jomlib/parser.cpp
+	src/jomlib/ppexpr_grammar.cpp
+	src/jomlib/ppexprparser.cpp
+	src/jomlib/preprocessor.cpp
+	src/jomlib/process.cpp
+	src/jomlib/targetexecutor.cpp
+	src/jomlib/consolecolorrestorer.h
+	src/jomlib/dependencygraph.h
+	src/jomlib/exception.h
+	src/jomlib/fileinfo.h
+	src/jomlib/filetime.h
+	src/jomlib/helperfunctions.h
+	src/jomlib/macrotable.h
+	src/jomlib/makefile.h
+	src/jomlib/makefilefactory.h
+	src/jomlib/makefilelinereader.h
+	src/jomlib/options.h
+	src/jomlib/parser.h
+	src/jomlib/ppexpr_grammar_p.h
+	src/jomlib/ppexprparser.h
+	src/jomlib/preprocessor.h
+	src/jomlib/stable.h
+)
 
-# run moc on all headers and add the moc files to the SRCS
-qt4_wrap_cpp(JOM_SRCS ${JOM_MOCS})
-add_executable(jom src/app/main.cpp ${JOM_SRCS})
-target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY} ws2_32)
+ # run moc on all headers and add the moc files to the SRCS
+ qt4_wrap_cpp(JOM_GENERATED_SRCS ${JOM_MOCS})
+ list(APPEND JOM_SRCS ${JOM_GENERATED_SRCS} ${JOM_MOCS})
 
-# install binaries to bin/, libraries to lib/ and import libraries to lib/ too
-install(TARGETS jom  RUNTIME DESTINATION bin
-                     LIBRARY DESTINATION lib
-                     ARCHIVE DESTINATION lib)
 
-# if we want to use tests:
-if(JOM_ENABLE_TESTS)
-    # in subdirectory tests:
-    qt4_wrap_cpp(JOM_SRCS tests/tests.h)
-    set(TESTS_SRCS tests/tests.cpp)
-    add_executable(jom-test tests.moc ${TESTS_SRCS} ${JOM_SRCS})
-    target_link_libraries(jom-test ${QT_QTMAIN_LIBRARY} 
-                                   ${QT_QTCORE_LIBRARY} 
-                                   ${QT_QTTEST_LIBRARY})
+ set(JOM_APP_MOCS
+	src/app/application.h
+)
+ set(JOM_APP_SRCS
+	src/app/main.cpp
+	src/app/application.cpp
+)
+ qt4_wrap_cpp(JOM_APP_GENERATED_SRCS ${JOM_APP_MOCS})
+ list(APPEND JOM_APP_SRCS ${JOM_APP_GENERATED_SRCS} ${JOM_APP_MOCS})
+ source_group("Generated Sources" FILES ${JOM_GENERATED_SRCS} ${JOM_APP_GENERATED_SRCS})
 
-    # copy the data directory 'makefiles' over into the build directory as the tests should be run from there
-    file(GLOB_RECURSE JOM_TEST_DATA RELATIVE ${CMAKE_SOURCE_DIR}/tests/makefiles/ "tests/makefiles/*")
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/makefiles)
-    foreach(_file ${JOM_TEST_DATA})
-        configure_file(${CMAKE_SOURCE_DIR}/tests/makefiles/${_file} ${CMAKE_BINARY_DIR}/makefiles/${_file} COPY_ONLY)
-    endforeach(_file ${JOM_TEST_DATA})
+ add_executable(jom ${JOM_APP_SRCS} ${JOM_SRCS})
+ target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY} ws2_32)
 
-    # add one unit test per function:
-    # you can run the unittests all at once using 'make test' from the build directory
-    add_test(includeFiles jom-test includeFiles)
-    add_test(includeCycle jom-test includeCycle)
-    add_test(macros jom-test macros)
-    add_test(inferenceRules jom-test inferenceRules)
-    add_test(cycleInTargets jom-test cycleInTargets)
-    add_test(multipleTargets jom-test multipleTargets)
-    add_test(multipleTargetsFail jom-test multipleTargetsFail)
-    add_test(comments jom-test comments)
-    add_test(fileNameMacros jom-test fileNameMacros)
+ # install binaries to bin/, libraries to lib/ and import libraries to lib/ too
+ install(TARGETS jom  RUNTIME DESTINATION bin
+                      LIBRARY DESTINATION lib
+                      ARCHIVE DESTINATION lib)
 
-endif(JOM_ENABLE_TESTS)
+ # if we want to use tests:
+ if(JOM_ENABLE_TESTS)
+     # in subdirectory tests:
+     set(TESTS_SRCS tests/tests.cpp tests/tests.h)
+     qt4_wrap_cpp(TESTS_SRCS tests/tests.h)
+     add_executable(jom-test ${TESTS_SRCS} ${JOM_SRCS})
+     target_link_libraries(jom-test ${QT_QTMAIN_LIBRARY}
+                                    ${QT_QTCORE_LIBRARY}
+                                    ${QT_QTTEST_LIBRARY})
+
+     # copy the data directory 'makefiles' over into the build directory as the tests should be run from there
+     file(GLOB_RECURSE JOM_TEST_DATA RELATIVE ${CMAKE_SOURCE_DIR}/tests/makefiles/ "tests/makefiles/*")
+     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/makefiles)
+     foreach(_file ${JOM_TEST_DATA})
+         configure_file(${CMAKE_SOURCE_DIR}/tests/makefiles/${_file} ${CMAKE_BINARY_DIR}/makefiles/${_file} COPY_ONLY)
+     endforeach(_file ${JOM_TEST_DATA})
+
+     # add one unit test per function:
+     # you can run the unittests all at once using 'make test' from the build directory
+     add_test(includeFiles jom-test includeFiles)
+     add_test(includeCycle jom-test includeCycle)
+     add_test(macros jom-test macros)
+     add_test(inferenceRules jom-test inferenceRules)
+     add_test(cycleInTargets jom-test cycleInTargets)
+     add_test(multipleTargets jom-test multipleTargets)
+     add_test(multipleTargetsFail jom-test multipleTargetsFail)
+     add_test(comments jom-test comments)
+     add_test(fileNameMacros jom-test fileNameMacros)
+
+ endif(JOM_ENABLE_TESTS)
 
