@@ -641,7 +641,7 @@ void ParserTest::fileNameMacros()
     foreach (const QString& str, lst) {
         QVERIFY(!target->m_commands.isEmpty());
         command = target->m_commands.takeFirst();
-        QCOMPARE(command.m_commandLine, QLatin1String("echo ") + str);
+        QCOMPARE(command.m_commandLine, QString(QLatin1String("echo ") + str));
     }
 
     target = mkfile->target(QLatin1String("manyDependentsSubstitutedNames"));
@@ -708,13 +708,13 @@ void ParserTest::fileNameMacros()
     target->expandFileNameMacros();
     QCOMPARE(target->m_commands.count(), 4);
     command = target->m_commands.at(0);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo ") + currentPath);
+    QCOMPARE(command.m_commandLine, QString(QLatin1String("echo ") + currentPath));
     command = target->m_commands.at(1);
     QCOMPARE(command.m_commandLine, QLatin1String("echo infrules"));
     command = target->m_commands.at(2);
     QCOMPARE(command.m_commandLine, QLatin1String("echo infrules.mk"));
     command = target->m_commands.at(3);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo ") + currentPath + QLatin1String("\\infrules"));
+    QCOMPARE(command.m_commandLine, QString(QLatin1String("echo ") + currentPath + QLatin1String("\\infrules")));
 
     target = mkfile->target("root_dir\\substitutionWithColon");
     QVERIFY(target);
@@ -988,9 +988,9 @@ void ParserTest::environmentVariables()
     m_bResetJomProcessEnvironment = true;   // reset environment, if this test fails
     QCOMPARE(m_jomProcess->exitCode(), 0);
     QVERIFY(!m_jomProcess->atEnd());
-    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()), QLatin1String("VAR1 ") + expectedVar1);
+    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()), QString(QLatin1String("VAR1 ") + expectedVar1));
     QVERIFY(!m_jomProcess->atEnd());
-    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()), QLatin1String("VAR2 ") + expectedVar2);
+    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()), QString(QLatin1String("VAR2 ") + expectedVar2));
     m_jomProcess->setEnvironment(QStringList());
     m_bResetJomProcessEnvironment = false;
 }
