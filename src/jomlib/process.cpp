@@ -24,6 +24,8 @@
 #include "process.h"
 #include <QByteArray>
 #include <qt_windows.h>
+#include <QMap>
+#include <QDir>
 
 struct Pipe
 {

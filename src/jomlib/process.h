@@ -25,6 +25,7 @@
 #define PROCESS_H
 
 #include <QObject>
+#include <QStringList>
 
 class Process : public QObject
 {
