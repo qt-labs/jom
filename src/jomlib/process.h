@@ -27,6 +27,8 @@
 #include <QObject>
 #include <QStringList>
 
+namespace NMakeFile {
+
 class Process : public QObject
 {
     Q_OBJECT
@@ -86,5 +88,7 @@ private:
     ExitStatus m_exitStatus;
     bool m_directOutput;
 };
+
+} // namespace NMakeFile
 
 #endif // PROCESS_H

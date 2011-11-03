@@ -27,6 +27,8 @@
 #include <QMap>
 #include <QDir>
 
+namespace NMakeFile {
+
 struct Pipe
 {
     Pipe()
@@ -72,6 +74,7 @@ struct ProcessPrivate
     HANDLE hProcessThread;
     Pipe stdoutPipe;
     Pipe stderrPipe;
+    Pipe stdinPipe;     // we don't use it but some processes demand it (e.g. xcopy)
     QByteArray outputBuffer;
 };
 
@@ -183,22 +186,24 @@ DWORD WINAPI Process::processWatcherThread(void *lpParameter)
     BOOL bSuccess = FALSE;
     HANDLE hParentStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    for (;;)
-    {
-        bSuccess = ReadFile(d->stdoutPipe.hRead, chBuf, buflen, &dwRead, NULL);
-        if (!bSuccess || dwRead == 0)
-            break;
-
-        if (process->m_directOutput) {
-            bSuccess = WriteFile(hParentStdOut, chBuf, dwRead, &dwWritten, NULL);
-            if (!bSuccess)
+    if (!process->m_directOutput) {
+        for (;;)
+        {
+            bSuccess = ReadFile(d->stdoutPipe.hRead, chBuf, buflen, &dwRead, NULL);
+            if (!bSuccess || dwRead == 0)
                 break;
-        } else {
-            d->outputBuffer.append(QByteArray(chBuf, dwRead));
-        }
-    }
 
-    CloseHandle(d->stdoutPipe.hRead);
+            if (process->m_directOutput) {
+                bSuccess = WriteFile(hParentStdOut, chBuf, dwRead, &dwWritten, NULL);
+                if (!bSuccess)
+                    break;
+            } else {
+                d->outputBuffer.append(QByteArray(chBuf, dwRead));
+            }
+        }
+
+        CloseHandle(d->stdoutPipe.hRead);
+    }
     WaitForSingleObject(d->hProcess, INFINITE);
 
     DWORD exitCode = 0;
@@ -223,13 +228,15 @@ void Process::onProcessFinished(int exitCode, bool crashed)
     emit finished(exitCode, exitStatus);
 }
 
-static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa)
+enum PipeType { InputPipe, OutputPipe };
+
+static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa, PipeType pt)
 {
     if (!CreatePipe(&pipe.hRead, &pipe.hWrite, sa, 0)) {
         qWarning("CreatePipe failed with error code %d.", GetLastError());
         return false;
     }
-    if (!SetHandleInformation(pipe.hRead, HANDLE_FLAG_INHERIT, 0)) {
+    if (!SetHandleInformation(pt == InputPipe ? pipe.hWrite : pipe.hRead, HANDLE_FLAG_INHERIT, 0)) {
         qWarning("SetHandleInformation failed with error code %d.", GetLastError());
         return false;
     }
@@ -244,18 +251,25 @@ void Process::start(const QString &commandLine)
     sa.nLength = sizeof(sa);
     sa.bInheritHandle = TRUE;
 
-    if (!setupPipe(d->stdoutPipe, &sa))
-        qFatal("Cannot setup pipe for stdout.");
+    if (!m_directOutput) {
+        if (!setupPipe(d->stdinPipe, &sa, InputPipe))
+            qFatal("Cannot setup pipe for stdin.");
+        if (!setupPipe(d->stdoutPipe, &sa, OutputPipe))
+            qFatal("Cannot setup pipe for stdout.");
 
-    // Let the child process write to the same handle, like QProcess::MergedChannels.
-    DuplicateHandle(GetCurrentProcess(), d->stdoutPipe.hWrite, GetCurrentProcess(),
-                    &d->stderrPipe.hWrite, 0, TRUE, DUPLICATE_SAME_ACCESS);
+        // Let the child process write to the same handle, like QProcess::MergedChannels.
+        DuplicateHandle(GetCurrentProcess(), d->stdoutPipe.hWrite, GetCurrentProcess(),
+                        &d->stderrPipe.hWrite, 0, TRUE, DUPLICATE_SAME_ACCESS);
+    }
 
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
-    si.hStdOutput = d->stdoutPipe.hWrite;
-    si.hStdError = d->stderrPipe.hWrite;
-    si.dwFlags = STARTF_USESTDHANDLES;
+    if (!m_directOutput) {
+        si.hStdInput = d->stdinPipe.hRead;
+        si.hStdOutput = d->stdoutPipe.hWrite;
+        si.hStdError = d->stderrPipe.hWrite;
+        si.dwFlags = STARTF_USESTDHANDLES;
+    }
 
     DWORD dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     PROCESS_INFORMATION pi;
@@ -278,10 +292,16 @@ void Process::start(const QString &commandLine)
     }
 
     // Close the pipe handles. This process doesn't need them anymore.
-    CloseHandle(d->stdoutPipe.hWrite);
-    d->stdoutPipe.hWrite = INVALID_HANDLE_VALUE;
-    CloseHandle(d->stderrPipe.hWrite);
-    d->stderrPipe.hWrite = INVALID_HANDLE_VALUE;
+    if (!m_directOutput) {
+        CloseHandle(d->stdinPipe.hWrite);
+        d->stdinPipe.hWrite = INVALID_HANDLE_VALUE;
+        CloseHandle(d->stdinPipe.hRead);
+        d->stdinPipe.hRead = INVALID_HANDLE_VALUE;
+        CloseHandle(d->stdoutPipe.hWrite);
+        d->stdoutPipe.hWrite = INVALID_HANDLE_VALUE;
+        CloseHandle(d->stderrPipe.hWrite);
+        d->stderrPipe.hWrite = INVALID_HANDLE_VALUE;
+    }
 
     // TODO: use a global notifier object instead of creating a thread for every starting process
     d->hProcess = pi.hProcess;
@@ -305,3 +325,5 @@ bool Process::waitForFinished(int ms)
     d->reset();
     return true;
 }
+
+} // namespace NMakeFile
