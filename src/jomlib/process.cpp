@@ -201,8 +201,8 @@ DWORD WINAPI Process::processWatcherThread(void *lpParameter)
                 d->outputBuffer.append(QByteArray(chBuf, dwRead));
             }
         }
-
         CloseHandle(d->stdoutPipe.hRead);
+        CloseHandle(d->stdinPipe.hWrite);
     }
     WaitForSingleObject(d->hProcess, INFINITE);
 
@@ -293,8 +293,6 @@ void Process::start(const QString &commandLine)
 
     // Close the pipe handles. This process doesn't need them anymore.
     if (!m_directOutput) {
-        CloseHandle(d->stdinPipe.hWrite);
-        d->stdinPipe.hWrite = INVALID_HANDLE_VALUE;
         CloseHandle(d->stdinPipe.hRead);
         d->stdinPipe.hRead = INVALID_HANDLE_VALUE;
         CloseHandle(d->stdoutPipe.hWrite);
