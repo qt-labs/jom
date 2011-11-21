@@ -78,7 +78,12 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 
         descblock = mkfile->firstTarget();
     } else {
-        descblock = mkfile->target(targets.first());
+        const QString targetName = targets.first();
+        descblock = mkfile->target(targetName);
+        if (!descblock) {
+            QString msg = QLatin1String("Target %1 does not exist in %2.");
+            throw Exception(msg.arg(targetName, mkfile->fileName()));
+        }
         for (int i=1; i < targets.count(); ++i) {
             m_pendingTargets.append( mkfile->target(targets.at(i)) );
         }
