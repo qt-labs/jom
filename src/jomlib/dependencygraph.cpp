@@ -162,10 +162,16 @@ void DependencyGraph::internalBuild(Node* node)
         Makefile* const makefile = node->target->makefile();
         DescriptionBlock* dependent = makefile->target(dependentName);
         if (!dependent) {
+            // We don't know dependent "foo" but it may have been defined as "C:\MySourceDir\foo"
+            FileInfo fi(makefile->fileName());
+            QString depFilePath = fi.absolutePath() + QLatin1Char('\\') + dependentName;
+            dependent = makefile->target(depFilePath);
+        }
+        if (!dependent) {
             if (!FastFileInfo(dependentName).exists()) {
                 QByteArray msg = "Error: dependent '";
                 msg += dependentName.toLocal8Bit();
-                msg += "' does not exist.";
+                msg += "' does not exist.\n";
                 fputs(msg.constData(), stderr);
                 exit(2);
             }
