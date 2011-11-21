@@ -179,15 +179,15 @@ void CommandExecutor::executeCurrentCommandLine()
     int jomCallIdx = commandLine.indexOf(m_pTarget->makefile()->options()->fullAppPath);
     bool spawnJOM = (jomCallIdx >= 0);
 
-    // Unescape commandline characters.
-    commandLine.replace(QLatin1String("%%"), QLatin1String("%"));
-
     if (!cmd.m_silent && !m_pTarget->makefile()->options()->suppressExecutedCommandsDisplay) {
         QByteArray output = commandLine.toLocal8Bit();
         output.prepend('\t');
         output.append('\n');
         writeToStandardOutput(output);
     }
+
+    // Unescape commandline characters.
+    commandLine.replace(QLatin1String("%%"), QLatin1String("%"));
 
     static QRegExp rexShellComment(QLatin1String("^(:|rem\\s)"),
                                    Qt::CaseInsensitive, QRegExp::RegExp2);
