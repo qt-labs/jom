@@ -98,14 +98,14 @@ void Process::setWorkingDirectory(const QString &path)
     m_workingDirectory = path;
 }
 
-static QByteArray createEnvBlock(const QMap<QString,QString> &environment)
+static QByteArray createEnvBlock(const QMap<QString,QString> &environment,
+                                 const QString &pathKey, const QString &rootKey)
 {
     QByteArray envlist;
     if (!environment.isEmpty()) {
         QMap<QString,QString> copy = environment;
 
         // add PATH if necessary (for DLL loading)
-        QString pathKey(QLatin1String("PATH"));
         if (!copy.contains(pathKey)) {
             QByteArray path = qgetenv("PATH");
             if (!path.isEmpty())
@@ -113,7 +113,6 @@ static QByteArray createEnvBlock(const QMap<QString,QString> &environment)
         }
 
         // add systemroot if needed
-        QString rootKey(QLatin1String("SystemRoot"));
         if (!copy.contains(rootKey)) {
             QByteArray systemRoot = qgetenv("SystemRoot");
             if (!systemRoot.isEmpty())
@@ -163,16 +162,22 @@ void Process::setEnvironment(const QStringList &environment)
     m_environment = environment;
 
     QMap<QString,QString> envmap;
+    QString pathKey(QLatin1String("Path")), rootKey(QLatin1String("SystemRoot"));
     foreach (const QString &str, m_environment) {
         int idx = str.indexOf(QLatin1Char('='));
         if (idx < 0)
             continue;
         QString name = str.left(idx);
+        QString upperName = name.toUpper();
+        if (upperName == QLatin1String("PATH"))
+            pathKey = name;
+        else if (upperName == QLatin1String("SYSTEMROOT"))
+            rootKey = name;
         QString value = str.mid(idx + 1);
         envmap.insert(name, value);
     }
 
-    m_envBlock = createEnvBlock(envmap);
+    m_envBlock = createEnvBlock(envmap, pathKey, rootKey);
 }
 
 DWORD WINAPI Process::processWatcherThread(void *lpParameter)
