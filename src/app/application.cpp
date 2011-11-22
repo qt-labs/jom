@@ -29,48 +29,39 @@
 
 namespace NMakeFile {
 
-class ProcessEntry
-{
-public:
-    ProcessEntry()
-    {
-        ZeroMemory(&data, sizeof(data));
-        data.dwSize = sizeof(data);
-    }
-
-    bool isValid() const { return data.szExeFile[0] != 0; }
-
-    PROCESSENTRY32 data;
-};
-
 static bool isSubJOM(const QString &processExeName)
 {
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE)
         return false;
     bool result = false;
-    QHash<DWORD, ProcessEntry> processEntries;
-    ProcessEntry pe;
-    if (!Process32First(hSnapshot, &pe.data))
+    QHash<DWORD, PROCESSENTRY32> processEntries;
+    PROCESSENTRY32 pe = {0};
+    pe.dwSize = sizeof(pe);
+    if (!Process32First(hSnapshot, &pe)) {
+        qWarning("Process32First failed with error code %d.", GetLastError());
         goto done;
+    }
     do {
-        processEntries.insert(pe.data.th32ProcessID, pe);
-    } while (Process32Next(hSnapshot, &pe.data));
+        processEntries.insert(pe.th32ProcessID, pe);
+    } while (Process32Next(hSnapshot, &pe));
 
     const DWORD dwCurrentProcessId = GetCurrentProcessId();
     DWORD dwProcessId = dwCurrentProcessId;
     while (dwProcessId) {
-        const ProcessEntry &process = processEntries.value(dwProcessId);
-        if (!process.isValid())
+        QHash<DWORD, PROCESSENTRY32>::iterator it = processEntries.find(dwProcessId);
+        if (it == processEntries.end())
             break;
 
-        QString exeName = QString::fromUtf16(process.data.szExeFile);
-        if (process.data.th32ProcessID != dwCurrentProcessId && exeName == processExeName) {
+        PROCESSENTRY32 &pe = it.value();
+        QString exeName = QString::fromUtf16(pe.szExeFile);
+        if (pe.th32ProcessID != dwCurrentProcessId && exeName == processExeName) {
             result = true;
             goto done;
         }
 
-        dwProcessId = process.data.th32ParentProcessID;
+        dwProcessId = pe.th32ParentProcessID;
+        processEntries.erase(it);
     }
 
 done:
