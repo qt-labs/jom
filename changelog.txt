@@ -1,4 +1,11 @@
-This is the changelog for jom 1.0.8, the parallel make tool.
+This is the changelog for jom 1.0.9, the parallel make tool.
+
+Changes since jom 1.0.8
+- Fix crash when specifying a target for an empty makefile.
+  (QTCREATORBUG-6552)
+- Fix lookup for targets in the Makefile's directory. (QTCREATORBUG-6546)
+- Fix handling of environment variables. (QTCREATORBUG-6578)
+- Fix (very rare) infinite loop.
 
 Changes since jom 1.0.7
 - Fix spawning of child processes that expect a valid stdin handle.
