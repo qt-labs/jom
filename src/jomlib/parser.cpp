@@ -421,14 +421,14 @@ void Parser::parseCommandLine(const QString& cmdLine, QList<Command>& commands, 
     do {
         if (cmd.m_commandLine.startsWith(QLatin1Char('-'))) {
             cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
-            cmd.m_maxExitCode = 255;
-            int idx = cmd.m_commandLine.indexOf(QLatin1Char(' '));
-            if (idx == -1) idx = cmd.m_commandLine.indexOf(QLatin1Char('\t'));
-            if (idx > -1) {
-                QString numstr = cmd.m_commandLine.left(idx+1);
-                bool ok;
-                int exitCode = numstr.toInt(&ok);
-                if (ok) cmd.m_maxExitCode = (unsigned char)exitCode;
+            int i = 0;
+            while (i < cmd.m_commandLine.length() && cmd.m_commandLine.at(i).isDigit())
+                ++i;
+            if (i > 0) {
+                cmd.m_maxExitCode = (unsigned char)cmd.m_commandLine.mid(0, i).toInt();
+                cmd.m_commandLine.remove(0, i);
+            } else {
+                cmd.m_maxExitCode = 255;
             }
         } else if (cmd.m_commandLine.startsWith(QLatin1Char('@'))) {
             cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);

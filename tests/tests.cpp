@@ -558,6 +558,31 @@ void ParserTest::multipleTargets()
     QCOMPARE(target->m_commands.count(), 3);
 }
 
+void ParserTest::commandModifiers()
+{
+    QVERIFY( openMakefile(QLatin1String("commandmodifiers.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
+
+    DescriptionBlock* target = mkfile->target("first");
+    QVERIFY(target);
+    QCOMPARE(target->m_commands.count(), 5);
+    Command cmd = target->m_commands.at(0);
+    QCOMPARE(cmd.m_silent, true);
+
+    cmd = target->m_commands.at(1);
+    QCOMPARE((int)cmd.m_maxExitCode, 255);
+
+    cmd = target->m_commands.at(2);
+    QCOMPARE((int)cmd.m_maxExitCode, 5);
+
+    cmd = target->m_commands.at(3);
+    QCOMPARE((int)cmd.m_maxExitCode, 15);
+
+    cmd = target->m_commands.at(4);
+    QCOMPARE(cmd.m_singleExecution, true);
+}
+
 void ParserTest::comments()
 {
     QVERIFY( openMakefile(QLatin1String("comments.mk")) );

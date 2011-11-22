@@ -60,6 +60,7 @@ private slots:
     void cycleInTargets();
     void dependentsWithSpace();
     void multipleTargets();
+    void commandModifiers();
     void comments();
     void fileNameMacros();
     void fileNameMacrosInDependents();
