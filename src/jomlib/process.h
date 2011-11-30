@@ -56,8 +56,8 @@ public:
         Running
     };
 
-    void setDirectOutput(bool b) { m_directOutput = b; }
-    bool isDirectOutputSet() const { return m_directOutput; }
+    void setBufferedOutput(bool b) { m_bufferedOutput = b; }
+    bool isBufferedOutputSet() const { return m_bufferedOutput; }
     void setWorkingDirectory(const QString &path);
     const QString &workingDirectory() const { return m_workingDirectory; }
     void setEnvironment(const QStringList &environment);
@@ -72,7 +72,7 @@ signals:
 
 public slots:
     void start(const QString &commandLine);
-    bool waitForFinished(int ms = 30000);
+    bool waitForFinished();
 
 private:
     static unsigned long __stdcall processWatcherThread(void *lpParameter);
@@ -86,7 +86,7 @@ private:
     ProcessState m_state;
     int m_exitCode;
     ExitStatus m_exitStatus;
-    bool m_directOutput;
+    bool m_bufferedOutput;
 };
 
 } // namespace NMakeFile

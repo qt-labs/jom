@@ -44,8 +44,8 @@ public:
     bool isActive() const { return m_active; }
     void waitForFinished();
     void cleanupTempFiles();
-    void setDirectOutput(bool b) { m_process.setDirectOutput(b); }
-    bool isDirectOutputSet() const { return m_process.isDirectOutputSet(); }
+    void setBufferedOutput(bool b) { m_process.setBufferedOutput(b); }
+    bool isBufferedOutputSet() const { return m_process.isBufferedOutputSet(); }
 
 public slots:
     void setEnvironment(const QStringList &environment);

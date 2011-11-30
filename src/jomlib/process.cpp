@@ -48,6 +48,14 @@ struct Pipe
     HANDLE hRead;
 };
 
+static void safelyCloseHandle(HANDLE &h)
+{
+    if (h != INVALID_HANDLE_VALUE) {
+        CloseHandle(h);
+        h = INVALID_HANDLE_VALUE;
+    }
+}
+
 struct ProcessPrivate
 {
     ProcessPrivate()
@@ -55,19 +63,6 @@ struct ProcessPrivate
           hProcess(INVALID_HANDLE_VALUE),
           hProcessThread(INVALID_HANDLE_VALUE)
     {}
-
-    void closeAndReset(HANDLE &h)
-    {
-        ::CloseHandle(h);
-        h = 0;
-    }
-
-    void reset()
-    {
-        closeAndReset(hProcess);
-        closeAndReset(hProcessThread);
-        closeAndReset(hWatcherThread);
-    }
 
     HANDLE hWatcherThread;
     HANDLE hProcess;
@@ -84,13 +79,14 @@ Process::Process(QObject *parent)
       m_state(NotRunning),
       m_exitCode(0),
       m_exitStatus(NormalExit),
-      m_directOutput(false)
+      m_bufferedOutput(true)
 {
 }
 
 Process::~Process()
 {
     waitForFinished();
+    delete d;
 }
 
 void Process::setWorkingDirectory(const QString &path)
@@ -180,59 +176,6 @@ void Process::setEnvironment(const QStringList &environment)
     m_envBlock = createEnvBlock(envmap, pathKey, rootKey);
 }
 
-DWORD WINAPI Process::processWatcherThread(void *lpParameter)
-{
-    Process *process = reinterpret_cast<Process*>(lpParameter);
-    ProcessPrivate *d = process->d;
-
-    DWORD dwRead, dwWritten;
-    const size_t buflen = 4096;
-    char chBuf[buflen];
-    BOOL bSuccess = FALSE;
-    HANDLE hParentStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    if (!process->m_directOutput) {
-        for (;;)
-        {
-            bSuccess = ReadFile(d->stdoutPipe.hRead, chBuf, buflen, &dwRead, NULL);
-            if (!bSuccess || dwRead == 0)
-                break;
-
-            if (process->m_directOutput) {
-                bSuccess = WriteFile(hParentStdOut, chBuf, dwRead, &dwWritten, NULL);
-                if (!bSuccess)
-                    break;
-            } else {
-                d->outputBuffer.append(QByteArray(chBuf, dwRead));
-            }
-        }
-        CloseHandle(d->stdoutPipe.hRead);
-        CloseHandle(d->stdinPipe.hWrite);
-    }
-    WaitForSingleObject(d->hProcess, INFINITE);
-
-    DWORD exitCode = 0;
-    bool crashed;
-    if (GetExitCodeProcess(process->d->hProcess, &exitCode)) {
-        //### for now we assume a crash if exit code is less than -1 or the magic number
-        crashed = (exitCode == 0xf291 || (int)exitCode < 0);
-    }
-
-    QMetaObject::invokeMethod(process, "onProcessFinished", Qt::QueuedConnection, Q_ARG(int, exitCode), Q_ARG(bool, crashed));
-    return 0;
-}
-
-void Process::onProcessFinished(int exitCode, bool crashed)
-{
-    if (!d->outputBuffer.isEmpty()) {
-        printf(d->outputBuffer.data());
-        d->outputBuffer.clear();
-    }
-    d->reset();
-    ExitStatus exitStatus = crashed ? Process::CrashExit : Process::NormalExit;
-    emit finished(exitCode, exitStatus);
-}
-
 enum PipeType { InputPipe, OutputPipe };
 
 static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa, PipeType pt)
@@ -256,7 +199,7 @@ void Process::start(const QString &commandLine)
     sa.nLength = sizeof(sa);
     sa.bInheritHandle = TRUE;
 
-    if (!m_directOutput) {
+    if (m_bufferedOutput) {
         if (!setupPipe(d->stdinPipe, &sa, InputPipe))
             qFatal("Cannot setup pipe for stdin.");
         if (!setupPipe(d->stdoutPipe, &sa, OutputPipe))
@@ -269,7 +212,7 @@ void Process::start(const QString &commandLine)
 
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
-    if (!m_directOutput) {
+    if (m_bufferedOutput) {
         si.hStdInput = d->stdinPipe.hRead;
         si.hStdOutput = d->stdoutPipe.hWrite;
         si.hStdError = d->stderrPipe.hWrite;
@@ -297,13 +240,10 @@ void Process::start(const QString &commandLine)
     }
 
     // Close the pipe handles. This process doesn't need them anymore.
-    if (!m_directOutput) {
-        CloseHandle(d->stdinPipe.hRead);
-        d->stdinPipe.hRead = INVALID_HANDLE_VALUE;
-        CloseHandle(d->stdoutPipe.hWrite);
-        d->stdoutPipe.hWrite = INVALID_HANDLE_VALUE;
-        CloseHandle(d->stderrPipe.hWrite);
-        d->stderrPipe.hWrite = INVALID_HANDLE_VALUE;
+    if (m_bufferedOutput) {
+        safelyCloseHandle(d->stdinPipe.hRead);
+        safelyCloseHandle(d->stdoutPipe.hWrite);
+        safelyCloseHandle(d->stderrPipe.hWrite);
     }
 
     // TODO: use a global notifier object instead of creating a thread for every starting process
@@ -311,7 +251,9 @@ void Process::start(const QString &commandLine)
     d->hProcessThread = pi.hThread;
     HANDLE hThread = CreateThread(NULL, 4096, processWatcherThread, this, 0, NULL);
     if (!hThread) {
-        d->reset();
+        safelyCloseHandle(d->hProcess);
+        safelyCloseHandle(d->hProcessThread);
+        m_state = NotRunning;
         emit error(FailedToStart);
         return;
     }
@@ -319,13 +261,78 @@ void Process::start(const QString &commandLine)
     m_state = Running;
 }
 
-bool Process::waitForFinished(int ms)
+DWORD WINAPI Process::processWatcherThread(void *lpParameter)
+{
+    Process *process = reinterpret_cast<Process*>(lpParameter);
+    ProcessPrivate *d = process->d;
+
+    DWORD dwRead;
+    const size_t buflen = 4096;
+    char chBuf[buflen];
+    BOOL bSuccess = FALSE;
+
+    if (process->m_bufferedOutput) {
+        for (;;)
+        {
+            DWORD bytesAvailable;
+            if (!PeekNamedPipe(d->stdoutPipe.hRead, 0, 0, 0, &bytesAvailable, 0))
+                break;
+            if (bytesAvailable == 0) {
+                if (WaitForSingleObject(d->hProcess, 100) == WAIT_TIMEOUT)
+                    continue;
+                else
+                    break;
+            }
+            bSuccess = ReadFile(d->stdoutPipe.hRead, chBuf, buflen, &dwRead, NULL);
+            if (!bSuccess || dwRead == 0)
+                break;
+
+            d->outputBuffer.append(QByteArray(chBuf, dwRead));
+        }
+
+        safelyCloseHandle(d->stdoutPipe.hRead);
+        safelyCloseHandle(d->stdinPipe.hWrite);
+    } else {
+        WaitForSingleObject(d->hProcess, INFINITE);
+    }
+
+    DWORD exitCode = 0;
+    bool crashed;
+    if (GetExitCodeProcess(d->hProcess, &exitCode)) {
+        //### for now we assume a crash if exit code is less than -1 or the magic number
+        crashed = (exitCode == 0xf291 || (int)exitCode < 0);
+    }
+
+    safelyCloseHandle(d->hProcess);
+    safelyCloseHandle(d->hProcessThread);
+
+    QMetaObject::invokeMethod(process, "onProcessFinished", Qt::QueuedConnection, Q_ARG(int, exitCode), Q_ARG(bool, crashed));
+    return 0;
+}
+
+void Process::onProcessFinished(int exitCode, bool crashed)
+{
+    if (m_state != Running)
+        return;
+
+    if (!d->outputBuffer.isEmpty()) {
+        printf(d->outputBuffer.data());
+        d->outputBuffer.clear();
+    }
+    safelyCloseHandle(d->hWatcherThread);
+    m_state = NotRunning;
+    ExitStatus exitStatus = crashed ? Process::CrashExit : Process::NormalExit;
+    emit finished(exitCode, exitStatus);
+}
+
+bool Process::waitForFinished()
 {
     if (m_state != Running)
         return true;
-    if (WaitForSingleObject(d->hWatcherThread, ms) == WAIT_TIMEOUT)
+    if (WaitForSingleObject(d->hWatcherThread, INFINITE) == WAIT_TIMEOUT)
         return false;
-    d->reset();
+    safelyCloseHandle(d->hWatcherThread);
+    m_state = NotRunning;
     return true;
 }
 

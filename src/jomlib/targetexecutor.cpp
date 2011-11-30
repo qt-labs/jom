@@ -41,7 +41,7 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
 
     for (int i=0; i < g_options.maxNumberOfJobs; ++i) {
         CommandExecutor* process = new CommandExecutor(this, environment);
-        if (i == 0) process->setDirectOutput(true);
+        if (i == 0) process->setBufferedOutput(false);
         connect(process, SIGNAL(finished(CommandExecutor*, bool)), this, SLOT(onChildFinished(CommandExecutor*, bool)));
         connect(process, SIGNAL(subJomStarted()), this, SLOT(onSubJomStarted()));
         m_availableProcesses.append(process);
@@ -141,7 +141,7 @@ void TargetExecutor::startProcesses()
 
 void TargetExecutor::waitForProcesses()
 {
-    foreach (CommandExecutor* process, findChildren<CommandExecutor*>())
+    foreach (CommandExecutor* process, m_processes)
         process->waitForFinished();
 }
 
@@ -158,10 +158,10 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
 {
     Q_CHECK_PTR(executor->target());
     m_depgraph->removeLeaf(executor->target());
-    if (executor->isDirectOutputSet())
-        m_availableProcesses.prepend(executor);
-    else
+    if (executor->isBufferedOutputSet())
         m_availableProcesses.append(executor);
+    else
+        m_availableProcesses.prepend(executor);
 
     if (!abortMakeProcess && m_blockingCommand && m_blockingCommand == executor) {
         //qDebug() << "UNBLOCK" << QCoreApplication::applicationPid();
