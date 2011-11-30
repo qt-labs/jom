@@ -163,7 +163,7 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
     else
         m_availableProcesses.append(executor);
 
-    if (m_blockingCommand && m_blockingCommand == executor) {
+    if (!abortMakeProcess && m_blockingCommand && m_blockingCommand == executor) {
         //qDebug() << "UNBLOCK" << QCoreApplication::applicationPid();
         m_blockingCommand = 0;
         foreach (CommandExecutor *cmdex, m_processes)
