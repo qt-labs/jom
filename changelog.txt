@@ -5,7 +5,8 @@ Changes since jom 1.0.8
   (QTCREATORBUG-6552)
 - Fix lookup for targets in the Makefile's directory. (QTCREATORBUG-6546)
 - Fix handling of environment variables. (QTCREATORBUG-6578)
-- Fix (very rare) infinite loop.
+- Fix parsing of the "ignore exit code" command modifier.
+- Fix (very rare) deadlock and zombie processes.
 
 Changes since jom 1.0.7
 - Fix spawning of child processes that expect a valid stdin handle.
