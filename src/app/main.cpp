@@ -133,6 +133,24 @@ int main(int argc, char* argv[])
         mkfile->dumpTargets();
     }
 
+    // ### HACK: pass the modified MAKEFLAGS variable to our environment.
+    if (g_options.isMaxNumberOfJobsSet) {
+        bool found = false;
+        QStringList environment = mkfile->macroTable()->environment();
+        for (QStringList::iterator it = environment.begin(); it != environment.end(); ++it) {
+            QString &str = *it;
+            if (str.toUpper().startsWith(QLatin1String("MAKEFLAGS"))) {
+                str = QLatin1String("MAKEFLAGS=") + mkfile->macroTable()->macroValue(QLatin1String("MAKEFLAGS"));
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            environment += QLatin1String("MAKEFLAGS=") + mkfile->macroTable()->macroValue(QLatin1String("MAKEFLAGS"));
+        MacroTable *mt = const_cast<MacroTable *>(mkfile->macroTable());
+        mt->setEnvironment(environment);
+    }
+
     TargetExecutor executor(mkfile->macroTable()->environment());
     g_pTargetExecutor = &executor;
     try {
