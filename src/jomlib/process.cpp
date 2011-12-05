@@ -81,6 +81,13 @@ Process::Process(QObject *parent)
       m_exitStatus(NormalExit),
       m_bufferedOutput(true)
 {
+    static bool metaTypesRegistered = false;
+    if (!metaTypesRegistered) {
+        metaTypesRegistered = true;
+        qRegisterMetaType<ExitStatus>("Process::ExitStatus");
+        qRegisterMetaType<ProcessError>("Process::ProcessError");
+        qRegisterMetaType<ProcessState>("Process::ProcessState");
+    }
 }
 
 Process::~Process()
