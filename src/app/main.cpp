@@ -59,9 +59,11 @@ static void showUsage()
            "       jom [options] [/f makefile] [macro definitions] [targets]\n\n"
            "This tool is meant to be an nmake clone.\n"
            "Please see the Microsoft nmake documentation for more options.\n"
-           "/DUMPGRAPH show the generated dependency graph\n"
-           "/DUMPGRAPHDOT dump dependency graph in dot format\n"
-           "/KEEPTEMPFILES keeps all temporary files\n");
+           "/DUMPGRAPH show the generated dependency graph.\n"
+           "/DUMPGRAPHDOT dump dependency graph in dot format.\n"
+           "/KEEPTEMPFILES keeps all temporary files.\n"
+           "/J <n> uses up to n processes in parallel.\n"
+           "/W prints the working directory before and after other processing.\n");
 }
 
 static TargetExecutor* g_pTargetExecutor = 0;
