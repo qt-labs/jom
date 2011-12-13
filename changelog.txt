@@ -1,6 +1,8 @@
 This is the changelog for jom 1.0.9, the parallel make tool.
 
 Changes since jom 1.0.8
+- The GNU Make option -w is now supported to print the current working
+  directory before and after other processing.
 - Fix crash when specifying a target for an empty makefile.
   (QTCREATORBUG-6552)
 - Fix lookup for targets in the Makefile's directory. (QTCREATORBUG-6546)
