@@ -54,6 +54,7 @@ Options::Options()
     changeTimeStampsButDoNotBuild(false),
     ignorePredefinedRulesAndMacros(false),
     suppressExecutedCommandsDisplay(false),
+    printWorkingDir(false),
     batchModeEnabled(true),
     dumpInlineFiles(false),
     dumpDependencyGraph(false),
@@ -314,6 +315,9 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                 break;
             case 'U':
                 dumpInlineFiles = true;
+                break;
+            case 'W':
+                printWorkingDir = true;
                 break;
             case 'Y':
                 batchModeEnabled = false;

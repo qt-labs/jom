@@ -151,6 +151,10 @@ int main(int argc, char* argv[])
         mt->setEnvironment(environment);
     }
 
+    if (options->printWorkingDir) {
+        printf("jom: Entering directory '%s\n", qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
+    }
+
     TargetExecutor executor(mkfile->macroTable()->environment());
     g_pTargetExecutor = &executor;
     try {
@@ -164,5 +168,8 @@ int main(int argc, char* argv[])
     int result = app.exec();
     g_pTargetExecutor = 0;
     delete mkfile;
+    if (options->printWorkingDir) {
+        printf("jom: Leaving directory '%s'\n", qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
+    }
     return result;
 }

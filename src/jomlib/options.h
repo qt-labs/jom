@@ -50,6 +50,7 @@ public:
     bool changeTimeStampsButDoNotBuild;
     bool ignorePredefinedRulesAndMacros;
     bool suppressExecutedCommandsDisplay;
+    bool printWorkingDir;
     bool batchModeEnabled;
     bool dumpInlineFiles;
     bool dumpDependencyGraph;
