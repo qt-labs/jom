@@ -412,34 +412,12 @@ void Parser::parseCommandLine(const QString& cmdLine, QList<Command>& commands, 
     if (m_ignoreExitCodes) cmd.m_maxExitCode = 255;
     cmd.m_silent = m_silentCommands;
 
-    if (!inferenceRule)
-        cmd.m_commandLine = m_preprocessor->macroTable()->expandMacros(cmdLine.trimmed());
-    else
+    if (inferenceRule) {
         cmd.m_commandLine = cmdLine.trimmed();
-
-    bool noCommandModifiersFound = false;
-    do {
-        if (cmd.m_commandLine.startsWith(QLatin1Char('-'))) {
-            cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
-            int i = 0;
-            while (i < cmd.m_commandLine.length() && cmd.m_commandLine.at(i).isDigit())
-                ++i;
-            if (i > 0) {
-                cmd.m_maxExitCode = (unsigned char)cmd.m_commandLine.mid(0, i).toInt();
-                cmd.m_commandLine.remove(0, i);
-            } else {
-                cmd.m_maxExitCode = 255;
-            }
-        } else if (cmd.m_commandLine.startsWith(QLatin1Char('@'))) {
-            cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
-            cmd.m_silent = true;
-        } else if (cmd.m_commandLine.startsWith(QLatin1Char('!'))) {
-            cmd.m_commandLine = cmd.m_commandLine.remove(0, 1);
-            cmd.m_singleExecution = true;
-        } else {
-            noCommandModifiersFound = true;
-        }
-    } while (!noCommandModifiersFound);
+    } else {
+        cmd.m_commandLine = m_preprocessor->macroTable()->expandMacros(cmdLine.trimmed());
+        cmd.evaluateModifiers();
+    }
 
     parseInlineFiles(cmd, inferenceRule);
 }

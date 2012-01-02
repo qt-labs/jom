@@ -48,6 +48,8 @@ public:
     Command(const Command& rhs);
     ~Command();
 
+    void evaluateModifiers();
+
     QString m_commandLine;
     QList<InlineFile*> m_inlineFiles;
     unsigned char m_maxExitCode;  // greatest allowed exit code

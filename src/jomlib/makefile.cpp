@@ -64,6 +64,39 @@ Command::~Command()
     qDeleteAll(m_inlineFiles);
 }
 
+/**
+ * Extract the modifiers of the command line and evaluate them.
+ * Modifiers are: @, - and !
+ */
+void Command::evaluateModifiers()
+{
+    for (;;) {
+        if (m_commandLine.isEmpty())
+            break;
+        const QCharRef firstChar = m_commandLine[0];
+        if (firstChar == QLatin1Char('-')) {
+            m_commandLine.remove(0, 1);
+            int i = 0;
+            while (i < m_commandLine.length() && m_commandLine.at(i).isDigit())
+                ++i;
+            if (i > 0) {
+                m_maxExitCode = (unsigned char)m_commandLine.mid(0, i).toInt();
+                m_commandLine.remove(0, i);
+            } else {
+                m_maxExitCode = 255;
+            }
+        } else if (firstChar == QLatin1Char('@')) {
+            m_commandLine.remove(0, 1);
+            m_silent = true;
+        } else if (firstChar == QLatin1Char('!')) {
+            m_commandLine.remove(0, 1);
+            m_singleExecution = true;
+        } else {
+            break;
+        }
+    }
+}
+
 DescriptionBlock::DescriptionBlock(Makefile* mkfile)
 :   m_bFileExists(false),
     m_canAddCommands(ACSUnknown),
@@ -581,6 +614,7 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
             inlineFile->m_content.replace(fileNameMacroString, inferredDependent);
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
+        command.evaluateModifiers();
         command.m_commandLine.replace(fileNameMacroString, inferredDependent);
     }
 }
@@ -610,6 +644,7 @@ void Makefile::applyInferenceRule(QList<DescriptionBlock*> &batch, const Inferen
             inlineFile->m_content.replace(fileNameMacroString, inferredDependents);
         }
         command.m_commandLine = m_macroTable->expandMacros(command.m_commandLine);
+        command.evaluateModifiers();
         command.m_commandLine.replace(fileNameMacroString, inferredDependents);
     }
 }
