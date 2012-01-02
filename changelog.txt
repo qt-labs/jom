@@ -7,6 +7,8 @@ Changes since jom 1.0.8
   (QTCREATORBUG-6552)
 - Fix lookup for targets in the Makefile's directory. (QTCREATORBUG-6546)
 - Fix handling of environment variables. (QTCREATORBUG-6578)
+- Specifying an exit code with the '-' command modifier was fixed.
+- Fix command modifiers in inference rules. (QTCREATORBUG-6742)
 - Fix parsing of the "ignore exit code" command modifier.
 - Fix (very rare) deadlock and zombie processes.
 
