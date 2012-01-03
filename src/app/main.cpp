@@ -169,9 +169,9 @@ int main(int argc, char* argv[])
     QMetaObject::invokeMethod(&executor, "startProcesses", Qt::QueuedConnection);
     int result = app.exec();
     g_pTargetExecutor = 0;
-    delete mkfile;
     if (options->printWorkingDir) {
         printf("jom: Leaving directory '%s'\n", qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
     }
+    delete mkfile;
     return result;
 }
