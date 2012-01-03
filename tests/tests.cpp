@@ -658,7 +658,7 @@ void ParserTest::fileNameMacros()
     command = target->m_commands.takeFirst();
     QCOMPARE(command.m_commandLine, QLatin1String("echo Timmy Jimmy Kenny Eric Kyle Stan"));
     QVERIFY(!target->m_commands.isEmpty());
-    command = target->m_commands.first();
+    command = target->m_commands.takeFirst();
     QCOMPARE(command.m_commandLine, QLatin1String("echo Timmy Jimmy Kenny Eric Kyle Stan"));
 
     target = mkfile->target(QLatin1String("manyDependentsSingleExecution"));
@@ -698,6 +698,33 @@ void ParserTest::fileNameMacros()
     QCOMPARE(content.at(0), QLatin1String("$@ manyDependentsInlineFile"));
     QCOMPARE(content.at(1), QLatin1String("$** Timmy Jimmy Kenny Eric Kyle Stan"));
 
+    target = mkfile->target(QLatin1String("manyDependentsWithModifiers"));
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**D) subdir subdir\\subsubdir . . . ."));
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**B) Timmy Jimmy Kenny Eric Kyle Stan"));
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**F) Timmy.txt Jimmy.txt Kenny.txt Eric.txt Kyle.txt Stan.txt"));
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**R) subdir\\Timmy subdir\\subsubdir\\Jimmy Kenny Eric Kyle Stan"));
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?D) subdir subdir\\subsubdir . . . ."));
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?B) Timmy Jimmy Kenny Eric Kyle Stan"));
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?F) Timmy.txt Jimmy.txt Kenny.txt Eric.txt Kyle.txt Stan.txt"));
+    QVERIFY(!target->m_commands.isEmpty());
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?R) subdir\\Timmy subdir\\subsubdir\\Jimmy Kenny Eric Kyle Stan"));
+
     system("del generated.txt gen1.txt gen2.txt gen3.txt > NUL 2>&1");
     target = mkfile->target(QLatin1String("gen_init"));
     QVERIFY(target);
@@ -721,7 +748,7 @@ void ParserTest::fileNameMacros()
     target = mkfile->target(QLatin1String("macros.mk"));
     QVERIFY(target);
     target->expandFileNameMacros();
-    QCOMPARE(target->m_commands.count(), 4);
+    QCOMPARE(target->m_commands.count(), 8);
     command = target->m_commands.at(0);
     QCOMPARE(command.m_commandLine, QLatin1String("echo $(@D) ."));
     command = target->m_commands.at(1);
@@ -729,6 +756,14 @@ void ParserTest::fileNameMacros()
     command = target->m_commands.at(2);
     QCOMPARE(command.m_commandLine, QLatin1String("echo $(@F) macros.mk"));
     command = target->m_commands.at(3);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@R) macros"));
+    command = target->m_commands.at(4);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@D) ."));
+    command = target->m_commands.at(5);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@B) macros"));
+    command = target->m_commands.at(6);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@F) macros.mk"));
+    command = target->m_commands.at(7);
     QCOMPARE(command.m_commandLine, QLatin1String("echo $(@R) macros"));
 
     const QString currentPath = QDir::currentPath().replace('/', '\\');

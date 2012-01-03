@@ -33,6 +33,16 @@ $$@ $@
 $$** $**
 <<
 
+manyDependentsWithModifiers: subdir\Timmy.txt subdir\subsubdir\Jimmy.txt Kenny.txt Eric.txt Kyle.txt Stan.txt
+	@echo $$(**D) $(**D)
+	@echo $$(**B) $(**B)
+	@echo $$(**F) $(**F)
+	@echo $$(**R) $(**R)
+	@echo $$(?D) $(?D)
+	@echo $$(?B) $(?B)
+	@echo $$(?F) $(?F)
+	@echo $$(?R) $(?R)
+
 Timmy:
 Jimmy:
 Kenny:
@@ -41,6 +51,15 @@ Kyle:
 Stan:
 Tilly:
 Jilly:
+
+subdir\Timmy.txt:
+subdir\subsubdir\Jimmy.txt:
+Kenny.txt:
+Eric.txt:
+Kyle.txt:
+Stan.txt:
+Tilly.txt:
+Jilly.txt:
 
 gen_init:
 	@echo x > gen1.txt
