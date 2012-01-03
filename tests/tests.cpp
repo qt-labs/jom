@@ -719,13 +719,13 @@ void ParserTest::fileNameMacros()
     target->expandFileNameMacros();
     QCOMPARE(target->m_commands.count(), 4);
     command = target->m_commands.at(0);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo ."));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@D) ."));
     command = target->m_commands.at(1);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo macros"));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@B) macros"));
     command = target->m_commands.at(2);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo macros.mk"));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@F) macros.mk"));
     command = target->m_commands.at(3);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo macros"));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@R) macros"));
 
     const QString currentPath = QDir::currentPath().replace('/', '\\');
     target = mkfile->target(currentPath + QLatin1String("\\infrules.mk"));
@@ -733,13 +733,13 @@ void ParserTest::fileNameMacros()
     target->expandFileNameMacros();
     QCOMPARE(target->m_commands.count(), 4);
     command = target->m_commands.at(0);
-    QCOMPARE(command.m_commandLine, QString(QLatin1String("echo ") + currentPath));
+    QCOMPARE(command.m_commandLine, QString(QLatin1String("echo $(@D) ") + currentPath));
     command = target->m_commands.at(1);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo infrules"));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@B) infrules"));
     command = target->m_commands.at(2);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo infrules.mk"));
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@F) infrules.mk"));
     command = target->m_commands.at(3);
-    QCOMPARE(command.m_commandLine, QString(QLatin1String("echo ") + currentPath + QLatin1String("\\infrules")));
+    QCOMPARE(command.m_commandLine, QString(QLatin1String("echo $(@R) ") + currentPath + QLatin1String("\\infrules")));
 
     target = mkfile->target("root_dir\\substitutionWithColon");
     QVERIFY(target);

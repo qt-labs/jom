@@ -52,16 +52,16 @@ gen_cleanup:
 	@del generated.txt gen?.txt
 
 macros.mk:
-	@echo $(@D)
-	@echo $(@B)
-	@echo $(@F)
-	@echo $(@R)
+	@echo $$(@D) $(@D)
+	@echo $$(@B) $(@B)
+	@echo $$(@F) $(@F)
+	@echo $$(@R) $(@R)
 
 $(MAKEDIR)\infrules.mk: force
-	@echo $(@D)
-	@echo $(@B)
-	@echo $(@F)
-	@echo $(@R)
+	@echo $$(@D) $(@D)
+	@echo $$(@B) $(@B)
+	@echo $$(@F) $(@F)
+	@echo $$(@R) $(@R)
 
 force:
 
