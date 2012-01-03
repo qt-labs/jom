@@ -3,9 +3,12 @@ all: Footb$$@ LolCatExtractorManager.tar.gz manyDependents \
      manyDependentsInlineFile \
      gen_init generated.txt gen_cleanup macros.mk $(MAKEDIR)\infrules.mk
 
+# $** and $? are undefined here and should be evaluated to empty strings.
 Football:
 	@echo $$@
 	@echo $@ $@
+	@echo $$** $**
+	@echo $$? $?
 
 LolCatExtractorManager.tar.gz:
 	@echo $*
