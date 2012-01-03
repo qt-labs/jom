@@ -51,6 +51,7 @@ set(JOM_SRCS
     src/jomlib/fileinfo.cpp
     src/jomlib/filetime.cpp
     src/jomlib/helperfunctions.cpp
+    src/jomlib/iocompletionport.cpp
     src/jomlib/macrotable.cpp
     src/jomlib/makefile.cpp
     src/jomlib/makefilefactory.cpp

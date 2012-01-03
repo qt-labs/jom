@@ -56,7 +56,7 @@ public:
         Running
     };
 
-    void setBufferedOutput(bool b) { m_bufferedOutput = b; }
+    void setBufferedOutput(bool b);
     bool isBufferedOutputSet() const { return m_bufferedOutput; }
     void setWorkingDirectory(const QString &path);
     const QString &workingDirectory() const { return m_workingDirectory; }
@@ -75,11 +75,13 @@ public slots:
     bool waitForFinished();
 
 private:
-    static unsigned long __stdcall processWatcherThread(void *lpParameter);
-    Q_INVOKABLE void onProcessFinished(int, bool);
+    void printBufferedOutput();
+
+private slots:
+    void onProcessFinished();
 
 private:
-    struct ProcessPrivate *d;
+    class ProcessPrivate *d;
     QString m_workingDirectory;
     QStringList m_environment;
     QByteArray m_envBlock;
@@ -87,6 +89,8 @@ private:
     int m_exitCode;
     ExitStatus m_exitStatus;
     bool m_bufferedOutput;
+
+    friend class ProcessPrivate;
 };
 
 } // namespace NMakeFile

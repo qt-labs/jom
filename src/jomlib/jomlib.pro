@@ -54,7 +54,8 @@ HEADERS +=  \
     ppexprparser.h \
     targetexecutor.h \
     commandexecutor.h \
-    process.h
+    process.h \
+    iocompletionport.h
 
 SOURCES += \
     fileinfo.cpp \
@@ -73,4 +74,5 @@ SOURCES += \
     ppexprparser.cpp \
     targetexecutor.cpp \
     commandexecutor.cpp \
-    process.cpp
+    process.cpp \
+    iocompletionport.cpp

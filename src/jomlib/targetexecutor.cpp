@@ -158,10 +158,19 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
 {
     Q_CHECK_PTR(executor->target());
     m_depgraph->removeLeaf(executor->target());
-    if (executor->isBufferedOutputSet())
-        m_availableProcesses.append(executor);
-    else
-        m_availableProcesses.prepend(executor);
+    m_availableProcesses.append(executor);
+    if (!executor->isBufferedOutputSet()) {
+        executor->setBufferedOutput(true);
+        bool found = false;
+        foreach (CommandExecutor *cmdex, m_processes) {
+            if (cmdex->isActive()) {
+                cmdex->setBufferedOutput(false);
+                found = true;
+            }
+        }
+        if (!found)
+            m_availableProcesses.first()->setBufferedOutput(false);
+    }
 
     if (!abortMakeProcess && m_blockingCommand && m_blockingCommand == executor) {
         //qDebug() << "UNBLOCK" << QCoreApplication::applicationPid();
