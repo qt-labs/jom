@@ -262,6 +262,8 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
                 if (fileNameReturned)
                     quoteStringIfNeeded(macroValue);
                 str.replace(idx - 1, replacementLength + 1, macroValue);
+            } else {
+                str.remove(idx - 1, replacementLength + 1);
             }
         }
     }
