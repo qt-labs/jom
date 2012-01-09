@@ -634,7 +634,7 @@ void ParserTest::fileNameMacros()
     target = mkfile->target(QLatin1String("Football"));
     QVERIFY(target);
     target->expandFileNameMacros();
-    QCOMPARE(target->m_commands.count(), 4);
+    QCOMPARE(target->m_commands.count(), 6);
     command = target->m_commands.takeFirst();
     QCOMPARE(command.m_commandLine, QLatin1String("echo $@"));
     command = target->m_commands.takeFirst();
@@ -643,6 +643,10 @@ void ParserTest::fileNameMacros()
     QCOMPARE(command.m_commandLine, QLatin1String("echo $** "));
     command = target->m_commands.takeFirst();
     QCOMPARE(command.m_commandLine, QLatin1String("echo $? "));
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(**) "));
+    command = target->m_commands.takeFirst();
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $(?) "));
 
     target = mkfile->target(QLatin1String("LolCatExtractorManager.tar.gz"));
     QVERIFY(target);

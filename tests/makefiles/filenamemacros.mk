@@ -9,6 +9,8 @@ Football:
 	@echo $@ $@
 	@echo $$** $**
 	@echo $$? $?
+	@echo $$(**) $(**)
+	@echo $$(?) $(?)
 
 LolCatExtractorManager.tar.gz:
 	@echo $*
