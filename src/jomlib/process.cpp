@@ -25,6 +25,7 @@
 #include <QByteArray>
 #include <qt_windows.h>
 #include <QMap>
+#include <QMetaType>
 #include <QDir>
 
 namespace NMakeFile {
