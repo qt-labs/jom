@@ -324,7 +324,7 @@ void Process::onProcessFinished(int exitCode, bool crashed)
         return;
 
     if (!d->outputBuffer.isEmpty()) {
-        printf(d->outputBuffer.data());
+        fputs(d->outputBuffer.data(), stdout);
         d->outputBuffer.clear();
     }
     safelyCloseHandle(d->hWatcherThread);

@@ -335,7 +335,7 @@ void CommandExecutor::cleanupTempFiles()
 
 void CommandExecutor::writeToChannel(const QByteArray& data, FILE *channel)
 {
-    fprintf(channel, data);
+    fputs(data, channel);
 }
 
 void CommandExecutor::writeToStandardOutput(const QByteArray& output)
