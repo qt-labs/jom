@@ -24,6 +24,7 @@
 #include "application.h"
 #include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
+#include <QtCore/QSet>
 #include <qt_windows.h>
 #include <Tlhelp32.h>
 
@@ -36,6 +37,7 @@ static bool isSubJOM(const QString &processExeName)
         return false;
     bool result = false;
     QHash<DWORD, PROCESSENTRY32> processEntries;
+    QSet<DWORD> seenProcessIds;
     PROCESSENTRY32 pe = {0};
     pe.dwSize = sizeof(pe);
     if (!Process32First(hSnapshot, &pe)) {
@@ -48,7 +50,8 @@ static bool isSubJOM(const QString &processExeName)
 
     const DWORD dwCurrentProcessId = GetCurrentProcessId();
     DWORD dwProcessId = dwCurrentProcessId;
-    while (dwProcessId) {
+    while (dwProcessId && !seenProcessIds.contains(dwProcessId)) {
+        seenProcessIds.insert(dwProcessId);
         QHash<DWORD, PROCESSENTRY32>::iterator it = processEntries.find(dwProcessId);
         if (it == processEntries.end())
             break;
