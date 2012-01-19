@@ -206,10 +206,10 @@ void CommandExecutor::executeCurrentCommandLine()
     if (simpleCmdLine)
     {
         // handle builtins
+        bool builtInHandled = true;
+        bool success = true;
         if (commandLineStartsWithCommand(commandLine, QLatin1String("cd"))) {
-            bool success = exec_cd(commandLine);
-            onProcessFinished(success ? 0 : 1, Process::NormalExit);
-            return;
+            success = exec_cd(commandLine);
         } else if (commandLineStartsWithCommand(commandLine, QLatin1String("set"))) {
             QString variableAssignment = commandLine;
             variableAssignment = variableAssignment.remove(0, 4).trimmed();
@@ -231,6 +231,12 @@ void CommandExecutor::executeCurrentCommandLine()
                 setEnvironment(environment);
                 emit environmentChanged(environment);
             }
+        } else {
+            builtInHandled = false;
+        }
+        if (builtInHandled) {
+            onProcessFinished(success ? 0 : 1, Process::NormalExit);
+            return;
         }
     }
 
