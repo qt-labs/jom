@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------
 --
--- Copyright (C) 2008-2011 Nokia Corporation and/or its subsidiary(-ies).
+-- Copyright (C) 2008-2012 Nokia Corporation and/or its subsidiary(-ies).
 -- Contact: Nokia Corporation (info@qt.nokia.com)
 --
 -- This file is part of the jom project on Trolltech Labs.
