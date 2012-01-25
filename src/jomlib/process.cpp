@@ -21,6 +21,9 @@
  **
  ****************************************************************************/
 
+#define _CRT_RAND_S
+#include <cstdlib>
+
 #include "process.h"
 #include "iocompletionport.h"
 
@@ -224,27 +227,38 @@ enum PipeType { InputPipe, OutputPipe };
 static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa, PipeType pt)
 {
     BOOL oldInheritHandle = sa->bInheritHandle;
-    static DWORD instanceCount = 0;
+
+    HANDLE hRead;
     const size_t maxPipeNameLen = 256;
     wchar_t pipeName[maxPipeNameLen];
-    swprintf_s(pipeName, maxPipeNameLen, L"\\\\.\\pipe\\jom-%X-%X",
-               GetCurrentProcessId(), instanceCount++);
+    unsigned int attempts = 1000;
+    do {
+        unsigned int randomValue;
+        if (rand_s(&randomValue) != 0)
+            randomValue = rand();
+        swprintf_s(pipeName, maxPipeNameLen, L"\\\\.\\pipe\\jom-%X", randomValue);
 
-    sa->bInheritHandle = (pt == InputPipe);
-    const DWORD dwPipeBufferSize = 1024 * 1024;
-    HANDLE hRead;
-    hRead = CreateNamedPipe(pipeName,
-                            PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
-                            PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
-                            1,                      // only one pipe instance
-                            0,                      // output buffer size
-                            dwPipeBufferSize,       // input buffer size
-                            0,
-                            sa);
-    if (hRead == INVALID_HANDLE_VALUE) {
-        qErrnoWarning("Process: CreateNamedPipe failed.");
-        return false;
-    }
+        sa->bInheritHandle = (pt == InputPipe);
+        const DWORD dwPipeBufferSize = 1024 * 1024;
+        hRead = CreateNamedPipe(pipeName,
+                                PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+                                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
+                                1,                      // only one pipe instance
+                                0,                      // output buffer size
+                                dwPipeBufferSize,       // input buffer size
+                                0,
+                                sa);
+        if (hRead != INVALID_HANDLE_VALUE) {
+            // Rejoice! The pipe was created!
+            break;
+        } else {
+            DWORD dwError = GetLastError();
+            if (dwError != ERROR_PIPE_BUSY) {
+                qErrnoWarning(dwError, "Process: CreateNamedPipe failed.");
+                return false;
+            }
+        }
+    } while (--attempts > 0);
 
     sa->bInheritHandle = (pt == OutputPipe);
     HANDLE hWrite = INVALID_HANDLE_VALUE;
