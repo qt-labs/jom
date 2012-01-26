@@ -102,7 +102,8 @@ Process::Process(QObject *parent)
       m_state(NotRunning),
       m_exitCode(0),
       m_exitStatus(NormalExit),
-      m_bufferedOutput(true)
+      m_bufferedOutput(true),
+      m_exitCodeRetrievalTimerId(0)
 {
     static bool metaTypesRegistered = false;
     if (!metaTypesRegistered) {
@@ -344,6 +345,11 @@ void Process::start(const QString &commandLine)
     }
 }
 
+void Process::startExitCodeRetrievalTimer()
+{
+    m_exitCodeRetrievalTimerId = startTimer(0);
+}
+
 void Process::onProcessFinished()
 {
     if (m_state != Running)
@@ -408,6 +414,23 @@ bool ProcessPrivate::startRead()
     return true;
 }
 
+void Process::timerEvent(QTimerEvent *timerEvent)
+{
+    if (timerEvent->timerId() == m_exitCodeRetrievalTimerId) {
+        killTimer(timerEvent->timerId());
+        m_exitCodeRetrievalTimerId = 0;
+
+        if (d->exitCode == STILL_ACTIVE)
+            if (!GetExitCodeProcess(d->hProcess, &d->exitCode))
+                d->exitCode = STILL_ACTIVE;
+
+        if (d->exitCode == STILL_ACTIVE)
+            m_exitCodeRetrievalTimerId = startTimer(100);
+        else
+            onProcessFinished();
+    }
+}
+
 void Process::printBufferedOutput()
 {
     d->outputBufferLock.lock();
@@ -419,6 +442,10 @@ void Process::printBufferedOutput()
     d->outputBufferLock.unlock();
 }
 
+/**
+ * Is called whenever we receive the result of an asynchronous I/O operation.
+ * Note: This function is running in the IOCP thread!
+ */
 void ProcessPrivate::completionPortNotified(DWORD numberOfBytes, DWORD errorCode)
 {
     if (numberOfBytes)  {
@@ -441,12 +468,7 @@ void ProcessPrivate::completionPortNotified(DWORD numberOfBytes, DWORD errorCode
         if (startRead())
             return;
 
-    if (exitCode == STILL_ACTIVE)
-        if (!GetExitCodeProcess(hProcess, &exitCode))
-            exitCode = STILL_ACTIVE;
-
-    if (exitCode != STILL_ACTIVE)
-        QTimer::singleShot(0, q, SLOT(onProcessFinished()));
+    QTimer::singleShot(0, q, SLOT(startExitCodeRetrievalTimer()));
 }
 
 } // namespace NMakeFile
