@@ -69,7 +69,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
     else if (fileName.startsWith(QLatin1Char('<')) && fileName.endsWith(QLatin1Char('>'))) {
         fileName = fileName.mid(1, fileName.length() - 2);
         QString includeVar = m_macroTable->macroValue(QLatin1String("INCLUDE")).replace(QLatin1Char('\t'), QLatin1Char(' '));
-        QStringList includeDirs = includeVar.split(QLatin1Char(' '), QString::SkipEmptyParts);
+        QStringList includeDirs = includeVar.split(QLatin1Char(';'), QString::SkipEmptyParts);
         QString fullFileName;
         foreach (const QString& includeDir, includeDirs) {
             fullFileName = includeDir + QLatin1Char('\\') + fileName;
