@@ -11,6 +11,8 @@ Changes since jom 1.0.8
 - Fix command modifiers in inference rules. (QTCREATORBUG-6742)
 - Fix parsing of the "ignore exit code" command modifier.
 - Fix (very rare) deadlock and zombie processes.
+- The preprocessor directive !include <file> now looks up files in the
+  include directories correctly. (QTCREATORBUG-6869)
 
 Changes since jom 1.0.7
 - Fix spawning of child processes that expect a valid stdin handle.
