@@ -457,7 +457,7 @@ void ProcessPrivate::completionPortNotified(DWORD numberOfBytes, DWORD errorCode
             outputBufferLock.unlock();
         } else {
             intermediateOutputBuffer[(uint)numberOfBytes] = 0;
-            printf(intermediateOutputBuffer.data());
+            fputs(intermediateOutputBuffer.data(), stdout);
             fflush(stdout);
         }
 
