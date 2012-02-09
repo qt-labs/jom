@@ -752,7 +752,7 @@ void ParserTest::fileNameMacros()
     target = mkfile->target(QLatin1String("macros.mk"));
     QVERIFY(target);
     target->expandFileNameMacros();
-    QCOMPARE(target->m_commands.count(), 8);
+    QCOMPARE(target->m_commands.count(), 4);
     command = target->m_commands.at(0);
     QCOMPARE(command.m_commandLine, QLatin1String("echo $(@D) ."));
     command = target->m_commands.at(1);
@@ -760,14 +760,6 @@ void ParserTest::fileNameMacros()
     command = target->m_commands.at(2);
     QCOMPARE(command.m_commandLine, QLatin1String("echo $(@F) macros.mk"));
     command = target->m_commands.at(3);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@R) macros"));
-    command = target->m_commands.at(4);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@D) ."));
-    command = target->m_commands.at(5);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@B) macros"));
-    command = target->m_commands.at(6);
-    QCOMPARE(command.m_commandLine, QLatin1String("echo $(@F) macros.mk"));
-    command = target->m_commands.at(7);
     QCOMPARE(command.m_commandLine, QLatin1String("echo $(@R) macros"));
 
     const QString currentPath = QDir::currentPath().replace('/', '\\');
