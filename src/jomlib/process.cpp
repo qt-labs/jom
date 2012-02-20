@@ -223,10 +223,20 @@ void Process::setEnvironment(const QStringList &environment)
     m_envBlock = createEnvBlock(envmap, pathKey, rootKey);
 }
 
+static bool runsWindowsVistaOrGreater()
+{
+    OSVERSIONINFO osvi = {0};
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    if (!GetVersionEx(&osvi))
+        qErrnoWarning("GetVersionEx failed.");
+    return osvi.dwMajorVersion >= 6;
+}
+
 enum PipeType { InputPipe, OutputPipe };
 
 static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa, PipeType pt)
 {
+    static bool rejectRemoteClientsFlagSupported = runsWindowsVistaOrGreater();
     BOOL oldInheritHandle = sa->bInheritHandle;
 
     HANDLE hRead;
@@ -241,9 +251,12 @@ static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa, PipeType pt)
 
         sa->bInheritHandle = (pt == InputPipe);
         const DWORD dwPipeBufferSize = 1024 * 1024;
+        DWORD dwPipeMode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT;
+        if (rejectRemoteClientsFlagSupported)
+            dwPipeMode |= PIPE_REJECT_REMOTE_CLIENTS;
         hRead = CreateNamedPipe(pipeName,
                                 PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
-                                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
+                                dwPipeMode,
                                 1,                      // only one pipe instance
                                 0,                      // output buffer size
                                 dwPipeBufferSize,       // input buffer size
