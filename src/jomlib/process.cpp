@@ -96,6 +96,8 @@ public:
     DWORD exitCode;
 };
 
+static HANDLE g_hStdOut = INVALID_HANDLE_VALUE;
+
 Process::Process(QObject *parent)
     : QObject(parent),
       d(new ProcessPrivate(this)),
@@ -348,6 +350,8 @@ void Process::start(const QString &commandLine)
     safelyCloseHandle(d->stdoutPipe.hWrite);
     safelyCloseHandle(d->stderrPipe.hWrite);
 
+    if (g_hStdOut == INVALID_HANDLE_VALUE)
+        g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     d->hProcess = pi.hProcess;
     d->hProcessThread = pi.hThread;
     iocp()->registerObserver(d, d->stdoutPipe.hRead);
@@ -448,8 +452,8 @@ void Process::printBufferedOutput()
 {
     d->outputBufferLock.lock();
     if (!d->outputBuffer.isEmpty()) {
-        fputs(d->outputBuffer.data(), stdout);
-        fflush(stdout);
+        DWORD dwWritten;
+        WriteFile(g_hStdOut, d->outputBuffer.data(), d->outputBuffer.size(), &dwWritten, NULL);
         d->outputBuffer.clear();
     }
     d->outputBufferLock.unlock();
@@ -470,8 +474,8 @@ void ProcessPrivate::completionPortNotified(DWORD numberOfBytes, DWORD errorCode
             outputBufferLock.unlock();
         } else {
             intermediateOutputBuffer[(uint)numberOfBytes] = 0;
-            fputs(intermediateOutputBuffer.data(), stdout);
-            fflush(stdout);
+            DWORD dwWritten;
+            WriteFile(g_hStdOut, intermediateOutputBuffer.data(), numberOfBytes, &dwWritten, NULL);
         }
 
         bufferedOutputModeSwitchMutex.unlock();
