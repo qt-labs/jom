@@ -43,15 +43,19 @@ public:
     void removeTempFiles();
     bool hasPendingTargets() const;
 
+signals:
+    void finished(int exitCode);
+
 public slots:
    void startProcesses();
 
 private slots:
     void onSubJomStarted();
-    void onChildFinished(CommandExecutor*, bool abortMakeProcess);
+    void onChildFinished(CommandExecutor*, bool commandFailed);
 
 private:
     void waitForProcesses();
+    void finishBuild(int exitCode);
 
 private:
     Makefile* m_makefile;
@@ -61,6 +65,7 @@ private:
     QObject *m_blockingCommand;
     QList<CommandExecutor*> m_availableProcesses;
     QList<CommandExecutor*> m_processes;
+    bool m_allCommandsSuccessfullyExecuted;
 };
 
 } //namespace NMakeFile

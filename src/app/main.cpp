@@ -158,6 +158,7 @@ int main(int argc, char* argv[])
     }
 
     TargetExecutor executor(mkfile->macroTable()->environment());
+    QObject::connect(&executor, SIGNAL(finished(int)), &app, SLOT(exit(int)));
     g_pTargetExecutor = &executor;
     try {
         executor.apply(mkfile, mf.activeTargets());

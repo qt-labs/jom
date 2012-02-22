@@ -35,6 +35,9 @@ public:
     Application(int argc, char** argv);
     const bool isSubJOM() const { return m_bIsSubJOM; }
 
+public slots:
+    void exit(int exitCode);
+
 private:
     bool m_bIsSubJOM;
 };

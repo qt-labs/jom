@@ -79,4 +79,9 @@ Application::Application(int argc, char** argv)
     m_bIsSubJOM = NMakeFile::isSubJOM(exeName);
 }
 
+void Application::exit(int exitCode)
+{
+    QCoreApplication::exit(exitCode);
+}
+
 } // namespace NMakeFile

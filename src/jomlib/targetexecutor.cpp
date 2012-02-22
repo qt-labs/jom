@@ -34,7 +34,8 @@ namespace NMakeFile {
 
 TargetExecutor::TargetExecutor(const QStringList& environment)
 :   m_bAborted(false),
-    m_blockingCommand(0)
+    m_blockingCommand(0),
+    m_allCommandsSuccessfullyExecuted(true)
 {
     m_makefile = 0;
     m_depgraph = new DependencyGraph();
@@ -69,6 +70,7 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 {
     m_bAborted = false;
     m_blockingCommand = 0;
+    m_allCommandsSuccessfullyExecuted = true;
     m_makefile = mkfile;
 
     DescriptionBlock* descblock;
@@ -95,7 +97,7 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
             m_depgraph->dotDump();
         else
             m_depgraph->dump();
-        QCoreApplication::exit();
+        finishBuild(0);
     }
 }
 
@@ -122,7 +124,7 @@ void TargetExecutor::startProcesses()
 
         if (m_availableProcesses.count() == g_options.maxNumberOfJobs) {
             if (m_pendingTargets.isEmpty()) {
-                QCoreApplication::exit();
+                finishBuild(0);
             } else {
                 m_depgraph->clear();
                 nextTarget = m_pendingTargets.takeFirst();
@@ -135,7 +137,7 @@ void TargetExecutor::startProcesses()
         m_bAborted = true;
         QString msg = QLatin1Literal("Error: ") + e.message() + QLatin1Char('\n');
         fprintf(stderr, qPrintable(msg));
-        QCoreApplication::exit(1);
+        finishBuild(1);
     }
 }
 
@@ -143,6 +145,18 @@ void TargetExecutor::waitForProcesses()
 {
     foreach (CommandExecutor* process, m_processes)
         process->waitForFinished();
+}
+
+void TargetExecutor::finishBuild(int exitCode)
+{
+    if (exitCode == 0
+        && !m_allCommandsSuccessfullyExecuted
+        && m_makefile->options()->buildUnrelatedTargetsOnError)
+    {
+        // /k specified and some command failed
+        exitCode = 1;
+    }
+    emit finished(exitCode);
 }
 
 void TargetExecutor::onSubJomStarted()
@@ -154,7 +168,7 @@ void TargetExecutor::onSubJomStarted()
             cmdex->block();
 }
 
-void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakeProcess)
+void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFailed)
 {
     Q_CHECK_PTR(executor->target());
     m_depgraph->removeLeaf(executor->target());
@@ -172,6 +186,10 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
             m_availableProcesses.first()->setBufferedOutput(false);
     }
 
+    if (commandFailed)
+        m_allCommandsSuccessfullyExecuted = false;
+
+    bool abortMakeProcess = commandFailed && !m_makefile->options()->buildUnrelatedTargetsOnError;
     if (!abortMakeProcess && m_blockingCommand && m_blockingCommand == executor) {
         //qDebug() << "UNBLOCK" << QCoreApplication::applicationPid();
         m_blockingCommand = 0;
@@ -184,7 +202,7 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool abortMakePr
         m_depgraph->clear();
         m_pendingTargets.clear();
         waitForProcesses();
-        QCoreApplication::exit(2);
+        finishBuild(2);
     }
 
     QMetaObject::invokeMethod(this, "startProcesses", Qt::QueuedConnection);

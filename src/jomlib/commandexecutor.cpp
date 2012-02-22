@@ -131,8 +131,7 @@ void CommandExecutor::onProcessFinished(int exitCode, Process::ExitStatus exitSt
         msg += QByteArray::number(exitCode);
         msg += "\n";
         writeToStandardError(msg);
-        bool abortMakeProcess = !m_pTarget->makefile()->options()->buildUnrelatedTargetsOnError;
-        finishExecution(abortMakeProcess);
+        finishExecution(true);
         return;
     }
 
@@ -144,10 +143,10 @@ void CommandExecutor::onProcessFinished(int exitCode, Process::ExitStatus exitSt
     }
 }
 
-void CommandExecutor::finishExecution(bool abortMakeProcess)
+void CommandExecutor::finishExecution(bool commandFailed)
 {
     m_active = false;
-    emit finished(this, abortMakeProcess);
+    emit finished(this, commandFailed);
 }
 
 void CommandExecutor::waitForFinished()

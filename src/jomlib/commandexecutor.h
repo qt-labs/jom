@@ -60,7 +60,7 @@ private slots:
     void onProcessFinished(int exitCode, Process::ExitStatus exitStatus);
 
 private:
-    void finishExecution(bool abortMakeProcess);
+    void finishExecution(bool commandFailed);
     void executeCurrentCommandLine();
     void createTempFiles();
     void writeToChannel(const QByteArray& data, FILE *channel);
