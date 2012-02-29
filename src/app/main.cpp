@@ -51,6 +51,7 @@ static void showLogo()
 {
     fprintf(stderr, "\njom %d.%d.%d - empower your cores\n\n",
         nVersionMajor, nVersionMinor, nVersionPatch);
+    fflush(stderr);
 }
 
 static void showUsage()
@@ -71,6 +72,7 @@ static TargetExecutor* g_pTargetExecutor = 0;
 BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
 {
     fprintf(stderr, "jom terminated by user (pid=%u)\n", QCoreApplication::applicationPid());
+    fflush(stderr);
 
     GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
     if (g_pTargetExecutor)
@@ -155,6 +157,7 @@ int main(int argc, char* argv[])
 
     if (options->printWorkingDir) {
         printf("jom: Entering directory '%s\n", qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
+        fflush(stdout);
     }
 
     TargetExecutor executor(mkfile->macroTable()->environment());
@@ -172,6 +175,7 @@ int main(int argc, char* argv[])
     g_pTargetExecutor = 0;
     if (options->printWorkingDir) {
         printf("jom: Leaving directory '%s'\n", qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
+        fflush(stdout);
     }
     delete mkfile;
     return result;

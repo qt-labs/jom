@@ -341,6 +341,7 @@ void CommandExecutor::cleanupTempFiles()
 void CommandExecutor::writeToChannel(const QByteArray& data, FILE *channel)
 {
     fputs(data, channel);
+    fflush(channel);
 }
 
 void CommandExecutor::writeToStandardOutput(const QByteArray& output)
