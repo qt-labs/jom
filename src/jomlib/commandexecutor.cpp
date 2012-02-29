@@ -346,12 +346,18 @@ void CommandExecutor::writeToChannel(const QByteArray& data, FILE *channel)
 
 void CommandExecutor::writeToStandardOutput(const QByteArray& output)
 {
-    writeToChannel(output, stdout);
+    if (m_process.isBufferedOutputSet())
+        m_process.writeToOutputBuffer(output);
+    else
+        writeToChannel(output, stdout);
 }
 
 void CommandExecutor::writeToStandardError(const QByteArray& output)
 {
-    writeToChannel(output, stderr);
+    if (m_process.isBufferedOutputSet())
+        m_process.writeToOutputBuffer(output);
+    else
+        writeToChannel(output, stderr);
 }
 
 bool CommandExecutor::isSimpleCommandLine(const QString &commandLine)

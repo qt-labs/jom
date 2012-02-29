@@ -139,6 +139,13 @@ void Process::setBufferedOutput(bool b)
     d->bufferedOutputModeSwitchMutex.unlock();
 }
 
+void Process::writeToOutputBuffer(const QByteArray &output)
+{
+    d->outputBufferLock.lock();
+    d->outputBuffer.append(output);
+    d->outputBufferLock.unlock();
+}
+
 void Process::setWorkingDirectory(const QString &path)
 {
     m_workingDirectory = path;
