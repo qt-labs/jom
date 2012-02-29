@@ -3,6 +3,9 @@ This is the changelog for jom 1.0.11, the parallel make tool.
 Changes since jom 1.0.10
 - Fix exit code for /k command line switch. (QTCREATORBUG-6987)
 - Fix spurious 0x0d characters in process output. (QTCREATORBUG-6986)
+- Fix process output ordering and printing of large amounts of output
+  in recursive jom scenarios.
+- Improved performance by caching file time stamps.
 
 Changes since jom 1.0.9
 - Fix regression that caused jom to fail on Windows XP.
