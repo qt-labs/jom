@@ -34,6 +34,9 @@
 #include <QTimer>
 
 #include <qt_windows.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <io.h>
 
 namespace NMakeFile {
 
@@ -95,8 +98,6 @@ public:
     QByteArray intermediateOutputBuffer;
     DWORD exitCode;
 };
-
-static HANDLE g_hStdOut = INVALID_HANDLE_VALUE;
 
 Process::Process(QObject *parent)
     : QObject(parent),
@@ -350,8 +351,6 @@ void Process::start(const QString &commandLine)
     safelyCloseHandle(d->stdoutPipe.hWrite);
     safelyCloseHandle(d->stderrPipe.hWrite);
 
-    if (g_hStdOut == INVALID_HANDLE_VALUE)
-        g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     d->hProcess = pi.hProcess;
     d->hProcessThread = pi.hThread;
     iocp()->registerObserver(d, d->stdoutPipe.hRead);
@@ -448,14 +447,38 @@ void Process::timerEvent(QTimerEvent *timerEvent)
     }
 }
 
+static void fwrite_binary(FILE *stream, const char *str, size_t count)
+{
+    const int fd = _fileno(stream);
+    const int origMode = _setmode(fd, _O_BINARY);
+    if (fwrite(str, sizeof(char), count, stream)) {
+        // Write operation was successful.
+        fflush(stream);
+    } else if (errno == ENOMEM) {
+        // The buffer was too big for writing. Write it in chunks.
+        const size_t chunkSize = 4096;
+        for (;;) {
+            size_t k = qMin(chunkSize, count);
+            fwrite(str, sizeof(char), k, stream);
+            fflush(stream);
+            if (k >= count)
+                break;
+            str += k;
+            count -= k;
+        }
+    }
+    if (origMode != -1)
+        _setmode(fd, origMode);
+}
+
 void Process::printBufferedOutput()
 {
+    if (d->outputBuffer.isEmpty())
+        return;
+
     d->outputBufferLock.lock();
-    if (!d->outputBuffer.isEmpty()) {
-        DWORD dwWritten;
-        WriteFile(g_hStdOut, d->outputBuffer.data(), d->outputBuffer.size(), &dwWritten, NULL);
-        d->outputBuffer.clear();
-    }
+    fwrite_binary(stdout, d->outputBuffer.data(), d->outputBuffer.count());
+    d->outputBuffer.clear();
     d->outputBufferLock.unlock();
 }
 
@@ -473,9 +496,7 @@ void ProcessPrivate::completionPortNotified(DWORD numberOfBytes, DWORD errorCode
             outputBuffer.append(intermediateOutputBuffer.data(), numberOfBytes);
             outputBufferLock.unlock();
         } else {
-            intermediateOutputBuffer[(uint)numberOfBytes] = 0;
-            DWORD dwWritten;
-            WriteFile(g_hStdOut, intermediateOutputBuffer.data(), numberOfBytes, &dwWritten, NULL);
+            fwrite_binary(stdout, intermediateOutputBuffer.data(), numberOfBytes);
         }
 
         bufferedOutputModeSwitchMutex.unlock();
