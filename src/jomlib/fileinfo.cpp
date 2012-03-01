@@ -24,6 +24,7 @@
 #include "fileinfo.h"
 
 #include <QtCore/QDebug>
+#include <QtCore/QHash>
 #include <windows.h>
 
 namespace NMakeFile {
@@ -56,6 +57,13 @@ inline const WIN32_FILE_ATTRIBUTE_DATA* z(const FastFileInfo::InternalType &inte
     return reinterpret_cast<const WIN32_FILE_ATTRIBUTE_DATA*>(&internalData);
 }
 
+static WIN32_FILE_ATTRIBUTE_DATA createInvalidFAD()
+{
+    WIN32_FILE_ATTRIBUTE_DATA fad = {0};
+    fad.dwFileAttributes = INVALID_FILE_ATTRIBUTES;
+    return fad;
+}
+
 FastFileInfo::FastFileInfo(const QString &fileName)
 {
     QString correctedFileName = fileName;
@@ -64,11 +72,20 @@ FastFileInfo::FastFileInfo(const QString &fileName)
         correctedFileName.chop(1);
     }
 
+    static QHash<QString, WIN32_FILE_ATTRIBUTE_DATA> h;
+    static const WIN32_FILE_ATTRIBUTE_DATA invalidFAD = createInvalidFAD();
+    *z(m_attributes) = h.value(correctedFileName, invalidFAD);
+    if (z(m_attributes)->dwFileAttributes != INVALID_FILE_ATTRIBUTES)
+        return;
+
     if (!GetFileAttributesEx(reinterpret_cast<const TCHAR*>(correctedFileName.utf16()),
                              GetFileExInfoStandard, &m_attributes))
     {
         z(m_attributes)->dwFileAttributes = INVALID_FILE_ATTRIBUTES;
+        return;
     }
+
+    h.insert(correctedFileName, *z(m_attributes));
 }
 
 bool FastFileInfo::exists() const
