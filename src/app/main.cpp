@@ -58,13 +58,30 @@ static void showUsage()
 {
     printf("Usage: jom @commandfile\n"
            "       jom [options] [/f makefile] [macro definitions] [targets]\n\n"
-           "This tool is meant to be an nmake clone.\n"
-           "Please see the Microsoft nmake documentation for more options.\n"
-           "/DUMPGRAPH show the generated dependency graph.\n"
-           "/DUMPGRAPHDOT dump dependency graph in dot format.\n"
-           "/KEEPTEMPFILES keeps all temporary files.\n"
-           "/J <n> uses up to n processes in parallel.\n"
-           "/W prints the working directory before and after other processing.\n");
+           "nmake compatible options:\n"
+           "/A build all targets\n"
+           "/D display build information\n"
+           "/E override environment variable macros\n"
+           "/F <filename> use the specified makefile\n"
+           "/G display included makefiles\n"
+           "/H show help\n"
+           "/I ignore all exit codes\n"
+           "/K keep going - build unrelated targets on error\n"
+           "/N dry run - just print commands\n"
+           "/NOLOGO do not print logo\n"
+           "/P print makefile info\n"
+           "/R ignore predefined rules and macros\n"
+           "/S silent mode\n"
+           "/L same as /NOLOGO\n"
+           "/W print the working directory before and after other processing\n"
+           "/X <filename> write stderr to file.\n"
+           "/Y disable batch mode inference rules\n\n"
+           "jom only options:\n"
+           "/DUMPGRAPH show the generated dependency graph\n"
+           "/DUMPGRAPHDOT dump dependency graph in dot format\n"
+           "/J <n> use up to n processes in parallel\n"
+           "/KEEPTEMPFILES keep all temporary files\n"
+           "/VERSION print version and exit\n");
 }
 
 static TargetExecutor* g_pTargetExecutor = 0;
