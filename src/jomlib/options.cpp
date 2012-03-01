@@ -257,6 +257,10 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
             case 'G':
                 displayIncludeFileNames = true;
                 break;
+            case 'H':
+            case '?':
+                showUsageAndExit = true;
+                break;
             case 'I':
                 stopOnErrors = false;
                 break;
@@ -321,9 +325,6 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                 break;
             case 'Y':
                 batchModeEnabled = false;
-                break;
-            case '?':
-                showUsageAndExit = true;
                 break;
             default:
                 fprintf(stderr, "Error: unknown command line option\n");
