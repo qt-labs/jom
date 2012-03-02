@@ -131,7 +131,7 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
         // That means there could be dependents we didn't take into account yet.
 
         QStringList savedDependents = target->m_dependents;
-        QList<InferenceRule*> savedRules = target->m_inferenceRules;
+        QVector<InferenceRule*> savedRules = target->m_inferenceRules;
         target->m_inferenceRules.clear();
 
         bool inferredDependentAdded = false;

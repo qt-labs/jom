@@ -398,6 +398,7 @@ Makefile::~Makefile()
 {
     delete m_macroTable;
     delete m_options;
+    qDeleteAll(m_inferenceRules);
 }
 
 void Makefile::clear()
@@ -450,24 +451,24 @@ void Makefile::dumpTargets() const
 
 void Makefile::dumpInferenceRules() const
 {
-    foreach (const InferenceRule& ir, m_inferenceRules) {
-        if (ir.m_fromSearchPath != QLatin1String(".")) {
+    foreach (InferenceRule *ir, m_inferenceRules) {
+        if (ir->m_fromSearchPath != QLatin1String(".")) {
             printf("{");
-            printf(qPrintable(ir.m_fromSearchPath));
+            printf(qPrintable(ir->m_fromSearchPath));
             printf("}");
         }
-        printf(qPrintable(ir.m_fromExtension));
-        if (ir.m_toSearchPath != QLatin1String(".")) {
+        printf(qPrintable(ir->m_fromExtension));
+        if (ir->m_toSearchPath != QLatin1String(".")) {
             printf("{");
-            printf(qPrintable(ir.m_toSearchPath));
+            printf(qPrintable(ir->m_toSearchPath));
             printf("}");
         }
-        printf(qPrintable(ir.m_toExtension));
-        if (ir.m_batchMode)
+        printf(qPrintable(ir->m_toExtension));
+        if (ir->m_batchMode)
             printf("::\n");
         else
             printf(":\n");
-        foreach (const Command& cmd, ir.m_commands) {
+        foreach (const Command& cmd, ir->m_commands) {
             printf("\t");
             printf(qPrintable(cmd.m_commandLine));
             printf("\n");
@@ -476,12 +477,12 @@ void Makefile::dumpInferenceRules() const
     }
 }
 
-void Makefile::filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName)
+void Makefile::filterRulesByDependent(QVector<InferenceRule*>& rules, const QString& targetName)
 {
     FileInfo fi(targetName);
     QString targetFileName = fi.fileName();
 
-    QList<InferenceRule*>::iterator it = rules.begin();
+    QVector<InferenceRule*>::iterator it = rules.begin();
     while (it != rules.end()) {
         const InferenceRule* rule = *it;
 
@@ -528,11 +529,11 @@ static bool infRulesPriorityGreaterThan(const InferenceRule *lhs, const Inferenc
     return lhs->m_priority > rhs->m_priority;
 }
 
-void Makefile::addInferenceRule(const InferenceRule& rule)
+void Makefile::addInferenceRule(InferenceRule *rule)
 {
-    QList<InferenceRule>::iterator it = qFind(m_inferenceRules.begin(),
-                                              m_inferenceRules.end(),
-                                              rule);
+    QVector<InferenceRule *>::iterator it = qFind(m_inferenceRules.begin(),
+                                                  m_inferenceRules.end(),
+                                                  rule);
     if (it != m_inferenceRules.end())
         m_inferenceRules.erase(it);
     m_inferenceRules.append(rule);
@@ -541,12 +542,12 @@ void Makefile::addInferenceRule(const InferenceRule& rule)
 void Makefile::calculateInferenceRulePriorities(const QStringList &suffixes)
 {
     // inference rule priority is determined by .SUFFIXES
-    QList<InferenceRule>::iterator it = m_inferenceRules.begin();
+    QVector<InferenceRule *>::iterator it = m_inferenceRules.begin();
     for (; it != m_inferenceRules.end(); ++it) {
-        InferenceRule &rule = *it;
+        InferenceRule *rule = *it;
         for (int i=0; i < suffixes.count(); ++i) {
-            if (rule.m_fromExtension == suffixes.at(i)) {
-                rule.m_priority = i;
+            if (rule->m_fromExtension == suffixes.at(i)) {
+                rule->m_priority = i;
                 break;
             }
         }
@@ -575,7 +576,7 @@ void Makefile::applyInferenceRules(DescriptionBlock* target)
     if (target->m_inferenceRules.isEmpty())
         return;
 
-    QList<InferenceRule*> rules = target->m_inferenceRules;
+    QVector<InferenceRule *> rules = target->m_inferenceRules;
     filterRulesByDependent(rules, target->targetName());
     qStableSort(rules.begin(), rules.end(), infRulesPriorityGreaterThan);
 

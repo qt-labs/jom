@@ -106,7 +106,7 @@ public:
     FileTime m_timeStamp;
     bool m_bFileExists;
     bool m_bVisitedByCycleCheck;
-    QList<InferenceRule*> m_inferenceRules;
+    QVector<InferenceRule*> m_inferenceRules;
 
     enum AddCommandsState { ACSUnknown, ACSEnabled, ACSDisabled };
     AddCommandsState m_canAddCommands;
@@ -192,7 +192,7 @@ public:
         return m_preciousTargets;
     }
 
-    const QList<InferenceRule>& inferenceRules() const
+    const QVector<InferenceRule *>& inferenceRules() const
     {
         return m_inferenceRules;
     }
@@ -209,12 +209,12 @@ public:
     void dumpInferenceRules() const;
     void invalidateTimeStamps();
     void applyInferenceRules(QList<DescriptionBlock*> targets);
-    void addInferenceRule(const InferenceRule& rule);
+    void addInferenceRule(InferenceRule *rule);
     void calculateInferenceRulePriorities(const QStringList &suffixes);
     void addPreciousTarget(const QString& targetName);
 
 private:
-    void filterRulesByDependent(QList<InferenceRule*>& rules, const QString& targetName);
+    void filterRulesByDependent(QVector<InferenceRule*>& rules, const QString& targetName);
     QStringList findInferredDependents(InferenceRule* rule, const QStringList& dependents);
     void applyInferenceRules(DescriptionBlock* target);
     void applyInferenceRule(DescriptionBlock* target, const InferenceRule *rule, bool applyingBatchMode = false);
@@ -225,7 +225,7 @@ private:
     DescriptionBlock* m_firstTarget;
     QHash<QString, DescriptionBlock*> m_targets;
     QStringList m_preciousTargets;
-    QList<InferenceRule> m_inferenceRules;
+    QVector<InferenceRule *> m_inferenceRules;
     MacroTable* m_macroTable;
     Options* m_options;
     QSet<const InferenceRule*> m_batchModeRules;

@@ -70,6 +70,7 @@ void Parser::apply(Preprocessor* pp,
                << QLatin1String(".res")
                << QLatin1String(".rc");
     m_syncPoints.clear();
+    m_ruleIdxByToExtension.clear();
     int dbSeparatorPos, dbSeparatorLength, dbCommandSeparatorPos;
 
     try {
@@ -127,6 +128,12 @@ void Parser::apply(Preprocessor* pp,
             break;
         target->m_dependents += it.value();
         target->m_dependents.removeDuplicates();
+    }
+
+    // build rule suffix cache
+    for (int i = m_makefile->inferenceRules().count(); --i >= 0;) {
+        InferenceRule *ir = m_makefile->inferenceRules().at(i);
+        m_ruleIdxByToExtension[ir->m_toExtension].prepend(ir);
     }
 
     // check for cycles in active targets
@@ -511,15 +518,15 @@ void Parser::parseInferenceRule()
     removeDirSeparatorAtEnd(fromPath);
     removeDirSeparatorAtEnd(toPath);
 
-    InferenceRule rule;
-    rule.m_batchMode = batchMode;
-    rule.m_fromSearchPath = fromPath;
-    rule.m_fromExtension = fromExt;
-    rule.m_toSearchPath = toPath;
-    rule.m_toExtension = toExt;
+    InferenceRule *rule = new InferenceRule();
+    rule->m_batchMode = batchMode;
+    rule->m_fromSearchPath = fromPath;
+    rule->m_fromExtension = fromExt;
+    rule->m_toSearchPath = toPath;
+    rule->m_toExtension = toExt;
 
     readLine();
-    while (parseCommand(rule.m_commands, true))
+    while (parseCommand(rule->m_commands, true))
         readLine();
 
     m_makefile->addInferenceRule(rule);
@@ -564,36 +571,46 @@ void Parser::checkForCycles(DescriptionBlock* target)
     }
 
     target->m_bVisitedByCycleCheck = true;
-    foreach (const QString& depname, target->m_dependents)
-        checkForCycles(m_makefile->target(depname));
+    for (int i = target->m_dependents.count(); --i >= 0;) {
+        DescriptionBlock *const dep = m_makefile->target(target->m_dependents.at(i));
+        checkForCycles(dep);
+    }
     target->m_bVisitedByCycleCheck = false;
 }
 
-QList<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFilePath)
+QVector<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFilePath)
 {
-    QList<InferenceRule*> rules;
-    foreach (const InferenceRule &rule, m_makefile->inferenceRules()) {
-        if (rule.m_priority < 0 || !targetFilePath.endsWith(rule.m_toExtension))
+    QVector<InferenceRule *> rules;
+
+    const QHash<QString, QVector<InferenceRule *> >::const_iterator itEnd = m_ruleIdxByToExtension.constEnd();
+    for (QHash<QString, QVector<InferenceRule *> >::const_iterator it = m_ruleIdxByToExtension.constBegin(); it != itEnd; ++it) {
+        const QString &toExtension = it.key();
+        if (!targetFilePath.endsWith(toExtension))
             continue;
 
-        QString fileName = fileNameFromFilePath(targetFilePath);
-        QString directory = targetFilePath.left(targetFilePath.length() - fileName.length());
-        removeDirSeparatorAtEnd(directory);
-        if (directory.isEmpty())
-            directory = QLatin1Char('.');
-        if (directory != rule.m_toSearchPath)
-            continue;
+        foreach (InferenceRule *rule, it.value()) {
+            if (rule->m_priority < 0)
+                continue;
 
-        // ### can't we work with QList<const InferenceRule*> ?
-        rules.append(const_cast<InferenceRule*>(&rule));
+            QString fileName = fileNameFromFilePath(targetFilePath);
+            QString directory = targetFilePath.left(targetFilePath.length() - fileName.length());
+            removeDirSeparatorAtEnd(directory);
+            if (directory.isEmpty())
+                directory = QLatin1Char('.');
+            if (directory != rule->m_toSearchPath)
+                continue;
+
+            rules.append(rule);
+        }
     }
+
     return rules;
 }
 
 void Parser::preselectInferenceRules(DescriptionBlock *target)
 {
     if (target->m_commands.isEmpty()) {
-        QList<InferenceRule*> rules = findRulesByTargetName(target->targetFilePath());
+        QVector<InferenceRule *> rules = findRulesByTargetName(target->targetFilePath());
         if (!rules.isEmpty())
             target->m_inferenceRules = rules;
     }
@@ -607,7 +624,7 @@ void Parser::preselectInferenceRules(DescriptionBlock *target)
                 dependentFileName.remove(0, 1);
                 dependentFileName.chop(1);
             }
-            QList<InferenceRule*> rules = findRulesByTargetName(dependentFileName);
+            QVector<InferenceRule *> rules = findRulesByTargetName(dependentFileName);
             if (!rules.isEmpty()) {
                 dependent = createTarget(dependentFileName);
                 dependent->m_inferenceRules = rules;

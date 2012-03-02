@@ -60,7 +60,7 @@ private:
     void parseCommandLine(const QString& cmdLine, QList<Command>& commands, bool inferenceRule);
     void parseInlineFiles(Command& cmd, bool inferenceRule);
     void checkForCycles(DescriptionBlock* target);
-    QList<InferenceRule*> findRulesByTargetName(const QString& targetFilePath);
+    QVector<InferenceRule*> findRulesByTargetName(const QString& targetFilePath);
     void preselectInferenceRules(DescriptionBlock *target);
     void error(const QString& msg);
 
@@ -78,6 +78,7 @@ private:
     QStringList                 m_suffixes;
     QStringList                 m_activeTargets;
     QHash<QString, QStringList> m_syncPoints;
+    QHash<QString, QVector<InferenceRule *> > m_ruleIdxByToExtension;
 };
 
 } // namespace NMakeFile
