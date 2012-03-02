@@ -300,7 +300,7 @@ static QStringList splitTargetNames(const QString& str)
         const QChar ch = str.at(i);
         if (ch == QLatin1Char('\"'))
             inDoubleQuotes = !inDoubleQuotes;
-        else if ((ch == QLatin1Char(' ') || ch == QLatin1Char('\t')) && !inDoubleQuotes)
+        else if (!inDoubleQuotes && (ch == QLatin1Char(' ') || ch == QLatin1Char('\t')))
             to = i;
         if (from < to) {
             split_append_helper(lst, str, from, to);
