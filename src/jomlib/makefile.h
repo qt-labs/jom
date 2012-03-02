@@ -161,24 +161,26 @@ public:
 
     DescriptionBlock* target(const QString& name) const
     {
+        DescriptionBlock* result = 0;
         const QString lowerName = name.toLower();
-        DescriptionBlock* result = m_targets.value(lowerName, 0);
-        if(!result) {
-            QString systemName = lowerName;
-            result = m_targets.value(systemName.replace(QLatin1Char('/'), QLatin1Char('\\')), 0);
+        result = m_targets.value(lowerName, 0);
+        if (result)
+            return result;
+
+        QString systemName = lowerName;
+        result = m_targets.value(systemName.replace(QLatin1Char('/'), QLatin1Char('\\')), 0);
+        if (result)
+            return result;
+
+        QString alternativeName = lowerName;
+        const QChar doubleQuote = QLatin1Char('"');
+        if (name.startsWith(doubleQuote) && name.endsWith(doubleQuote)) {
+            alternativeName.remove(0, 1);
+            alternativeName.chop(1);
+        } else {
+            alternativeName = QLatin1Char('"') + alternativeName + QLatin1Char('"');
         }
-        if (!result) {
-            QString alternativeName = lowerName;
-            const QChar doubleQuote = QLatin1Char('"');
-            if (name.startsWith(doubleQuote) && name.endsWith(doubleQuote)) {
-                alternativeName.remove(0, 1);
-                alternativeName.chop(1);
-            } else {
-                alternativeName.prepend(doubleQuote);
-                alternativeName.append(doubleQuote);
-            }
-            result = m_targets.value(alternativeName, 0);
-        }
+        result = m_targets.value(alternativeName, 0);
         return result;
     }
 
