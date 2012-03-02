@@ -152,9 +152,15 @@ QString MacroTable::expandMacros(const QString& str, bool inDependentsLine, QSet
     ret.reserve(str.count());
 
     int i = 0;
+    int appendStart = -1, appendLength = 0;
     const int max_i = str.count() - 1;
     while (i <= max_i) {
         if (str.at(i) == QLatin1Char('$') && i < max_i) {
+            if (appendStart != -1) {
+                ret.append(str.mid(appendStart, appendLength));
+                appendStart = -1;
+            }
+
             ++i;
             if (str.at(i) == QLatin1Char('(')) {
                 // found macro invocation
@@ -162,7 +168,7 @@ QString MacroTable::expandMacros(const QString& str, bool inDependentsLine, QSet
                 int macroNameEnd = -1;
                 bool closingParenthesisFound = false;
                 for (; macroInvokationEnd <= max_i; ++macroInvokationEnd) {
-                    const QChar &ch = str.at(macroInvokationEnd);
+                    const QChar ch = str.at(macroInvokationEnd);
                     if (ch == QLatin1Char(':')) {
                         if (macroNameEnd < 0)
                             macroNameEnd = macroInvokationEnd;
@@ -251,12 +257,22 @@ QString MacroTable::expandMacros(const QString& str, bool inDependentsLine, QSet
                 }
             }
         } else {
-            ret.append(str.at(i));
+            if (appendStart == -1) {
+                appendStart = i;
+                appendLength = 1;
+            } else {
+                ++appendLength;
+            }
         }
         ++i;
     }
 
-    ret.squeeze();
+    if (appendStart != -1) {
+        if (appendStart == 0 && appendLength == str.count())
+            return str;
+        ret.append(str.mid(appendStart, appendLength));
+    }
+
     return ret;
 }
 
