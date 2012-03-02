@@ -171,9 +171,9 @@ bool Preprocessor::parseMacro(const QString& line)
     if (line.isEmpty())
         return false;
 
-    static const QRegExp rex(QLatin1String("^(_|[a-z]|[0-9]|\\$)([a-z]|[0-9]|\\$|=|\\()?.*"),
+    static const QRegExp rex(QLatin1String("^(?:_|[a-z]|[0-9]|\\$)(?:[a-z]|[0-9]|\\$|=|\\()?"),
                              Qt::CaseInsensitive, QRegExp::RegExp2);
-    if (!rex.exactMatch(line))
+    if (rex.indexIn(line) != 0)
         return false;
 
     int equalsSignPos = -1;
