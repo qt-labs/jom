@@ -171,6 +171,7 @@ void TargetExecutor::onSubJomStarted()
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFailed)
 {
     Q_CHECK_PTR(executor->target());
+    FastFileInfo::clearCacheForFile(executor->target()->targetFilePath());
     m_depgraph->removeLeaf(executor->target());
     m_availableProcesses.append(executor);
     if (!executor->isBufferedOutputSet()) {

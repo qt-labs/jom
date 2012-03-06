@@ -41,6 +41,8 @@ public:
     bool exists() const;
     FileTime lastModified() const;
 
+    static void clearCacheForFile(const QString &fileName);
+
     struct InternalType
     {
         quint8 z[36];
