@@ -2,6 +2,7 @@ jom - the parallel make tool for Windows
 
 "jom" is "let's go" in Malay.
 Its aimed to be an nmake clone with support for parallel builds.
+The project's wiki is here: http://qt-project.org/wiki/jom
 
 == How to compile jom ==
 This is a Qt program, so the usual steps to compile jom on command line are:
