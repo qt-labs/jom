@@ -38,6 +38,10 @@
 #include <fcntl.h>
 #include <io.h>
 
+#ifndef PIPE_REJECT_REMOTE_CLIENTS
+#define PIPE_REJECT_REMOTE_CLIENTS 0x08
+#endif
+
 namespace NMakeFile {
 
 Q_GLOBAL_STATIC(IoCompletionPort, iocp)
