@@ -19,11 +19,14 @@ MSYSPATH=C:\\msys
 } else:!exists($$MSYSPATH\\1.0\\bin\\flex.exe) {
     !build_pass:message("MSYSPATH is set but flex cannot be found.")
 } else {
-    FLEX_FILES = ppexpr.l
-    flex.name = flex
-    flex.input = FLEX_FILES
+    # One special extra compiler for ppexpr.l because
+    # msys flex does not understand backslashes and I have no way
+    # to translate the slashes in ${QMAKE_FILE_IN}. /me rolls eyes...
+    PPEXPR_FLEX_FILE = $$PWD/ppexpr.l
+    flex.name = flex ppexpr.l
+    flex.input = PPEXPR_FLEX_FILE
     flex.output = ${QMAKE_FILE_BASE}-lex.inc
-    flex.commands = $$MSYSPATH\\1.0\\bin\\flex.exe --noline ${QMAKE_FILE_IN}
+    flex.commands = $$MSYSPATH\\1.0\\bin\\flex.exe --noline $$PPEXPR_FLEX_FILE
     flex.CONFIG += no_link explicit_dependencies
     QMAKE_EXTRA_COMPILERS += flex
 
@@ -32,7 +35,7 @@ MSYSPATH=C:\\msys
     qlalr.input = QLALR_FILES
     qlalr.output = ${QMAKE_FILE_BASE}_grammar.cpp
     qlalr.commands = $$[QT_INSTALL_BINS]\\qlalr.exe --no-lines ${QMAKE_FILE_IN}
-    qlalr.depends = ${QMAKE_FILE_BASE}.l
+    qlalr.depends = $$PWD/${QMAKE_FILE_BASE}.l
     qlalr.dependency_type = TYPE_C
     qlalr.CONFIG += no_link explicit_dependencies
     QMAKE_EXTRA_COMPILERS += qlalr
@@ -76,3 +79,4 @@ SOURCES += \
     commandexecutor.cpp \
     process.cpp \
     iocompletionport.cpp
+

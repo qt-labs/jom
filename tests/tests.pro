@@ -1,8 +1,9 @@
 TEMPLATE = app
-DEPENDPATH += . ../src/jomlib
-INCLUDEPATH += ../src/jomlib
 CONFIG += debug_and_release
 QT += testlib
+DEPENDPATH += . ../src/jomlib
+INCLUDEPATH += ../src/jomlib
+DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
 build_pass:CONFIG(debug, debug|release) {
     LIBS += ../lib/jomlibd.lib

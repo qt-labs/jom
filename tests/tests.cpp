@@ -44,10 +44,7 @@ void ParserTest::initTestCase()
     m_jomProcess = 0;
     m_bResetJomProcessEnvironment = false;
     m_oldCurrentPath = QDir::currentPath();
-    if (QFile::exists("../makefiles"))
-        QDir::setCurrent("../makefiles");
-    else
-        QDir::setCurrent("makefiles");
+    QDir::setCurrent(SRCDIR "makefiles");
 }
 
 void ParserTest::cleanupTestCase()
@@ -67,9 +64,9 @@ void ParserTest::includeFiles()
     MacroTable macroTable;
     Preprocessor pp;
     pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("include_test.mk")) );
     bool exceptionCaught = false;
     try {
+        QVERIFY( pp.openFile(QLatin1String("include_test.mk")) );
         while (!pp.readLine().isNull());
     } catch (Exception &e) {
         qDebug() << e.message();
@@ -91,9 +88,9 @@ void ParserTest::includeCycle()
     MacroTable macroTable;
     Preprocessor pp;
     pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("circular_include.mk")) );
     bool bExceptionCaught = false;
     try {
+        QVERIFY( pp.openFile(QLatin1String("circular_include.mk")) );
         while (!pp.readLine().isNull());
     } catch (Exception &e) {
         qDebug() << e.message();
@@ -107,9 +104,9 @@ void ParserTest::macros()
     MacroTable macroTable;
     Preprocessor pp;
     pp.setMacroTable(&macroTable);
-    QVERIFY( pp.openFile(QLatin1String("macrotest.mk")) );
     bool bExceptionCaught = false;
     try {
+        QVERIFY( pp.openFile(QLatin1String("macrotest.mk")) );
         while (!pp.readLine().isNull());
         QCOMPARE(macroTable.macroValue("VERY_LONG_Macro_Name_With_mucho_mucho_characters_and_some_number_too_1234458789765421200218427824996512548989654486630110059699471421"), QLatin1String("AHA"));
         QCOMPARE(macroTable.macroValue("SEIN"), QLatin1String("ist"));
@@ -512,10 +509,10 @@ void ParserTest::cycleInTargets()
     Preprocessor pp;
     Parser parser;
     pp.setMacroTable(macroTable);
-    QVERIFY( pp.openFile(QLatin1String("cycle_in_targets.mk")) );
 
     bool exceptionThrown = false;
     try {
+        QVERIFY( pp.openFile(QLatin1String("cycle_in_targets.mk")) );
         parser.apply(&pp, &mkfile);
     } catch (...) {
         exceptionThrown = true;
@@ -908,7 +905,7 @@ bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory
 #endif
     QString jomBinary = QFileInfo(QCoreApplication::applicationDirPath() + "/" + jomBinaryName).absoluteFilePath();
     if (!QFile::exists(jomBinary)) {
-        jomBinary = QFileInfo("../../bin/" + jomBinaryName).absoluteFilePath();
+        jomBinary = QFileInfo(QCoreApplication::applicationDirPath() + QLatin1String("/../../bin/") + jomBinaryName).absoluteFilePath();
         if (!QFile::exists(jomBinary)) {
             qDebug("could not find jom");
         }
