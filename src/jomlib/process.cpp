@@ -28,10 +28,13 @@
 #include "iocompletionport.h"
 
 #include <QByteArray>
+#include <QEventLoop>
 #include <QDir>
 #include <QMap>
+#include <QMetaType>
 #include <QMutex>
 #include <QTimer>
+#include <QTimerEvent>
 
 #include <qt_windows.h>
 #include <errno.h>

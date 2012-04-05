@@ -26,6 +26,7 @@
 #include "macrotable.h"
 #include <QStringList>
 #include <QHash>
+#include <QVector>
 
 namespace NMakeFile {
 
