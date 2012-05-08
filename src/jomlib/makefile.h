@@ -91,14 +91,6 @@ public:
     }
 
     /**
-     * Returns this target's name as a file name, i.e. unquoted.
-     */
-    QString targetFilePath() const
-    {
-        return m_targetFilePath;
-    }
-
-    /**
      * Returns the makefile, this target belongs to.
      */
     Makefile* makefile() const { return m_pMakefile; }
@@ -120,7 +112,6 @@ private:
 
 private:
     QString m_targetName;
-    QString m_targetFilePath;
     Makefile* m_pMakefile;
 };
 
@@ -173,15 +164,6 @@ public:
         if (result)
             return result;
 
-        QString alternativeName = lowerName;
-        const QChar doubleQuote = QLatin1Char('"');
-        if (name.startsWith(doubleQuote) && name.endsWith(doubleQuote)) {
-            alternativeName.remove(0, 1);
-            alternativeName.chop(1);
-        } else {
-            alternativeName = QLatin1Char('"') + alternativeName + QLatin1Char('"');
-        }
-        result = m_targets.value(alternativeName, 0);
         return result;
     }
 

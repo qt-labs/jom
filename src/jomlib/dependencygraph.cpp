@@ -136,7 +136,7 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 
         bool inferredDependentAdded = false;
         foreach (InferenceRule *rule, savedRules) {
-            QString inferredDependent = rule->inferredDependent(target->targetFilePath());
+            QString inferredDependent = rule->inferredDependent(target->targetName());
             if (!target->m_dependents.contains(inferredDependent) && FastFileInfo(inferredDependent).exists()) {
                 inferredDependentAdded = true;
                 target->m_dependents.append(inferredDependent);

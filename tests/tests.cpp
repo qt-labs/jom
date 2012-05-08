@@ -529,7 +529,7 @@ void ParserTest::dependentsWithSpace()
     QVERIFY(target);
     QCOMPARE(target->m_dependents.count(), 3);
     QCOMPARE(target->m_dependents.at(0), QLatin1String("one"));
-    QCOMPARE(target->m_dependents.at(1), QLatin1String("\"dependent two with spaces\""));
+    QCOMPARE(target->m_dependents.at(1), QLatin1String("dependent two with spaces"));
     QCOMPARE(target->m_dependents.at(2), QLatin1String("three"));
 }
 
@@ -851,24 +851,6 @@ void ParserTest::fileNameMacrosInDependents()
     QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $(@R)
     QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $$(@R)
     QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $(*R)
-
-    target = mkfile->target(QLatin1String("\"C:\\My Project\\tmp\\foo.obj\""));
-    QVERIFY(target);
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo.obj\""));  // $@
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo.obj\""));  // $$@
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo\""));      // $*
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\""));           // $(@D)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\""));           // $$(@D)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\""));           // $(*D)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(@B)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $$(@B)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*B)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $(@F)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo.obj"));                           // $$(@F)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("foo"));                               // $(*F)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo\""));      // $(@R)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo\""));      // $$(@R)
-    QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("\"C:\\My Project\\tmp\\foo\""));      // $(*R)
 }
 
 void ParserTest::windowsPathsInTargetName()
@@ -885,9 +867,9 @@ void ParserTest::windowsPathsInTargetName()
     QVERIFY(target != 0);
     QCOMPARE(target->targetName(), QLatin1String("C:\\bar.txt"));
 
-    target = mkfile->target(QLatin1String("\"C:\\three.txt\""));
+    target = mkfile->target(QLatin1String("C:\\three.txt"));
     QVERIFY(target != 0);
-    QCOMPARE(target->targetName(), QLatin1String("\"C:\\three.txt\""));
+    QCOMPARE(target->targetName(), QLatin1String("C:\\three.txt"));
     QCOMPARE(target->m_commands.count(), 2);
 
     target = mkfile->target(QLatin1String("S"));

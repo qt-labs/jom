@@ -291,7 +291,7 @@ void CommandExecutor::createTempFiles()
             QString fileName;
             if (inlineFile->m_filename.isEmpty()) {
                 do {
-                    QString simplifiedTargetName = m_pTarget->targetFilePath();
+                    QString simplifiedTargetName = m_pTarget->targetName();
                     simplifiedTargetName = fileNameFromFilePath(simplifiedTargetName);
                     fileName = m_tempPath + simplifiedTargetName + QLatin1Char('.')
                                + QString::number(GetCurrentProcessId()) + QLatin1Char('.')
@@ -392,6 +392,7 @@ bool CommandExecutor::exec_cd(const QString &commandLine)
         }
     }
 
+    removeDoubleQuotes(args);
     FileInfo fi(args);
     if (!fi.exists()) {
         QString msg = QLatin1String("Couldn't change working directory to %0.\n");

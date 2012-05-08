@@ -53,6 +53,15 @@ inline void removeDirSeparatorAtEnd(QString& directory)
         directory.chop(1);
 }
 
+inline void removeDoubleQuotes(QString& targetName)
+{
+    const QChar dblQuote = QLatin1Char('"');
+    if (targetName.startsWith(dblQuote) && targetName.endsWith(dblQuote)) {
+        targetName.chop(1);
+        targetName.remove(0, 1);
+    }
+}
+
 /**
  * Splits the string, respects "foo bar" and "foo ""knuffi"" bar".
  */

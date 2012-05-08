@@ -108,11 +108,6 @@ DescriptionBlock::DescriptionBlock(Makefile* mkfile)
 void DescriptionBlock::setTargetName(const QString& name)
 {
     m_targetName = name;
-    m_targetFilePath = name;
-    if (m_targetFilePath.startsWith(QLatin1Char('"')) && m_targetFilePath.endsWith(QLatin1Char('"'))) {
-        m_targetFilePath.remove(0, 1);
-        m_targetFilePath.chop(1);
-    }
 }
 
 /**
@@ -287,7 +282,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
     switch (str.at(0).toLatin1()) {
         case '@':
             replacementLength = 1;
-            result = targetFilePath();
+            result = targetName();
             returnsFileName = true;
             break;
         case '*':
@@ -301,7 +296,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                 } else {
                     returnsFileName = true;
                     replacementLength = 1;
-                    result = targetFilePath();
+                    result = targetName();
                     int idx = result.lastIndexOf(QLatin1Char('.'));
                     if (idx > -1)
                         result.resize(idx);
@@ -317,7 +312,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                 result.clear();
                 bool firstAppend = true;
                 const FileTime currentTimeStamp = FileTime::currentTime();
-                FileTime targetTimeStamp = FastFileInfo(targetFilePath()).lastModified();
+                FileTime targetTimeStamp = FastFileInfo(targetName()).lastModified();
                 if (!targetTimeStamp.isValid())
                     targetTimeStamp = currentTimeStamp;
 
@@ -639,7 +634,7 @@ void Makefile::applyInferenceRule(QList<DescriptionBlock*> &batch, const Inferen
     DescriptionBlock *executingTarget = batch.first();
     foreach (DescriptionBlock *target, batch) {
         target->m_inferenceRules.clear();
-        QString inferredDependent = rule->inferredDependent(target->targetFilePath());
+        QString inferredDependent = rule->inferredDependent(target->targetName());
         if (!executingTarget->m_dependents.contains(inferredDependent))
             executingTarget->m_dependents.append(inferredDependent);
 

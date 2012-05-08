@@ -287,6 +287,7 @@ static void split_append_helper(QStringList& lst, const QString& str, int from, 
     QString entry;
     entry = str.mid(from, to - from);
     entry = entry.trimmed();
+    removeDoubleQuotes(entry);
     if (!entry.isEmpty())
         lst.append(entry);
 }
@@ -610,7 +611,7 @@ QVector<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFileP
 void Parser::preselectInferenceRules(DescriptionBlock *target)
 {
     if (target->m_commands.isEmpty()) {
-        QVector<InferenceRule *> rules = findRulesByTargetName(target->targetFilePath());
+        QVector<InferenceRule *> rules = findRulesByTargetName(target->targetName());
         if (!rules.isEmpty())
             target->m_inferenceRules = rules;
     }
@@ -620,10 +621,7 @@ void Parser::preselectInferenceRules(DescriptionBlock *target)
             preselectInferenceRules(dependent);
         } else {
             QString dependentFileName = dependentName;
-            if (dependentFileName.startsWith(QLatin1Char('"')) && dependentFileName.endsWith(QLatin1Char('"'))) {
-                dependentFileName.remove(0, 1);
-                dependentFileName.chop(1);
-            }
+            removeDoubleQuotes(dependentFileName);
             QVector<InferenceRule *> rules = findRulesByTargetName(dependentFileName);
             if (!rules.isEmpty()) {
                 dependent = createTarget(dependentFileName);
