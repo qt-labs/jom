@@ -22,7 +22,7 @@
  ****************************************************************************/
 #pragma once
 
-#include "fileinfo.h"
+#include "fastfileinfo.h"
 #include "macrotable.h"
 #include <QStringList>
 #include <QHash>

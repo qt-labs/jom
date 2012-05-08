@@ -21,7 +21,7 @@
  **
  ****************************************************************************/
 
-#include "fileinfo.h"
+#include "fastfileinfo.h"
 
 #include <QtCore/QDebug>
 #include <QtCore/QHash>

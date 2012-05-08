@@ -26,7 +26,7 @@
 #include "exception.h"
 #include "makefilelinereader.h"
 #include "helperfunctions.h"
-#include "fileinfo.h"
+#include "fastfileinfo.h"
 
 #include <QDir>
 #include <QDebug>

@@ -48,7 +48,7 @@ set(JOM_SRCS
     src/jomlib/commandexecutor.cpp
     src/jomlib/dependencygraph.cpp
     src/jomlib/exception.cpp
-    src/jomlib/fileinfo.cpp
+    src/jomlib/fastfileinfo.cpp
     src/jomlib/filetime.cpp
     src/jomlib/helperfunctions.cpp
     src/jomlib/iocompletionport.cpp
@@ -65,7 +65,7 @@ set(JOM_SRCS
     src/jomlib/targetexecutor.cpp
     src/jomlib/dependencygraph.h
     src/jomlib/exception.h
-    src/jomlib/fileinfo.h
+    src/jomlib/fastfileinfo.h
     src/jomlib/filetime.h
     src/jomlib/helperfunctions.h
     src/jomlib/macrotable.h

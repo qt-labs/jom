@@ -21,7 +21,6 @@
  **
  ****************************************************************************/
 #include "makefile.h"
-#include "fileinfo.h"
 #include "exception.h"
 #include "options.h"
 #include <QDebug>

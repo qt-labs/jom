@@ -24,7 +24,7 @@
 #include "options.h"
 #include "exception.h"
 #include "helperfunctions.h"
-#include "fileinfo.h"
+#include "fastfileinfo.h"
 
 #include <QtCore/QDebug>
 #include <QtCore/QDir>

@@ -23,7 +23,7 @@
 #include "dependencygraph.h"
 #include "makefile.h"
 #include "options.h"
-#include "fileinfo.h"
+#include "fastfileinfo.h"
 
 #include <QFile>
 #include <QDebug>

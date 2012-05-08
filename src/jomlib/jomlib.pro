@@ -42,7 +42,7 @@ MSYSPATH=C:\\msys
 }
 
 HEADERS +=  \
-    fileinfo.h \
+    fastfileinfo.h \
     filetime.h \
     helperfunctions.h \
     makefile.h \
@@ -61,7 +61,7 @@ HEADERS +=  \
     iocompletionport.h
 
 SOURCES += \
-    fileinfo.cpp \
+    fastfileinfo.cpp \
     filetime.cpp \
     helperfunctions.cpp \
     macrotable.cpp \
