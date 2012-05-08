@@ -52,35 +52,23 @@ static WIN32_FILE_ATTRIBUTE_DATA createInvalidFAD()
     return fad;
 }
 
-static QString correctFileName(const QString &fileName)
-{
-    QString result = fileName;
-    if (result.startsWith(QLatin1Char('\"'))) {
-        result.remove(0, 1);
-        result.chop(1);
-    }
-    return result;
-}
-
 static QHash<QString, WIN32_FILE_ATTRIBUTE_DATA> fadHash;
 
 FastFileInfo::FastFileInfo(const QString &fileName)
 {
-    QString correctedFileName = correctFileName(fileName);
-
     static const WIN32_FILE_ATTRIBUTE_DATA invalidFAD = createInvalidFAD();
-    *z(m_attributes) = fadHash.value(correctedFileName, invalidFAD);
+    *z(m_attributes) = fadHash.value(fileName, invalidFAD);
     if (z(m_attributes)->dwFileAttributes != INVALID_FILE_ATTRIBUTES)
         return;
 
-    if (!GetFileAttributesEx(reinterpret_cast<const TCHAR*>(correctedFileName.utf16()),
+    if (!GetFileAttributesEx(reinterpret_cast<const TCHAR*>(fileName.utf16()),
                              GetFileExInfoStandard, &m_attributes))
     {
         z(m_attributes)->dwFileAttributes = INVALID_FILE_ATTRIBUTES;
         return;
     }
 
-    fadHash.insert(correctedFileName, *z(m_attributes));
+    fadHash.insert(fileName, *z(m_attributes));
 }
 
 bool FastFileInfo::exists() const
@@ -100,8 +88,7 @@ FileTime FastFileInfo::lastModified() const
 
 void FastFileInfo::clearCacheForFile(const QString &fileName)
 {
-    QString correctedFileName = correctFileName(fileName);
-    fadHash.remove(correctedFileName);
+    fadHash.remove(fileName);
 }
 
 } // NMakeFile
