@@ -96,7 +96,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
 
     // make file name absolute for safe cycle detection
     const QString origFileName = fileName;
-    FileInfo fileInfo(fileName);
+    QFileInfo fileInfo(fileName);
     if (!fileInfo.exists()) {
         QString msg = QLatin1String("File %1 doesn't exist.");
         error(msg.arg(origFileName));

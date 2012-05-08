@@ -393,7 +393,7 @@ bool CommandExecutor::exec_cd(const QString &commandLine)
     }
 
     removeDoubleQuotes(args);
-    FileInfo fi(args);
+    QFileInfo fi(args);
     if (!fi.exists()) {
         QString msg = QLatin1String("Couldn't change working directory to %0.\n");
         writeToStandardError(msg.arg(args).toLocal8Bit());

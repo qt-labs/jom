@@ -29,18 +29,6 @@
 
 namespace NMakeFile {
 
-FileInfo::FileInfo(const QString& fileName)
-{
-    if (fileName.startsWith(QLatin1Char('"'))) {
-        QString correctedFileName = fileName;
-        correctedFileName.remove(0, 1);
-        correctedFileName.chop(1);
-        QFileInfo::setFile(correctedFileName);
-    } else {
-        QFileInfo::setFile(fileName);
-    }
-}
-
 template<bool> struct CompileTimeAssert;
 template<> struct CompileTimeAssert<true> {};
 static CompileTimeAssert<

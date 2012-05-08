@@ -23,15 +23,8 @@
 #pragma once
 
 #include "filetime.h"
-#include <QtCore/QFileInfo>
 
 namespace NMakeFile {
-
-class FileInfo : public QFileInfo
-{
-public:
-    FileInfo(const QString& fileName);
-};
 
 class FastFileInfo
 {

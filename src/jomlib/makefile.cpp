@@ -212,10 +212,10 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
                         macroValue = macroValue.left(k);
                     break;
                 case 'B':
-                    macroValue = FileInfo(macroValue).baseName();
+                    macroValue = QFileInfo(macroValue).baseName();
                     break;
                 case 'F':
-                    macroValue = FileInfo(macroValue).fileName();
+                    macroValue = QFileInfo(macroValue).fileName();
                     break;
                 case 'R':
                     k = macroValue.lastIndexOf(QLatin1Char('.'));
@@ -371,7 +371,7 @@ bool InferenceRule::operator == (const InferenceRule& rhs) const
  */
 QString InferenceRule::inferredDependent(const QString &targetName) const
 {
-    QString dependent = FileInfo(targetName).fileName();
+    QString dependent = QFileInfo(targetName).fileName();
     dependent.chop(m_toExtension.length());
     dependent.append(m_fromExtension);
 
@@ -412,7 +412,7 @@ void Makefile::clear()
 const QString &Makefile::dirPath() const
 {
     if (m_dirPath.isEmpty()) {
-        FileInfo fi(m_fileName);
+        QFileInfo fi(m_fileName);
         m_dirPath = fi.absolutePath();
     }
     return m_dirPath;
@@ -483,7 +483,7 @@ void Makefile::dumpInferenceRules() const
 
 void Makefile::filterRulesByDependent(QVector<InferenceRule*>& rules, const QString& targetName)
 {
-    FileInfo fi(targetName);
+    QFileInfo fi(targetName);
     QString targetFileName = fi.fileName();
 
     QVector<InferenceRule*>::iterator it = rules.begin();
