@@ -201,6 +201,7 @@ public:
     }
 
     const QString &fileName() const { return m_fileName; }
+    const QString &dirPath() const;
     void setOptions(Options *o) { m_options = o; }
     const Options* options() const { return m_options; }
 
@@ -225,6 +226,7 @@ private:
 
 private:
     QString m_fileName;
+    mutable QString m_dirPath;
     DescriptionBlock* m_firstTarget;
     QHash<QString, DescriptionBlock*> m_targets;
     QStringList m_preciousTargets;

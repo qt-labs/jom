@@ -414,6 +414,15 @@ void Makefile::clear()
     m_inferenceRules.clear();
 }
 
+const QString &Makefile::dirPath() const
+{
+    if (m_dirPath.isEmpty()) {
+        FileInfo fi(m_fileName);
+        m_dirPath = fi.absolutePath();
+    }
+    return m_dirPath;
+}
+
 void Makefile::dumpTarget(DescriptionBlock* db, uchar level) const
 {
     QString indent;
