@@ -84,6 +84,7 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
     if (!expandCommandFiles(arguments))
         return false;
 
+    const QStringList originalArguments = arguments;
     while (!arguments.isEmpty()) {
         QString arg = arguments.takeFirst();
         if (arg.at(0) == QLatin1Char('-') ||
@@ -91,7 +92,7 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
         {
             // handle option
             arg.remove(0, 1);
-            if (!handleCommandLineOption(arg, arguments, makefile, makeflags))
+            if (!handleCommandLineOption(originalArguments, arg, arguments, makefile, makeflags))
                 return false;
         } else if (arg.contains(QLatin1Char('='))) {
             // handle macro definition
@@ -172,7 +173,7 @@ bool Options::expandCommandFiles(QStringList& arguments)
     return true;
 }
 
-bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QString& makefile, QString& makeflags)
+bool Options::handleCommandLineOption(const QStringList &originalArguments, QString arg, QStringList& arguments, QString& makefile, QString& makeflags)
 {
     while (!arg.isEmpty()) {
         QString upperArg = arg.toUpper();
@@ -327,8 +328,12 @@ bool Options::handleCommandLineOption(QString arg, QStringList& arguments, QStri
                 batchModeEnabled = false;
                 break;
             default:
-                fprintf(stderr, "Error: unknown command line option\n");
-                return false;
+                {
+                    QString arglist = QLatin1Char('\'') + originalArguments.join(QLatin1String("', '")) + QLatin1Char('\'');
+                    fprintf(stderr, "Error: unknown command line option '%c' in arguments: %s\n",
+                            ch.toLatin1(), qPrintable(arglist));
+                    return false;
+                }
         }
     }
 

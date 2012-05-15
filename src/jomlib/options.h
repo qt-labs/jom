@@ -66,7 +66,7 @@ public:
 
 private:
     bool expandCommandFiles(QStringList& arguments);
-    bool handleCommandLineOption(QString arg, QStringList& arguments, QString& makefile, QString& makeflags);
+    bool handleCommandLineOption(const QStringList &originalArguments, QString arg, QStringList& arguments, QString& makefile, QString& makeflags);
 };
 
 class GlobalOptions
