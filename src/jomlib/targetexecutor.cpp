@@ -162,9 +162,19 @@ void TargetExecutor::finishBuild(int exitCode)
 void TargetExecutor::onSubJomStarted()
 {
     //qDebug() << "BLOCK" << QCoreApplication::applicationPid();
-    m_blockingCommand = sender();
+
+    // Set the blocking sub jom command to direct output mode.
+    CommandExecutor *subJomCmd = qobject_cast<CommandExecutor*>(sender());
+    if (subJomCmd->isBufferedOutputSet()) {
+        foreach (CommandExecutor *cmdex, m_processes)
+            if (!cmdex->isBufferedOutputSet())
+                cmdex->setBufferedOutput(true);
+        subJomCmd->setBufferedOutput(false);
+    }
+
+    m_blockingCommand = subJomCmd;
     foreach (CommandExecutor *cmdex, m_processes)
-        if (cmdex != sender())
+        if (cmdex != subJomCmd)
             cmdex->block();
 }
 
