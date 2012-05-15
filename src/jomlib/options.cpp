@@ -92,19 +92,21 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
         {
             // handle option
             arg.remove(0, 1);
+            arg = arg.trimmed();
             if (!handleCommandLineOption(originalArguments, arg, arguments, makefile, makeflags))
                 return false;
         } else if (arg.contains(QLatin1Char('='))) {
             // handle macro definition
             int idx = arg.indexOf(QLatin1Char('='));
-            QString name = arg.left(idx);
+            QString name = arg.left(idx).trimmed();
             if (!macroTable.isMacroNameValid(name)) {
                 fprintf(stderr, "Error: The macro name %s is invalid.", qPrintable(name));
                 exit(128);
             }
-            macroTable.defineEnvironmentMacroValue(name, arg.mid(idx+1), true);
+            macroTable.defineEnvironmentMacroValue(name, trimLeft(arg.mid(idx+1)), true);
         } else {
             // handle target
+            arg = arg.trimmed();
             if (!targets.contains(arg))
                 targets.append(arg);
         }
