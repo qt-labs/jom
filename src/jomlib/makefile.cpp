@@ -23,6 +23,7 @@
 #include "makefile.h"
 #include "exception.h"
 #include "options.h"
+#include <QFileInfo>
 #include <QDebug>
 
 namespace NMakeFile {
