@@ -58,3 +58,11 @@ QStringList splitCommandLine(QString commandLine)
     }
     return arguments;
 }
+
+QString trimLeft(const QString &s)
+{
+    QString result = s;
+    while (!result.isEmpty() && result[0].isSpace())
+        result.remove(0, 1);
+    return result;
+}
