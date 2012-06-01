@@ -347,7 +347,7 @@ void CommandExecutor::writeToChannel(const QByteArray& data, FILE *channel)
 void CommandExecutor::writeToStandardOutput(const QByteArray& output)
 {
     if (m_process.isBufferedOutputSet())
-        m_process.writeToOutputBuffer(output);
+        m_process.writeToStdOutBuffer(output);
     else
         writeToChannel(output, stdout);
 }
@@ -355,7 +355,7 @@ void CommandExecutor::writeToStandardOutput(const QByteArray& output)
 void CommandExecutor::writeToStandardError(const QByteArray& output)
 {
     if (m_process.isBufferedOutputSet())
-        m_process.writeToOutputBuffer(output);
+        m_process.writeToStdErrBuffer(output);
     else
         writeToChannel(output, stderr);
 }

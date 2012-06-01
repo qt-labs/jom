@@ -58,7 +58,8 @@ public:
 
     void setBufferedOutput(bool b);
     bool isBufferedOutputSet() const { return m_bufferedOutput; }
-    void writeToOutputBuffer(const QByteArray &output);
+    void writeToStdOutBuffer(const QByteArray &output);
+    void writeToStdErrBuffer(const QByteArray &output);
     void setWorkingDirectory(const QString &path);
     const QString &workingDirectory() const { return m_workingDirectory; }
     void setEnvironment(const QStringList &environment);

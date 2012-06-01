@@ -30,6 +30,7 @@
 #include <QByteArray>
 #include <QEventLoop>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QMap>
 #include <QMetaType>
 #include <QMutex>
@@ -48,6 +49,7 @@
 namespace NMakeFile {
 
 Q_GLOBAL_STATIC(IoCompletionPort, iocp)
+Q_GLOBAL_STATIC(QElapsedTimer, runtime)
 
 struct Pipe
 {
@@ -79,7 +81,34 @@ static void safelyCloseHandle(HANDLE &h)
     }
 }
 
-class ProcessPrivate : public IoCompletionPortObserver
+struct TimeStampedBuffer
+{
+    TimeStampedBuffer(const qint64 t, const QByteArray &b)
+        : timestamp(t), buffer(b)
+    {
+    }
+
+    qint64 timestamp;
+    QByteArray buffer;
+};
+
+class ProcessPrivate;
+
+class OutputChannel : public IoCompletionPortObserver
+{
+public:
+    bool startRead();
+    void completionPortNotified(DWORD numberOfBytes, DWORD errorCode);
+
+    ProcessPrivate *d;
+    Pipe *pipe;
+    FILE *stream;
+    QByteArray intermediateOutputBuffer;
+    QList<TimeStampedBuffer> buffers;
+    QMutex outputBufferLock;
+};
+
+class ProcessPrivate
 {
 public:
     ProcessPrivate(Process *process)
@@ -88,10 +117,15 @@ public:
           hProcessThread(INVALID_HANDLE_VALUE),
           exitCode(STILL_ACTIVE)
     {
+        stdoutChannel.d = this;
+        stdoutChannel.pipe = &stdoutPipe;
+        stdoutChannel.stream = stdout;
+        stderrChannel.d = this;
+        stderrChannel.pipe = &stderrPipe;
+        stderrChannel.stream = stderr;
     }
 
     bool startRead();
-    void completionPortNotified(DWORD numberOfBytes, DWORD errorCode);
 
     Process *q;
     HANDLE hProcess;
@@ -99,10 +133,9 @@ public:
     Pipe stdoutPipe;
     Pipe stderrPipe;
     Pipe stdinPipe;     // we don't use it but some processes demand it (e.g. xcopy)
-    QByteArray outputBuffer;
-    QMutex outputBufferLock;
+    OutputChannel stdoutChannel;
+    OutputChannel stderrChannel;
     QMutex bufferedOutputModeSwitchMutex;
-    QByteArray intermediateOutputBuffer;
     DWORD exitCode;
 };
 
@@ -115,12 +148,13 @@ Process::Process(QObject *parent)
       m_bufferedOutput(true),
       m_exitCodeRetrievalTimerId(0)
 {
-    static bool metaTypesRegistered = false;
-    if (!metaTypesRegistered) {
-        metaTypesRegistered = true;
+    static bool staticsInitialized = false;
+    if (!staticsInitialized) {
+        staticsInitialized = true;
         qRegisterMetaType<ExitStatus>("Process::ExitStatus");
         qRegisterMetaType<ProcessError>("Process::ProcessError");
         qRegisterMetaType<ProcessState>("Process::ProcessState");
+        runtime()->start();
     }
 }
 
@@ -146,11 +180,18 @@ void Process::setBufferedOutput(bool b)
     d->bufferedOutputModeSwitchMutex.unlock();
 }
 
-void Process::writeToOutputBuffer(const QByteArray &output)
+void Process::writeToStdOutBuffer(const QByteArray &output)
 {
-    d->outputBufferLock.lock();
-    d->outputBuffer.append(output);
-    d->outputBufferLock.unlock();
+    d->stdoutChannel.outputBufferLock.lock();
+    d->stdoutChannel.buffers.append(TimeStampedBuffer(runtime()->elapsed(), output));
+    d->stdoutChannel.outputBufferLock.unlock();
+}
+
+void Process::writeToStdErrBuffer(const QByteArray &output)
+{
+    d->stderrChannel.outputBufferLock.lock();
+    d->stderrChannel.buffers.append(TimeStampedBuffer(runtime()->elapsed(), output));
+    d->stderrChannel.outputBufferLock.unlock();
 }
 
 void Process::setWorkingDirectory(const QString &path)
@@ -327,10 +368,8 @@ void Process::start(const QString &commandLine)
         qFatal("Cannot setup pipe for stdin.");
     if (!setupPipe(d->stdoutPipe, &sa, OutputPipe))
         qFatal("Cannot setup pipe for stdout.");
-
-    // Let the child process write to the same handle, like QProcess::MergedChannels.
-    DuplicateHandle(GetCurrentProcess(), d->stdoutPipe.hWrite, GetCurrentProcess(),
-                    &d->stderrPipe.hWrite, 0, TRUE, DUPLICATE_SAME_ACCESS);
+    if (!setupPipe(d->stderrPipe, &sa, OutputPipe))
+        qFatal("Cannot setup pipe for stderr.");
 
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
@@ -367,7 +406,8 @@ void Process::start(const QString &commandLine)
 
     d->hProcess = pi.hProcess;
     d->hProcessThread = pi.hThread;
-    iocp()->registerObserver(d, d->stdoutPipe.hRead);
+    iocp()->registerObserver(&d->stdoutChannel , d->stdoutPipe.hRead);
+    iocp()->registerObserver(&d->stderrChannel , d->stderrPipe.hRead);
     if (d->startRead()) {
         m_state = Running;
     } else {
@@ -385,7 +425,8 @@ void Process::onProcessFinished()
     if (m_state != Running)
         return;
 
-    iocp()->unregisterObserver(d);
+    iocp()->unregisterObserver(&d->stdoutChannel);
+    iocp()->unregisterObserver(&d->stderrChannel);
     safelyCloseHandle(d->stdoutPipe.hRead);
     safelyCloseHandle(d->stderrPipe.hRead);
     safelyCloseHandle(d->hProcess);
@@ -416,49 +457,37 @@ bool Process::waitForFinished()
     return true;
 }
 
+bool ProcessPrivate::startRead()
+{
+    return stdoutChannel.startRead() && stderrChannel.startRead();
+}
+
 /**
  * Starts the asynchronous read operation.
  * Returns true, if initiating the read operation was successful.
  */
-bool ProcessPrivate::startRead()
+bool OutputChannel::startRead()
 {
     DWORD dwRead;
     BOOL bSuccess;
 
     const DWORD minReadBufferSize = 4096;
-    bSuccess = PeekNamedPipe(stdoutPipe.hRead, NULL, 0, NULL, &dwRead, NULL);
+    bSuccess = PeekNamedPipe(pipe->hRead, NULL, 0, NULL, &dwRead, NULL);
     if (!bSuccess || dwRead < minReadBufferSize)
         dwRead = minReadBufferSize;
 
     intermediateOutputBuffer.resize(dwRead);
-    bSuccess = ReadFile(stdoutPipe.hRead,
+    bSuccess = ReadFile(pipe->hRead,
                         intermediateOutputBuffer.data(),
                         intermediateOutputBuffer.size(),
                         NULL,
-                        &stdoutPipe.overlapped);
+                        &pipe->overlapped);
     if (!bSuccess) {
         DWORD dwError = GetLastError();
         if (dwError != ERROR_IO_PENDING)
             return false;
     }
     return true;
-}
-
-void Process::timerEvent(QTimerEvent *timerEvent)
-{
-    if (timerEvent->timerId() == m_exitCodeRetrievalTimerId) {
-        killTimer(timerEvent->timerId());
-        m_exitCodeRetrievalTimerId = 0;
-
-        if (d->exitCode == STILL_ACTIVE)
-            if (!GetExitCodeProcess(d->hProcess, &d->exitCode))
-                d->exitCode = STILL_ACTIVE;
-
-        if (d->exitCode == STILL_ACTIVE)
-            m_exitCodeRetrievalTimerId = startTimer(100);
-        else
-            onProcessFinished();
-    }
 }
 
 static void fwrite_binary(FILE *stream, const char *str, size_t count)
@@ -485,42 +514,77 @@ static void fwrite_binary(FILE *stream, const char *str, size_t count)
         _setmode(fd, origMode);
 }
 
-void Process::printBufferedOutput()
-{
-    if (d->outputBuffer.isEmpty())
-        return;
-
-    d->outputBufferLock.lock();
-    fwrite_binary(stdout, d->outputBuffer.data(), d->outputBuffer.count());
-    d->outputBuffer.clear();
-    d->outputBufferLock.unlock();
-}
-
 /**
  * Is called whenever we receive the result of an asynchronous I/O operation.
  * Note: This function is running in the IOCP thread!
  */
-void ProcessPrivate::completionPortNotified(DWORD numberOfBytes, DWORD errorCode)
+void OutputChannel::completionPortNotified(DWORD numberOfBytes, DWORD errorCode)
 {
     if (numberOfBytes)  {
-        bufferedOutputModeSwitchMutex.lock();
+        d->bufferedOutputModeSwitchMutex.lock();
 
-        if (q->m_bufferedOutput) {
+        if (d->q->isBufferedOutputSet()) {
             outputBufferLock.lock();
-            outputBuffer.append(intermediateOutputBuffer.data(), numberOfBytes);
+            QByteArray data(intermediateOutputBuffer.data(), numberOfBytes);
+            buffers.append(TimeStampedBuffer(runtime()->elapsed(), data));
             outputBufferLock.unlock();
         } else {
-            fwrite_binary(stdout, intermediateOutputBuffer.data(), numberOfBytes);
+            fwrite_binary(stream, intermediateOutputBuffer.data(), numberOfBytes);
         }
 
-        bufferedOutputModeSwitchMutex.unlock();
+        d->bufferedOutputModeSwitchMutex.unlock();
     }
 
     if (errorCode == ERROR_SUCCESS)
         if (startRead())
             return;
 
-    QTimer::singleShot(0, q, SLOT(startExitCodeRetrievalTimer()));
+    QTimer::singleShot(0, d->q, SLOT(startExitCodeRetrievalTimer()));
+}
+
+void Process::timerEvent(QTimerEvent *timerEvent)
+{
+    if (timerEvent->timerId() == m_exitCodeRetrievalTimerId) {
+        killTimer(timerEvent->timerId());
+        m_exitCodeRetrievalTimerId = 0;
+
+        if (d->exitCode == STILL_ACTIVE)
+            if (!GetExitCodeProcess(d->hProcess, &d->exitCode))
+                d->exitCode = STILL_ACTIVE;
+
+        if (d->exitCode == STILL_ACTIVE)
+            m_exitCodeRetrievalTimerId = startTimer(100);
+        else
+            onProcessFinished();
+    }
+}
+
+void Process::printBufferedOutput()
+{
+    while (!d->stdoutChannel.buffers.isEmpty()
+        || !d->stderrChannel.buffers.isEmpty())
+    {
+        OutputChannel *channels[2] = { &d->stdoutChannel, &d->stderrChannel };
+
+        size_t i = 0;
+        if (channels[0]->buffers.isEmpty()
+            || (!channels[1]->buffers.isEmpty()
+                && channels[0]->buffers.first().timestamp > channels[1]->buffers.first().timestamp))
+        {
+            i = 1;
+        }
+
+        OutputChannel *const channel = channels[i];
+        channel->outputBufferLock.lock();
+        const QByteArray &ba = channel->buffers.first().buffer;
+        fwrite_binary(channel->stream, ba.data(), ba.count());
+        channel->buffers.removeFirst();
+        channel->outputBufferLock.unlock();
+    }
 }
 
 } // namespace NMakeFile
+
+QT_BEGIN_NAMESPACE
+Q_DECLARE_TYPEINFO(NMakeFile::TimeStampedBuffer, Q_MOVABLE_TYPE);
+QT_END_NAMESPACE
