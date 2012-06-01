@@ -26,7 +26,10 @@
 #include "process.h"
 #include <QFile>
 #include <QString>
+
+QT_BEGIN_NAMESPACE
 class QStringList;
+QT_END_NAMESPACE
 
 namespace NMakeFile {
 
