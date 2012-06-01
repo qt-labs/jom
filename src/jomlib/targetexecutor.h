@@ -25,7 +25,6 @@
 #include "makefile.h"
 #include <QEvent>
 
-class QProcess;
 QT_BEGIN_NAMESPACE
 class QFile;
 QT_END_NAMESPACE

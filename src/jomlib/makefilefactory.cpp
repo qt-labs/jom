@@ -30,7 +30,6 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
-#include <QtCore/QProcess>
 
 namespace NMakeFile {
 
