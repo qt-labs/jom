@@ -178,7 +178,9 @@ void CommandExecutor::executeCurrentCommandLine()
     int jomCallIdx = commandLine.indexOf(m_pTarget->makefile()->options()->fullAppPath);
     bool spawnJOM = (jomCallIdx >= 0);
 
-    if (!cmd.m_silent && !m_pTarget->makefile()->options()->suppressExecutedCommandsDisplay) {
+    if (m_pTarget->makefile()->options()->dryRun
+        || (!cmd.m_silent && !m_pTarget->makefile()->options()->suppressExecutedCommandsDisplay))
+    {
         QByteArray output = commandLine.toLocal8Bit();
         output.prepend('\t');
         output.append('\n');
