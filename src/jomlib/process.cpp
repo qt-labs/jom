@@ -160,6 +160,9 @@ Process::Process(QObject *parent)
 
 Process::~Process()
 {
+    iocp()->unregisterObserver(&d->stdoutChannel);
+    iocp()->unregisterObserver(&d->stderrChannel);
+
     if (m_state == Running)
         qWarning("Process: destroyed while process still running.");
     printBufferedOutput();
