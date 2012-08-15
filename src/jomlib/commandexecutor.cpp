@@ -312,8 +312,17 @@ void CommandExecutor::createTempFiles()
                 throw Exception(msg.arg(fileName));
             }
 
+            const QByteArray content = inlineFile->m_content.toLocal8Bit();
+            if (m_pTarget->makefile()->options()->dumpInlineFiles) {
+                writeToStandardOutput("---");
+                writeToStandardOutput(fileName.toLocal8Bit());
+                writeToStandardOutput("---\n");
+                writeToStandardOutput(content);
+                writeToStandardOutput("---end of inline file---\n");
+            }
+
             // TODO: do something with inlineFile->m_unicode;
-            tempFile.file->write(inlineFile->m_content.toLocal8Bit());
+            tempFile.file->write(content);
             tempFile.file->close();
 
             QString replacement = QString(tempFile.file->fileName()).replace(QLatin1Char('/'), QLatin1Char('\\'));

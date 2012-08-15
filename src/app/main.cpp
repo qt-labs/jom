@@ -72,6 +72,7 @@ static void showUsage()
            "/P print makefile info\n"
            "/R ignore predefined rules and macros\n"
            "/S silent mode\n"
+           "/U print content of inline files\n"
            "/L same as /NOLOGO\n"
            "/W print the working directory before and after other processing\n"
            "/X <filename> write stderr to file.\n"
