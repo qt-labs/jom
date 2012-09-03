@@ -57,7 +57,7 @@ static bool isSubJOM(const QString &processExeName)
             break;
 
         PROCESSENTRY32 &pe = it.value();
-        QString exeName = QString::fromUtf16(pe.szExeFile);
+        QString exeName = QString::fromUtf16((const ushort*)pe.szExeFile);
         if (pe.th32ProcessID != dwCurrentProcessId && exeName == processExeName) {
             result = true;
             goto done;

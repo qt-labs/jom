@@ -74,7 +74,7 @@ QString FileTime::toString() const
                                  L"%02d.%02d.%d %02d:%02d:%02d",
                                  stLocal.wDay, stLocal.wMonth, stLocal.wYear,
                                  stLocal.wHour, stLocal.wMinute, stLocal.wSecond);
-    return SUCCEEDED(hr) ? QString::fromUtf16(szString) : QString();
+    return SUCCEEDED(hr) ? QString::fromUtf16((unsigned short*)szString) : QString();
 }
 
 } // namespace NMakeFile

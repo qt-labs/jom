@@ -383,11 +383,11 @@ void Process::start(const QString &commandLine)
 
     DWORD dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     PROCESS_INFORMATION pi;
-    wchar_t *strCommandLine = _wcsdup(commandLine.utf16());     // CreateProcess can modify this string
+    wchar_t *strCommandLine = _wcsdup((const wchar_t*)commandLine.utf16());     // CreateProcess can modify this string
     const wchar_t *strWorkingDir = 0;
     if (!m_workingDirectory.isEmpty()) {
         m_workingDirectory = QDir::toNativeSeparators(m_workingDirectory);
-        strWorkingDir = m_workingDirectory.utf16();
+        strWorkingDir = (const wchar_t*)m_workingDirectory.utf16();
     }
     void *envBlock = (m_envBlock.isEmpty() ? 0 : m_envBlock.data());
     BOOL bResult = CreateProcess(NULL, strCommandLine,
