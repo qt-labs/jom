@@ -110,6 +110,40 @@ void MacroTable::setEnvironmentVariable(const QString& name, const QString& valu
     m_environment.append(namePlusEq + value);
 }
 
+/**
+ * String replace with lazy replacement evaluation.
+ * getValue is only called if the search string is present.
+ */
+template <typename F>
+void replaceStringWithLazyValue(QString &str, const QString &searchString, F getValue)
+{
+    int idx = str.indexOf(searchString);
+    if (idx >= 0) {
+        const QString oldValue = getValue();
+        do {
+            str.replace(idx, searchString.length(), oldValue);
+            idx = str.indexOf(searchString, idx + oldValue.length());
+        } while (idx >= 0);
+    }
+}
+
+class MacroValueOp
+{
+public:
+    MacroValueOp(MacroTable *mt, const QString &str)
+        : mt(mt), str(str)
+    {}
+
+    QString operator()()
+    {
+        return mt->macroValue(str);
+    }
+
+private:
+    const MacroTable *const mt;
+    const QString &str;
+};
+
 MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, const QString& value)
 {
     QString expandedName = expandMacros(name);
@@ -119,8 +153,7 @@ MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, co
     MacroData* result = 0;
     const QString instantiatedName = QLatin1Literal("$(") + expandedName + QLatin1Literal(")");
     QString newValue = value;
-    if (value.contains(instantiatedName))
-        newValue.replace(instantiatedName, macroValue(expandedName));
+    replaceStringWithLazyValue(newValue, instantiatedName, MacroValueOp(this, expandedName));
 
     result = &m_macros[expandedName];
     if (!result->isReadOnly)
