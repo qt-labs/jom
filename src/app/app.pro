@@ -1,20 +1,16 @@
 TEMPLATE = app
 DESTDIR = ../../bin
 QT = core
-CONFIG += console debug_and_release build_all
+CONFIG += console depend_includepath
 DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
 DEFINES += QT_USE_FAST_CONCATENATION QT_USE_FAST_OPERATOR_PLUS
 TARGET = jom
-DEPENDPATH += .
-
 build_pass:CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
-    LIBS += ../../lib/jomlibd.lib
 }
 
-build_pass:CONFIG(release, debug|release) {
-    LIBS += ../../lib/jomlib.lib
-}
+PROJECT_BUILD_ROOT=$$OUT_PWD/../..
+include(../jomlib/use_jomlib.pri)
 
 contains(QMAKE_CXXFLAGS_RELEASE, -MT) {
     QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt
