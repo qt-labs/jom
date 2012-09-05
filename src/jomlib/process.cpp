@@ -209,8 +209,13 @@ static QByteArray createEnvBlock(const QMap<QString,QString> &environment,
     if (!environment.isEmpty()) {
         QMap<QString,QString> copy = environment;
 
-        // add PATH if necessary (for DLL loading)
-        if (!copy.contains(pathKey)) {
+        if (copy.contains(pathKey)) {
+            // PATH has been altered.
+            // It must be set in this environment to start the correct executable.
+            // ### Note that this doesn't work if a batch file is supposed to shadow an exe or com.
+            qputenv(qPrintable(pathKey), qPrintable(environment.value(pathKey)));
+        } else {
+            // add PATH (for DLL loading)
             QByteArray path = qgetenv("PATH");
             if (!path.isEmpty())
                 copy.insert(pathKey, QString::fromLocal8Bit(path));
