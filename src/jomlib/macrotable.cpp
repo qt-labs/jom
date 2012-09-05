@@ -26,7 +26,6 @@
 #include <QStringList>
 #include <QRegExp>
 #include <QDebug>
-#include <qt_windows.h>
 
 namespace NMakeFile {
 
