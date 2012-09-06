@@ -59,7 +59,7 @@ void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString&
         return;
     macroData->isEnvironmentVariable = true;
     macroData->isReadOnly = readOnly;
-    setEnvironmentVariable(name, macroData->value);
+    setEnvironmentVariable(name, expandMacros(macroData->value));
 }
 
 bool MacroTable::isMacroNameValid(const QString& name) const
@@ -89,7 +89,7 @@ void MacroTable::setMacroValue(const QString& name, const QString& value)
     }
 
     if (macroData->isEnvironmentVariable)
-        setEnvironmentVariable(name, macroData->value);
+        setEnvironmentVariable(name, expandMacros(macroData->value));
 }
 
 /**
