@@ -292,7 +292,7 @@ bool Options::handleCommandLineOption(const QStringList &originalArguments, QStr
                         return false;
                     }
                     g_options.isMaxNumberOfJobsSet = true;
-                    if (makeflags.at(makeflags.count() - 1) == QLatin1Char('j'))
+                    if (makeflags.at(makeflags.count() - 1).toUpper() == QLatin1Char('J'))
                         makeflags += nJobsStr;
                     break;
                 }
