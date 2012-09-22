@@ -21,6 +21,7 @@
  **
  ****************************************************************************/
 #include "application.h"
+#include <helperfunctions.h>
 #include <options.h>
 #include <parser.h>
 #include <preprocessor.h>
@@ -103,9 +104,9 @@ BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
 QStringList getCommandLineArguments()
 {
     QStringList commandLineArguments = qApp->arguments().mid(1);
-    QByteArray makeFlags = qgetenv("MAKEFLAGS");
+    QString makeFlags = qGetEnvironmentVariable(L"MAKEFLAGS");
     if (!makeFlags.isEmpty())
-        commandLineArguments.prepend(QString::fromLatin1('/' + makeFlags));
+        commandLineArguments.prepend(QLatin1Char('/') + makeFlags);
     return commandLineArguments;
 }
 

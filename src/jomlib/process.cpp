@@ -25,6 +25,7 @@
 #include <cstdlib>
 
 #include "process.h"
+#include "helperfunctions.h"
 #include "iocompletionport.h"
 
 #include <QByteArray>
@@ -213,19 +214,20 @@ static QByteArray createEnvBlock(const QMap<QString,QString> &environment,
             // PATH has been altered.
             // It must be set in this environment to start the correct executable.
             // ### Note that this doesn't work if a batch file is supposed to shadow an exe or com.
-            qputenv(qPrintable(pathKey), qPrintable(environment.value(pathKey)));
+            if (!qSetEnvironmentVariable(pathKey, environment.value(pathKey)))
+                qWarning("jom: setting PATH failed");
         } else {
             // add PATH (for DLL loading)
-            QByteArray path = qgetenv("PATH");
+            QString path = qGetEnvironmentVariable(L"PATH");
             if (!path.isEmpty())
-                copy.insert(pathKey, QString::fromLocal8Bit(path));
+                copy.insert(pathKey, path);
         }
 
         // add systemroot if needed
         if (!copy.contains(rootKey)) {
-            QByteArray systemRoot = qgetenv("SystemRoot");
+            QString systemRoot = qGetEnvironmentVariable(L"SystemRoot");
             if (!systemRoot.isEmpty())
-                copy.insert(rootKey, QString::fromLocal8Bit(systemRoot));
+                copy.insert(rootKey, systemRoot);
         }
 
         int pos = 0;
