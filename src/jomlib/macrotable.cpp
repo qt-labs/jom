@@ -98,16 +98,7 @@ void MacroTable::setMacroValue(const QString& name, const QString& value)
  */
 void MacroTable::setEnvironmentVariable(const QString& name, const QString& value)
 {
-    const QString namePlusEq = name + QLatin1Char('=');
-    QStringList::iterator it = m_environment.begin();
-    QStringList::iterator itEnd = m_environment.end();
-    for (; it != itEnd; ++it) {
-        if ((*it).startsWith(namePlusEq, Qt::CaseInsensitive)) {
-            m_environment.erase(it);
-            break;
-        }
-    }
-    m_environment.append(namePlusEq + value);
+    m_environment[name] = value;
 }
 
 /**

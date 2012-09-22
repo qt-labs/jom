@@ -22,6 +22,8 @@
  ****************************************************************************/
 #pragma once
 
+#include "processenvironment.h"
+
 #include <QtCore/QSet>
 #include <QtCore/QStringList>
 
@@ -35,8 +37,8 @@ public:
     MacroTable();
     ~MacroTable();
 
-    void setEnvironment(const QStringList& e) { m_environment = e; }
-    const QStringList& environment() const { return m_environment; }
+    void setEnvironment(const ProcessEnvironment &e) { m_environment = e; }
+    const ProcessEnvironment &environment() const { return m_environment; }
 
     bool isMacroDefined(const QString& name) const;
     bool isMacroNameValid(const QString& name) const;
@@ -69,7 +71,7 @@ private:
     QString cycleCheckedMacroValue(const QString& macroName, QSet<QString>& usedMacros) const;
 
     QHash<QString, MacroData>   m_macros;
-    QStringList                 m_environment;
+    ProcessEnvironment          m_environment;
 };
 
 } // namespace NMakeFile

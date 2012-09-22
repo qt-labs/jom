@@ -37,7 +37,7 @@ class CommandExecutor : public QObject
 {
     Q_OBJECT
 public:
-    CommandExecutor(QObject* parent, const QStringList& environment);
+    CommandExecutor(QObject* parent, const ProcessEnvironment &environment);
     ~CommandExecutor();
 
     void start(DescriptionBlock* target);
@@ -51,10 +51,10 @@ public:
     bool isBufferedOutputSet() const { return m_process.isBufferedOutputSet(); }
 
 public slots:
-    void setEnvironment(const QStringList &environment);
+    void setEnvironment(const ProcessEnvironment &environment);
 
 signals:
-    void environmentChanged(const QStringList &environment);
+    void environmentChanged(const ProcessEnvironment &environment);
     void finished(CommandExecutor* process, bool abortMakeProcess);
     void subJomStarted();
 

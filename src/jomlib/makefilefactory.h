@@ -22,6 +22,7 @@
  ****************************************************************************/
 #pragma once
 
+#include "processenvironment.h"
 #include <QtCore/QStringList>
 
 namespace NMakeFile {
@@ -33,7 +34,7 @@ class MakefileFactory
 {
 public:
     MakefileFactory();
-    void setEnvironment(const QStringList& env) { m_environment = env; }
+    void setEnvironment(const QStringList& env);
     bool apply(const QStringList& commandLineArguments, Options **outopt = 0);
 
     enum ErrorType {
@@ -53,7 +54,7 @@ private:
 
 private:
     Makefile*   m_makefile;
-    QStringList m_environment;
+    ProcessEnvironment m_environment;
     QStringList m_activeTargets;
     QString     m_errorString;
     ErrorType   m_errorType;

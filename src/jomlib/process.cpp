@@ -266,26 +266,22 @@ static QByteArray createEnvBlock(const QMap<QString,QString> &environment,
     return envlist;
 }
 
-void Process::setEnvironment(const QStringList &environment)
+void Process::setEnvironment(const ProcessEnvironment &environment)
 {
     m_environment = environment;
 
     QMap<QString,QString> envmap;
     QString pathKey(QLatin1String("Path")), rootKey(QLatin1String("SystemRoot"));
-    foreach (const QString &str, m_environment) {
-        int idx = str.indexOf(QLatin1Char('='));
-        if (idx < 0)
-            continue;
-        QString name = str.left(idx);
-        QString upperName = name.toUpper();
-        if (upperName == QLatin1String("PATH"))
-            pathKey = name;
-        else if (upperName == QLatin1String("SYSTEMROOT"))
-            rootKey = name;
-        QString value = str.mid(idx + 1);
-        envmap.insert(name, value);
+    int found = 0;
+    for (ProcessEnvironment::const_iterator it = environment.begin(); it != environment.end() && found < 2; ++it) {
+        if (it.key().compare(pathKey) == 0) {
+            ++found;
+            pathKey = it.key().toQString();
+        } else if (it.key().compare(rootKey) == 0) {
+            ++found;
+            rootKey = it.key().toQString();
+        }
     }
-
     m_envBlock = createEnvBlock(envmap, pathKey, rootKey);
 }
 

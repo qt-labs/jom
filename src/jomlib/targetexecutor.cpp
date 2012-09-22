@@ -32,7 +32,7 @@
 
 namespace NMakeFile {
 
-TargetExecutor::TargetExecutor(const QStringList& environment)
+TargetExecutor::TargetExecutor(const ProcessEnvironment &environment)
 :   m_bAborted(false),
     m_blockingCommand(0),
     m_allCommandsSuccessfullyExecuted(true)
@@ -52,8 +52,8 @@ TargetExecutor::TargetExecutor(const QStringList& environment)
     foreach (CommandExecutor *process, m_processes)
         foreach (CommandExecutor *otherProcess, m_processes)
             if (process != otherProcess)
-                connect(process, SIGNAL(environmentChanged(const QStringList&)),
-                        otherProcess, SLOT(setEnvironment(const QStringList&)));
+                connect(process, SIGNAL(environmentChanged(const ProcessEnvironment &)),
+                        otherProcess, SLOT(setEnvironment(const ProcessEnvironment &)));
 }
 
 TargetExecutor::~TargetExecutor()

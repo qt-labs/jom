@@ -24,6 +24,7 @@
 
 #include "makefile.h"
 #include <QEvent>
+#include <QtCore/QMap>
 
 QT_BEGIN_NAMESPACE
 class QFile;
@@ -37,7 +38,7 @@ class DependencyGraph;
 class TargetExecutor : public QObject {
     Q_OBJECT
 public:
-    TargetExecutor(const QStringList& environment);
+    TargetExecutor(const ProcessEnvironment &environment);
     ~TargetExecutor();
 
     void apply(Makefile* mkfile, const QStringList& targets);

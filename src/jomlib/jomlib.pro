@@ -58,6 +58,7 @@ HEADERS +=  \
     targetexecutor.h \
     commandexecutor.h \
     process.h \
+    processenvironment.h \
     iocompletionport.h
 
 SOURCES += \

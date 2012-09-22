@@ -24,6 +24,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "processenvironment.h"
 #include <QObject>
 #include <QStringList>
 
@@ -62,8 +63,8 @@ public:
     void writeToStdErrBuffer(const QByteArray &output);
     void setWorkingDirectory(const QString &path);
     const QString &workingDirectory() const { return m_workingDirectory; }
-    void setEnvironment(const QStringList &environment);
-    const QStringList &environment() const { return m_environment; }
+    void setEnvironment(const ProcessEnvironment &environment);
+    const ProcessEnvironment &environment() const { return m_environment; }
     int exitCode() const { return m_exitCode; }
     ExitStatus exitStatus() const { return m_exitStatus; }
     bool isStarted() const { return m_state == Running; }
@@ -89,7 +90,7 @@ private slots:
 private:
     class ProcessPrivate *d;
     QString m_workingDirectory;
-    QStringList m_environment;
+    ProcessEnvironment m_environment;
     QByteArray m_envBlock;
     ProcessState m_state;
     int m_exitCode;

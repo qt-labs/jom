@@ -39,6 +39,15 @@ MakefileFactory::MakefileFactory()
 {
 }
 
+void MakefileFactory::setEnvironment(const QStringList &env)
+{
+    for (QStringList::const_iterator it = env.begin(); it != env.end(); ++it) {
+        int idx = it->indexOf(QLatin1Char('='));
+        if (idx >= 0)
+            m_environment.insert(it->left(idx), it->mid(idx + 1));
+    }
+}
+
 void MakefileFactory::clear()
 {
     m_makefile = 0;
@@ -47,15 +56,11 @@ void MakefileFactory::clear()
     m_activeTargets.clear();
 }
 
-static void readEnvironment(const QStringList& environment, MacroTable *macroTable, bool forceReadOnly)
+static void readEnvironment(const ProcessEnvironment &environment, MacroTable *macroTable, bool forceReadOnly)
 {
-    foreach (const QString& env, environment) {
-        QString lhs, rhs;
-        int idx = env.indexOf(QLatin1Char('='));
-        lhs = env.left(idx);
-        rhs = env.right(env.length() - idx - 1);
-        macroTable->defineEnvironmentMacroValue(lhs, rhs, forceReadOnly);
-    }
+    ProcessEnvironment::const_iterator it = environment.begin();
+    for (; it != environment.end(); ++it)
+        macroTable->defineEnvironmentMacroValue(it.key().toQString(), it.value(), forceReadOnly);
 }
 
 /**

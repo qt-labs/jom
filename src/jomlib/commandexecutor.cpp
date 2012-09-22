@@ -37,7 +37,7 @@ namespace NMakeFile {
 ulong CommandExecutor::m_startUpTickCount = 0;
 QString CommandExecutor::m_tempPath;
 
-CommandExecutor::CommandExecutor(QObject* parent, const QStringList& environment)
+CommandExecutor::CommandExecutor(QObject* parent, const ProcessEnvironment &environment)
 :   QObject(parent),
     m_pTarget(0),
     m_blocked(false),
@@ -216,19 +216,10 @@ void CommandExecutor::executeCurrentCommandLine()
             variableAssignment = variableAssignment.remove(0, 4).trimmed();
             int idx = variableAssignment.indexOf(QLatin1Char('='));
             if (idx >= 0) {
-                QString variableName = variableAssignment;
-                variableName.truncate(idx);
-                QStringList environment = m_process.environment();
-                bool found = false;
-                for (int i=0; i < environment.count(); ++i) {
-                    if (environment.at(i).compare(variableName, Qt::CaseInsensitive) == 0) {
-                        environment.replace(i, variableAssignment);
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    environment.append(variableAssignment);
+                QString variableName = variableAssignment.left(idx);
+                QString variableValue = variableAssignment.mid(idx + 1);
+                ProcessEnvironment environment = m_process.environment();
+                environment.insert(variableName, variableValue);
                 setEnvironment(environment);
                 emit environmentChanged(environment);
             }
@@ -419,7 +410,7 @@ bool CommandExecutor::exec_cd(const QString &commandLine)
     return true;
 }
 
-void CommandExecutor::setEnvironment(const QStringList &environment)
+void CommandExecutor::setEnvironment(const ProcessEnvironment &environment)
 {
     m_process.setEnvironment(environment);
 }
