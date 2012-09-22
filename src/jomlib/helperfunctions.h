@@ -71,3 +71,6 @@ QStringList splitCommandLine(QString commandLine);
  * Returns a copy of s with all whitespace removed from the left.
  */
 QString trimLeft(const QString &s);
+
+QString qGetEnvironmentVariable(const wchar_t *lpName);
+bool qSetEnvironmentVariable(const QString &name, const QString &value);

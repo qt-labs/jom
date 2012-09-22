@@ -22,6 +22,7 @@
  ****************************************************************************/
 
 #include "helperfunctions.h"
+#include <qt_windows.h>
 
 /**
  * Splits the string, respects "foo bar" and "foo ""knuffi"" bar".
@@ -65,4 +66,20 @@ QString trimLeft(const QString &s)
     while (!result.isEmpty() && result[0].isSpace())
         result.remove(0, 1);
     return result;
+}
+
+QString qGetEnvironmentVariable(const wchar_t *lpName)
+{
+    const size_t bufferSize = 32767;
+    TCHAR buffer[bufferSize];
+    if (GetEnvironmentVariable(lpName, buffer, bufferSize))
+        return QString::fromWCharArray(buffer);
+    return QString();
+}
+
+bool qSetEnvironmentVariable(const QString &name, const QString &value)
+{
+    return SetEnvironmentVariable(
+            reinterpret_cast<const wchar_t *>(name.utf16()),
+            reinterpret_cast<const wchar_t *>(value.utf16()));
 }
