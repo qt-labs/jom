@@ -81,3 +81,6 @@ SOURCES += \
     process.cpp \
     iocompletionport.cpp
 
+OTHER_FILES += \
+    ppexpr.g \
+    ppexpr.l
