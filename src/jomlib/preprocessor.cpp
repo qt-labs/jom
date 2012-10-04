@@ -381,7 +381,7 @@ int Preprocessor::evaluateExpression(const QString& expr)
     if (!m_expressionParser->parse(qPrintable(m_macroTable->expandMacros(expr)))) {
         QString msg = QLatin1String("Can't evaluate preprocessor expression.");
         msg += QLatin1String("\nerror: ");
-        msg += QString::fromAscii(m_expressionParser->errorMessage());
+        msg += QString::fromLatin1(m_expressionParser->errorMessage());
         msg += QLatin1String("\nexpression: ");
         msg += expr;
         error(msg);

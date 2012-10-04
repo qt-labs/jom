@@ -134,8 +134,8 @@ PPExprParser::PPExprParser()
 PPExprParser::~PPExprParser()
 {
     if (stack_size) {
-        qFree(sym_stack);
-        qFree(state_stack);
+        free(sym_stack);
+        free(state_stack);
     }
 }
 
@@ -146,8 +146,8 @@ inline void PPExprParser::reallocateStack()
     else
         stack_size <<= 1;
 
-    sym_stack = reinterpret_cast<Value*> (qRealloc(sym_stack, stack_size * sizeof(Value)));
-    state_stack = reinterpret_cast<int*> (qRealloc(state_stack, stack_size * sizeof(int)));
+    sym_stack = reinterpret_cast<Value*> (realloc(sym_stack, stack_size * sizeof(Value)));
+    state_stack = reinterpret_cast<int*> (realloc(state_stack, stack_size * sizeof(int)));
 }
 
 bool PPExprParser::parse(const char* str)
