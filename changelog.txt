@@ -1,4 +1,7 @@
-This is the changelog for jom 1.0.12, the parallel make tool.
+This is the changelog for jom 1.0.13, the parallel make tool.
+
+Changes since jom 1.0.12
+- Fix passing of -j argument to subjoms.
 
 Changes since jom 1.0.11
 - Performance improvements.
