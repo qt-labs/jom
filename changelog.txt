@@ -7,6 +7,7 @@ Changes since jom 1.0.11
 - Separate output of stdout and stderr.
 - Fix the output of silent commands in /n mode. (QTCREATORBUG-7170)
 - Implemented the /U switch for dumping inline files.
+- Fix expansion of environment variables.
 
 Changes since jom 1.0.10
 - Fix exit code for /k command line switch. (QTCREATORBUG-6987)
