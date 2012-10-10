@@ -159,9 +159,11 @@ int main(int argc, char* argv[])
     // ### HACK: pass the modified MAKEFLAGS variable to our environment.
     if (g_options.isMaxNumberOfJobsSet) {
         ProcessEnvironment environment = mkfile->macroTable()->environment();
-        environment[QLatin1String("MAKEFLAGS")] = mkfile->macroTable()->macroValue(QLatin1String("MAKEFLAGS"));
+        const QString makeFlags = mkfile->macroTable()->macroValue(QLatin1String("MAKEFLAGS"));
+        environment[QLatin1String("MAKEFLAGS")] = makeFlags;
         MacroTable *mt = const_cast<MacroTable *>(mkfile->macroTable());
         mt->setEnvironment(environment);
+        qSetEnvironmentVariable(QLatin1String("MAKEFLAGS"), makeFlags);
     }
 
     if (options->printWorkingDir) {
