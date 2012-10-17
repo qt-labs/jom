@@ -72,7 +72,7 @@ done:
     return result;
 }
 
-Application::Application(int argc, char** argv)
+Application::Application(int &argc, char **argv)
 :   QCoreApplication(argc, argv)
 {
     QString exeName = QFileInfo(QCoreApplication::applicationFilePath()).fileName();
