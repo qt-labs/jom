@@ -313,10 +313,7 @@ void MacroTable::dump() const
 {
     QHash<QString, MacroData>::const_iterator it = m_macros.begin();
     for (; it != m_macros.end(); ++it) {
-        printf(qPrintable(it.key()));
-        printf(" = ");
-        printf(qPrintable((*it).value));
-        printf("\n");
+        printf("%s = %s\n", qPrintable(it.key()), qPrintable((*it).value));
     }
 }
 

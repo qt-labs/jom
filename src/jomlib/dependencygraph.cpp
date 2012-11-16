@@ -200,7 +200,7 @@ void DependencyGraph::dump()
 
 void DependencyGraph::internalDump(Node* node, QString& indent)
 {
-    printf(qPrintable(QString(indent + node->target->targetName() + QLatin1Char('\n'))));
+    puts(qPrintable(QString(indent + node->target->targetName())));
     indent.append(QLatin1Char(' '));
     foreach (Node* child, node->children) {
         internalDump(child, indent);
@@ -219,8 +219,8 @@ void DependencyGraph::dotDump()
 void DependencyGraph::internalDotDump(Node* node, const QString& parent)
 {
     if (!parent.isNull()) {
-        QByteArray line = "  \"" + parent.toLocal8Bit() + "\" -> \"" + node->target->targetName().toLocal8Bit() + "\";\n";
-        printf(line);
+        QByteArray line = "  \"" + parent.toLocal8Bit() + "\" -> \"" + node->target->targetName().toLocal8Bit() + "\";";
+        puts(line);
     }
     foreach (Node* child, node->children) {
         internalDotDump(child, node->target->targetName());
@@ -328,8 +328,7 @@ void DependencyGraph::displayNodeBuildInfo(Node* node, bool isUpToDate)
             msg = "*";
         msg += node->target->m_timeStamp.toString().toLocal8Bit() + " " +
                node->target->targetName().toLocal8Bit();
-        msg += "\n";
-        printf(msg);
+        puts(msg);
     }
 }
 

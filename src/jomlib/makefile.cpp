@@ -435,18 +435,13 @@ void Makefile::dumpTargets() const
     QHash<QString, DescriptionBlock*>::const_iterator it=m_targets.begin();
     for (; it != m_targets.end(); ++it) {
         DescriptionBlock* target = *it;
-        printf(qPrintable(target->targetName()));
-        printf(":\n\tdependents:");
+        printf("%s:\n\tdependents:", qPrintable(target->targetName()));
         foreach (const QString& dependent, target->m_dependents) {
-            printf("\t");
-            printf(qPrintable(dependent));
-            printf("\n");
+            printf("\t%s\n", qPrintable(dependent));
         }
         printf("\tcommands:");
         foreach (const Command& cmd, target->m_commands) {
-            printf("\t");
-            printf(qPrintable(cmd.m_commandLine));
-            printf("\n");
+            printf("\t%s\n", qPrintable(cmd.m_commandLine));
         }
         printf("\n");
     }
@@ -457,25 +452,19 @@ void Makefile::dumpInferenceRules() const
 {
     foreach (InferenceRule *ir, m_inferenceRules) {
         if (ir->m_fromSearchPath != QLatin1String(".")) {
-            printf("{");
-            printf(qPrintable(ir->m_fromSearchPath));
-            printf("}");
+            printf("{%s}", qPrintable(ir->m_fromSearchPath));
         }
-        printf(qPrintable(ir->m_fromExtension));
+        printf("%s", qPrintable(ir->m_fromExtension));
         if (ir->m_toSearchPath != QLatin1String(".")) {
-            printf("{");
-            printf(qPrintable(ir->m_toSearchPath));
-            printf("}");
+            printf("{%s}", qPrintable(ir->m_toSearchPath));
         }
-        printf(qPrintable(ir->m_toExtension));
+        printf("%s", qPrintable(ir->m_toExtension));
         if (ir->m_batchMode)
             printf("::\n");
         else
             printf(":\n");
         foreach (const Command& cmd, ir->m_commands) {
-            printf("\t");
-            printf(qPrintable(cmd.m_commandLine));
-            printf("\n");
+            printf("\t%s\n", qPrintable(cmd.m_commandLine));
         }
         printf("\n");
     }

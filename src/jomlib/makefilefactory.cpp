@@ -82,7 +82,7 @@ static bool isComplexPathName(const QString& path)
 static QString encloseInDoubleQuotesIfNeeded(const QString& path)
 {
     if (isComplexPathName(path)) {
-        QString result = QLatin1Char('"');
+        QString result(QLatin1Char('"'));
         result.append(path);
         result.append(QLatin1Char('"'));
         return result;

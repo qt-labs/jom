@@ -446,7 +446,7 @@ void Parser::parseInlineFiles(Command& cmd, bool inferenceRule)
                 int idx = cmd.m_commandLine.indexOf(QLatin1Char('"'), fileNamePos + 1);
                 if (idx == -1) {
                     QString msg = QLatin1String("missing quote for inline file name in %0, line %1");
-                    qWarning(qPrintable(msg.arg(m_preprocessor->currentFileName()).arg(m_preprocessor->lineNumber())));
+                    qWarning("%s", qPrintable(msg.arg(m_preprocessor->currentFileName()).arg(m_preprocessor->lineNumber())));
                 } else {
                     inlineFile->m_filename = cmd.m_commandLine.mid(fileNamePos + 1, idx - fileNamePos - 1);
                     cmd.m_commandLine.remove(fileNamePos, idx - fileNamePos + 1);

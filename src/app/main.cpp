@@ -126,9 +126,7 @@ int main(int argc, char* argv[])
             return 128;
         case MakefileFactory::ParserError:
         case MakefileFactory::IOError:
-            fprintf(stderr, "Error: ");
-            fprintf(stderr, qPrintable(mf.errorString()));
-            fprintf(stderr, "\n");
+            fprintf(stderr, "Error: %s\n", qPrintable(mf.errorString()));
             return 2;
         }
     }

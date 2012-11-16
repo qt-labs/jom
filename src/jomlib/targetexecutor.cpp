@@ -135,8 +135,7 @@ void TargetExecutor::startProcesses()
         }
     } catch (Exception &e) {
         m_bAborted = true;
-        QString msg = QLatin1Literal("Error: ") + e.message() + QLatin1Char('\n');
-        fprintf(stderr, qPrintable(msg));
+        fprintf(stderr, "Error: %s\n", qPrintable(e.message()));
         finishBuild(1);
     }
 }

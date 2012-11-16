@@ -137,9 +137,7 @@ bool Options::expandCommandFiles(QStringList& arguments)
             fileName.remove(0, frontRemoveCount);
             QFile file(fileName);
             if (!file.open(QFile::ReadOnly)) {
-                fprintf(stderr, "Can't read command file: ");
-                fprintf(stderr, qPrintable(fileName));
-                fprintf(stderr, "\n");
+                fprintf(stderr, "Can't read command file: %s\n", qPrintable(fileName));
                 return false;
             }
 

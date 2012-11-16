@@ -212,8 +212,7 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
     } else if (directive == QLatin1String("ERROR")) {
         error(QLatin1Literal("ERROR: ") + value);
     } else if (directive == QLatin1String("MESSAGE")) {
-        printf(qPrintable(value));
-        printf("\n");
+        puts(qPrintable(value));
     } else if (directive == QLatin1String("INCLUDE")) {
         internalOpenFile(value);
     } else if (directive == QLatin1String("IF")) {
