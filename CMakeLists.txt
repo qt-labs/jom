@@ -97,7 +97,11 @@ set(JOM_SRCS
  source_group("Generated Sources" FILES ${JOM_GENERATED_SRCS} ${JOM_APP_GENERATED_SRCS})
 
  add_executable(jom ${JOM_APP_SRCS} ${JOM_SRCS})
- target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY} ws2_32)
+ if(WIN32)
+    target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY} ws2_32)
+ else(WIN32)
+    target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY})
+ endif(WIN32)
 
  # install binaries to bin/, libraries to lib/ and import libraries to lib/ too
  install(TARGETS jom  RUNTIME DESTINATION bin
