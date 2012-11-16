@@ -25,6 +25,7 @@
 #include "options.h"
 #include <QFileInfo>
 #include <QDebug>
+#include <QDir>
 
 namespace NMakeFile {
 
@@ -376,7 +377,7 @@ QString InferenceRule::inferredDependent(const QString &targetName) const
     dependent.append(m_fromExtension);
 
     if (m_fromSearchPath != QLatin1String("."))
-        dependent.prepend(m_fromSearchPath + QLatin1Char('\\'));
+        dependent.prepend(m_fromSearchPath + QDir::separator());
 
     return dependent;
 }
@@ -483,7 +484,7 @@ void Makefile::filterRulesByDependent(QVector<InferenceRule*>& rules, const QStr
         // is guaranteed to end with rule->m_toExtension.
         QString baseName = targetFileName;
         baseName.chop(rule->m_toExtension.length());
-        QString dependentName = rule->m_fromSearchPath + QLatin1Char('\\') +
+        QString dependentName = rule->m_fromSearchPath + QDir::separator() +
                                 baseName + rule->m_fromExtension;
 
         DescriptionBlock* depTarget = m_targets.value(dependentName);

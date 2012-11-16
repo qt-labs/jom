@@ -27,6 +27,7 @@
 #include "helperfunctions.h"
 
 #include <QDebug>
+#include <QDir>
 
 namespace NMakeFile {
 
@@ -324,8 +325,8 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
     if (commandSeparatorPos >= 0) value.truncate(commandSeparatorPos);
     value.remove(0, separatorPos + separatorLength);
     value = m_preprocessor->macroTable()->expandMacros(value.trimmed(), true);
-    target.replace(QLatin1Char('/'), QLatin1Char('\\'));
-    value.replace(QLatin1Char('/'), QLatin1Char('\\'));
+    target = QDir::toNativeSeparators(target);
+    value = QDir::toNativeSeparators(value);
 
     // extract command from description block line
     QList<Command> commands;

@@ -53,7 +53,7 @@ CommandExecutor::CommandExecutor(QObject* parent, const ProcessEnvironment &envi
         DWORD count = GetTempPathW(MAX_PATH, buf);
         if (count) {
             m_tempPath = QString::fromWCharArray(buf, count);
-            if (!m_tempPath.endsWith(QLatin1Char('\\'))) m_tempPath.append(QLatin1Char('\\'));
+            if (!m_tempPath.endsWith(QDir::separator())) m_tempPath.append(QDir::separator());
         }
     }
 
@@ -125,7 +125,7 @@ void CommandExecutor::onProcessFinished(int exitCode, Process::ExitStatus exitSt
     const Command &currentCommand = m_pTarget->m_commands.at(m_currentCommandIdx);
     if (exitCode > currentCommand.m_maxExitCode) {
         QByteArray msg = "jom: ";
-        msg += QDir::toNativeSeparators(QDir::currentPath()).toLocal8Bit() + "\\";
+        msg += QDir::toNativeSeparators(QDir::currentPath() + QDir::separator()).toLocal8Bit();
         msg += m_pTarget->makefile()->fileName().toLocal8Bit();
         msg += " [" + m_pTarget->targetName().toLocal8Bit() + "] Error ";
         msg += QByteArray::number(exitCode);
@@ -316,7 +316,7 @@ void CommandExecutor::createTempFiles()
             tempFile.file->write(content);
             tempFile.file->close();
 
-            QString replacement = QString(tempFile.file->fileName()).replace(QLatin1Char('/'), QLatin1Char('\\'));
+            QString replacement = QDir::toNativeSeparators(tempFile.file->fileName());
             if (replacement.contains(QLatin1Char(' ')) || replacement.contains(QLatin1Char('\t'))) {
                 replacement.prepend(QLatin1Char('"'));
                 replacement.append(QLatin1Char('"'));

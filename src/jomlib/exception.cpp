@@ -22,6 +22,8 @@
  ****************************************************************************/
 #include "exception.h"
 
+#include <QDir>
+
 namespace NMakeFile {
 
 Exception::Exception(const QString& message)
@@ -47,7 +49,7 @@ const QString FileException::toString() const
     if (!m_fileName.isEmpty()) {
         output += QLatin1String(" in ");
         QString fileName = m_fileName;
-        fileName.replace(QLatin1Char('/'), QLatin1Char('\\'));
+        fileName = QDir::toNativeSeparators(fileName);
         output += fileName;
         output += QLatin1String(" ");
     }

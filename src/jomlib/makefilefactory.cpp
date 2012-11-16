@@ -126,8 +126,7 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments, Options **o
         }
     }
 
-    options->fullAppPath = QCoreApplication::applicationFilePath();
-    options->fullAppPath.replace(QLatin1Char('/'), QDir::separator());
+    options->fullAppPath = QDir::toNativeSeparators(QCoreApplication::applicationFilePath());
 
     readEnvironment(m_environment, macroTable, options->overrideEnvVarMacros);
     if (!options->ignorePredefinedRulesAndMacros) {

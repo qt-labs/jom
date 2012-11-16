@@ -27,6 +27,7 @@
 
 #include <QFile>
 #include <QDebug>
+#include <QDir>
 
 namespace NMakeFile {
 
@@ -163,7 +164,7 @@ void DependencyGraph::internalBuild(Node* node)
         DescriptionBlock* dependent = makefile->target(dependentName);
         if (!dependent) {
             // We don't know dependent "foo" but it may have been defined as "C:\MySourceDir\foo"
-            dependent = makefile->target(makefile->dirPath() + QLatin1Char('\\') + dependentName);
+            dependent = makefile->target(makefile->dirPath() + QDir::separator() + dependentName);
         }
         if (!dependent) {
             if (!FastFileInfo(dependentName).exists()) {

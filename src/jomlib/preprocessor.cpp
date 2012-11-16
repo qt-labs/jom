@@ -72,7 +72,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
         QStringList includeDirs = includeVar.split(QLatin1Char(';'), QString::SkipEmptyParts);
         QString fullFileName;
         foreach (const QString& includeDir, includeDirs) {
-            fullFileName = includeDir + QLatin1Char('\\') + fileName;
+            fullFileName = includeDir + QDir::separator() + fileName;
             if (QFile::exists(fullFileName)) {
                 fileName = fullFileName;
                 break;
@@ -88,7 +88,7 @@ bool Preprocessor::internalOpenFile(QString fileName)
             }
             TextFile textFile = m_fileStack.pop();
             tmpStack.push(textFile);
-            fullFileName = textFile.fileDirectory + QLatin1Char('\\') + fileName;
+            fullFileName = textFile.fileDirectory + QDir::separator() + fileName;
         }
         while (!tmpStack.isEmpty())
             m_fileStack.push(tmpStack.pop());
