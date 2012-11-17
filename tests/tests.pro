@@ -4,9 +4,10 @@ CONFIG += depend_includepath
 INCLUDEPATH += ../src/jomlib
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
-TARGET = tests
-build_pass:CONFIG(debug, debug|release) {
+CONFIG(debug, debug|release) {
     TARGET = testsd
+} else {
+    TARGET = tests
 }
 
 PROJECT_BUILD_ROOT=$$OUT_PWD/..
