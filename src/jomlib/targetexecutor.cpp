@@ -32,7 +32,6 @@ namespace NMakeFile {
 
 TargetExecutor::TargetExecutor(const ProcessEnvironment &environment)
 :   m_bAborted(false),
-    m_blockingCommand(0),
     m_allCommandsSuccessfullyExecuted(true)
 {
     m_makefile = 0;
@@ -42,7 +41,6 @@ TargetExecutor::TargetExecutor(const ProcessEnvironment &environment)
         CommandExecutor* process = new CommandExecutor(this, environment);
         if (i == 0) process->setBufferedOutput(false);
         connect(process, SIGNAL(finished(CommandExecutor*, bool)), this, SLOT(onChildFinished(CommandExecutor*, bool)));
-        connect(process, SIGNAL(subJomStarted()), this, SLOT(onSubJomStarted()));
         m_availableProcesses.append(process);
         m_processes.append(process);
     }
@@ -67,7 +65,6 @@ bool TargetExecutor::hasPendingTargets() const
 void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 {
     m_bAborted = false;
-    m_blockingCommand = 0;
     m_allCommandsSuccessfullyExecuted = true;
     m_makefile = mkfile;
 
@@ -101,7 +98,7 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 
 void TargetExecutor::startProcesses()
 {
-    if (m_bAborted || m_blockingCommand)
+    if (m_bAborted)
         return;
 
     try {
@@ -116,7 +113,7 @@ void TargetExecutor::startProcesses()
 
             CommandExecutor* process = m_availableProcesses.takeFirst();
             process->start(nextTarget);
-            if (m_bAborted || m_blockingCommand)
+            if (m_bAborted)
                 return;
         }
 
@@ -156,25 +153,6 @@ void TargetExecutor::finishBuild(int exitCode)
     emit finished(exitCode);
 }
 
-void TargetExecutor::onSubJomStarted()
-{
-    //qDebug() << "BLOCK" << QCoreApplication::applicationPid();
-
-    // Set the blocking sub jom command to direct output mode.
-    CommandExecutor *subJomCmd = qobject_cast<CommandExecutor*>(sender());
-    if (subJomCmd->isBufferedOutputSet()) {
-        foreach (CommandExecutor *cmdex, m_processes)
-            if (!cmdex->isBufferedOutputSet())
-                cmdex->setBufferedOutput(true);
-        subJomCmd->setBufferedOutput(false);
-    }
-
-    m_blockingCommand = subJomCmd;
-    foreach (CommandExecutor *cmdex, m_processes)
-        if (cmdex != subJomCmd)
-            cmdex->block();
-}
-
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFailed)
 {
     Q_CHECK_PTR(executor->target());
@@ -198,13 +176,6 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFail
         m_allCommandsSuccessfullyExecuted = false;
 
     bool abortMakeProcess = commandFailed && !m_makefile->options()->buildUnrelatedTargetsOnError;
-    if (!abortMakeProcess && m_blockingCommand && m_blockingCommand == executor) {
-        //qDebug() << "UNBLOCK" << QCoreApplication::applicationPid();
-        m_blockingCommand = 0;
-        foreach (CommandExecutor *cmdex, m_processes)
-            cmdex->unblock();
-    }
-
     if (abortMakeProcess) {
         m_bAborted = true;
         m_depgraph->clear();

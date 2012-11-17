@@ -51,7 +51,6 @@ public slots:
    void startProcesses();
 
 private slots:
-    void onSubJomStarted();
     void onChildFinished(CommandExecutor*, bool commandFailed);
 
 private:
@@ -63,7 +62,6 @@ private:
     DependencyGraph* m_depgraph;
     QList<DescriptionBlock*> m_pendingTargets;
     bool m_bAborted;
-    QObject *m_blockingCommand;
     QList<CommandExecutor*> m_availableProcesses;
     QList<CommandExecutor*> m_processes;
     bool m_allCommandsSuccessfullyExecuted;

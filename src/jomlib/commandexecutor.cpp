@@ -38,8 +38,6 @@ QString CommandExecutor::m_tempPath;
 CommandExecutor::CommandExecutor(QObject* parent, const ProcessEnvironment &environment)
 :   QObject(parent),
     m_pTarget(0),
-    m_blocked(false),
-    m_processFinishedWhileBlocked(false),
     m_ignoreProcessErrors(false),
     m_active(false)
 {
@@ -86,22 +84,6 @@ void CommandExecutor::start(DescriptionBlock* target)
     executeCurrentCommandLine();
 }
 
-void CommandExecutor::block()
-{
-    m_blocked = true;
-}
-
-void CommandExecutor::unblock()
-{
-    if (m_blocked) {
-        m_blocked = false;
-        if (m_processFinishedWhileBlocked) {
-            m_processFinishedWhileBlocked = false;
-            onProcessFinished(m_process.exitCode(), m_process.exitStatus());
-        }
-    }
-}
-
 void CommandExecutor::onProcessError(Process::ProcessError error)
 {
     //qDebug() << "onProcessError" << error;
@@ -112,11 +94,6 @@ void CommandExecutor::onProcessError(Process::ProcessError error)
 void CommandExecutor::onProcessFinished(int exitCode, Process::ExitStatus exitStatus)
 {
     //qDebug() << "onProcessFinished" << m_pTarget->m_targetName;
-    if (m_blocked) {
-        m_processFinishedWhileBlocked = true;
-        return;
-    }
-
     if (exitStatus != Process::NormalExit)
         exitCode = 2;
 
@@ -170,11 +147,8 @@ static bool startsWithShellBuiltin(const QString &commandLine)
 
 void CommandExecutor::executeCurrentCommandLine()
 {
-    m_processFinishedWhileBlocked = false;
     const Command& cmd = m_pTarget->m_commands.at(m_currentCommandIdx);
     QString commandLine = cmd.m_commandLine;
-    int jomCallIdx = commandLine.indexOf(m_pTarget->makefile()->options()->fullAppPath);
-    bool spawnJOM = (jomCallIdx >= 0);
 
     if (m_pTarget->makefile()->options()->dryRun
         || (!cmd.m_silent && !m_pTarget->makefile()->options()->suppressExecutedCommandsDisplay))
@@ -229,9 +203,6 @@ void CommandExecutor::executeCurrentCommandLine()
             return;
         }
     }
-
-    if (spawnJOM)
-        emit subJomStarted();
 
     bool executionSucceeded = false;
     if (simpleCmdLine && !startsWithShellBuiltin(commandLine)) {

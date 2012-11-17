@@ -41,8 +41,6 @@ public:
 
     void start(DescriptionBlock* target);
     DescriptionBlock* target() { return m_pTarget; }
-    void block();
-    void unblock();
     bool isActive() const { return m_active; }
     void waitForFinished();
     void cleanupTempFiles();
@@ -55,7 +53,6 @@ public slots:
 signals:
     void environmentChanged(const ProcessEnvironment &environment);
     void finished(CommandExecutor* process, bool abortMakeProcess);
-    void subJomStarted();
 
 private slots:
     void onProcessError(Process::ProcessError error);
@@ -76,8 +73,6 @@ private:
     static QString      m_tempPath;
     Process             m_process;
     DescriptionBlock*   m_pTarget;
-    bool                m_blocked;
-    bool                m_processFinishedWhileBlocked;
 
     struct TempFile
     {
