@@ -263,12 +263,13 @@ void CommandExecutor::executeCurrentCommandLine()
             commandLine.append(doubleQuote);
         }
 
-        m_process.start(QLatin1Literal("cmd /C ") + commandLine);
+        commandLine = QLatin1Literal("cmd /C ") + commandLine;
+        m_process.start(commandLine);
         executionSucceeded = m_process.isStarted();
     }
 
     if (!executionSucceeded)
-        qFatal("Can't start command.");
+        qFatal("Can't start command: %s", qPrintable(commandLine));
 }
 
 void CommandExecutor::createTempFiles()
