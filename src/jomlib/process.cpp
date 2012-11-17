@@ -374,6 +374,15 @@ void Process::start(const QString &commandLine)
     if (!setupPipe(d->stderrPipe, &sa, OutputPipe))
         qFatal("Cannot setup pipe for stderr.");
 
+    iocp()->registerObserver(&d->stdoutChannel, d->stdoutPipe.hRead);
+    iocp()->registerObserver(&d->stderrChannel, d->stderrPipe.hRead);
+    if (!d->startRead()) {
+        m_state = NotRunning;
+        emit error(FailedToStart);
+        qWarning("Can't read output channels.");
+        return;
+    }
+
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
     si.hStdInput = d->stdinPipe.hRead;
@@ -409,13 +418,7 @@ void Process::start(const QString &commandLine)
 
     d->hProcess = pi.hProcess;
     d->hProcessThread = pi.hThread;
-    iocp()->registerObserver(&d->stdoutChannel , d->stdoutPipe.hRead);
-    iocp()->registerObserver(&d->stderrChannel , d->stderrPipe.hRead);
-    if (d->startRead()) {
-        m_state = Running;
-    } else {
-        emit error(FailedToStart);
-    }
+    m_state = Running;
 }
 
 void Process::startExitCodeRetrievalTimer()
