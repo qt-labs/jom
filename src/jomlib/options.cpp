@@ -286,6 +286,10 @@ bool Options::handleCommandLineOption(const QStringList &originalArguments, QStr
                         fprintf(stderr, "Error: option -j expects a numerical argument\n");
                         return false;
                     }
+                    if (g_options.maxNumberOfJobs < 1) {
+                        fputs("Error: the argument for -j must not be less than 1.\n", stderr);
+                        return false;
+                    }
                     g_options.isMaxNumberOfJobsSet = true;
                     if (makeflags.at(makeflags.count() - 1).toUpper() == QLatin1Char('J'))
                         makeflags += nJobsStr;
