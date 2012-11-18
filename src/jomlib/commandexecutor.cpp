@@ -263,7 +263,11 @@ void CommandExecutor::executeCurrentCommandLine()
             commandLine.append(doubleQuote);
         }
 
-        commandLine = QLatin1Literal("cmd /C ") + commandLine;
+        QString shellCmd = qGetEnvironmentVariable(L"ComSpec");
+        if (shellCmd.isEmpty())
+            shellCmd = QLatin1String("cmd.exe");
+
+        commandLine = shellCmd + QLatin1Literal(" /C ") + commandLine;
         m_process.start(commandLine);
         executionSucceeded = m_process.isStarted();
     }
