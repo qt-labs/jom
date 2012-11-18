@@ -74,14 +74,11 @@ public slots:
     void start(const QString &commandLine);
     bool waitForFinished();
 
-protected:
-    void timerEvent(QTimerEvent *timerEvent);
-
 private:
     void printBufferedOutput();
 
 private slots:
-    void startExitCodeRetrievalTimer();
+    void tryToRetrieveExitCode();
     void onProcessFinished();
 
 private:
@@ -93,7 +90,6 @@ private:
     int m_exitCode;
     ExitStatus m_exitStatus;
     bool m_bufferedOutput;
-    int m_exitCodeRetrievalTimerId;
 
     friend class ProcessPrivate;
 };

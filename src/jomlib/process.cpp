@@ -33,7 +33,6 @@
 #include <QMetaType>
 #include <QMutex>
 #include <QTimer>
-#include <QTimerEvent>
 
 #include <qt_windows.h>
 #include <errno.h>
@@ -143,8 +142,7 @@ Process::Process(QObject *parent)
       m_state(NotRunning),
       m_exitCode(0),
       m_exitStatus(NormalExit),
-      m_bufferedOutput(true),
-      m_exitCodeRetrievalTimerId(0)
+      m_bufferedOutput(true)
 {
     static bool staticsInitialized = false;
     if (!staticsInitialized) {
@@ -421,9 +419,16 @@ void Process::start(const QString &commandLine)
     m_state = Running;
 }
 
-void Process::startExitCodeRetrievalTimer()
+void Process::tryToRetrieveExitCode()
 {
-    m_exitCodeRetrievalTimerId = startTimer(0);
+    if (d->exitCode == STILL_ACTIVE)
+        if (!GetExitCodeProcess(d->hProcess, &d->exitCode))
+            d->exitCode = STILL_ACTIVE;
+
+    if (d->exitCode == STILL_ACTIVE)
+        QTimer::singleShot(250, this, SLOT(tryToRetrieveExitCode()));
+    else
+        onProcessFinished();
 }
 
 void Process::onProcessFinished()
@@ -545,24 +550,7 @@ void OutputChannel::completionPortNotified(DWORD numberOfBytes, DWORD errorCode)
         if (startRead())
             return;
 
-    QTimer::singleShot(0, d->q, SLOT(startExitCodeRetrievalTimer()));
-}
-
-void Process::timerEvent(QTimerEvent *timerEvent)
-{
-    if (timerEvent->timerId() == m_exitCodeRetrievalTimerId) {
-        killTimer(timerEvent->timerId());
-        m_exitCodeRetrievalTimerId = 0;
-
-        if (d->exitCode == STILL_ACTIVE)
-            if (!GetExitCodeProcess(d->hProcess, &d->exitCode))
-                d->exitCode = STILL_ACTIVE;
-
-        if (d->exitCode == STILL_ACTIVE)
-            m_exitCodeRetrievalTimerId = startTimer(100);
-        else
-            onProcessFinished();
-    }
+    QMetaObject::invokeMethod(d->q, "tryToRetrieveExitCode", Qt::QueuedConnection);
 }
 
 void Process::printBufferedOutput()
