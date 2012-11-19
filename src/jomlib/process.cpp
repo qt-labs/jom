@@ -198,13 +198,13 @@ void Process::setWorkingDirectory(const QString &path)
     m_workingDirectory = path;
 }
 
-static QByteArray createEnvBlock(const QMap<QString,QString> &environment,
-                                 const QString &pathKey, const QString &rootKey)
+static QByteArray createEnvBlock(const ProcessEnvironment &environment)
 {
     QByteArray envlist;
     if (!environment.isEmpty()) {
-        QMap<QString,QString> copy = environment;
+        ProcessEnvironment copy = environment;
 
+        const QString pathKey(QLatin1String("Path"));
         if (copy.contains(pathKey)) {
             // PATH has been altered.
             // It must be set in this environment to start the correct executable.
@@ -219,6 +219,7 @@ static QByteArray createEnvBlock(const QMap<QString,QString> &environment,
         }
 
         // add systemroot if needed
+        const ProcessEnvironmentKey rootKey(QLatin1String("SystemRoot"));
         if (!copy.contains(rootKey)) {
             QString systemRoot = qGetEnvironmentVariable(L"SystemRoot");
             if (!systemRoot.isEmpty())
@@ -266,20 +267,7 @@ static QByteArray createEnvBlock(const QMap<QString,QString> &environment,
 void Process::setEnvironment(const ProcessEnvironment &environment)
 {
     m_environment = environment;
-
-    QMap<QString,QString> envmap;
-    QString pathKey(QLatin1String("Path")), rootKey(QLatin1String("SystemRoot"));
-    int found = 0;
-    for (ProcessEnvironment::const_iterator it = environment.begin(); it != environment.end() && found < 2; ++it) {
-        if (it.key().compare(pathKey) == 0) {
-            ++found;
-            pathKey = it.key().toQString();
-        } else if (it.key().compare(rootKey) == 0) {
-            ++found;
-            rootKey = it.key().toQString();
-        }
-    }
-    m_envBlock = createEnvBlock(envmap, pathKey, rootKey);
+    m_envBlock = createEnvBlock(environment);
 }
 
 static bool runsWindowsVistaOrGreater()

@@ -1045,6 +1045,15 @@ void ParserTest::environmentVariables()
     m_bResetJomProcessEnvironment = false;
 }
 
+void ParserTest::environmentVariablesInCommands()
+{
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/sl",
+                   "blackbox/environmentVariablesInCommands"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QByteArray output = m_jomProcess->readAllStandardOutput().trimmed();
+    QCOMPARE(output.data(), "narf");
+}
+
 void ParserTest::ignoreExitCodes()
 {
     QVERIFY(runJom(QStringList() << "/f" << "blackbox\\ignoreExitCodes\\test.mk"));

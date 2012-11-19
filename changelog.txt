@@ -4,6 +4,7 @@ Changes since jom 1.0.12
 - Fix spurious "Can't start command" error.
 - Fix passing of -j argument to subjoms.
 - Sanity check the -j argument.
+- Fix regression of non-functional set command in command blocks.
 
 Changes since jom 1.0.11
 - Performance improvements.
