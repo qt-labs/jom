@@ -28,8 +28,8 @@
 
 #include <QDebug>
 #include <QDir>
-#include <QTextStream>
 #include <QProcess>
+#include <QScopedPointer>
 #include <QTextCodec>
 
 #include <windows.h>
@@ -109,80 +109,81 @@ QStringList getCommandLineArguments()
 
 int main(int argc, char* argv[])
 {
-    SetConsoleCtrlHandler(&ConsoleCtrlHandlerRoutine, TRUE);
-    Application app(argc, argv);
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
-
-    MakefileFactory mf;
-    mf.setEnvironment(QProcess::systemEnvironment());
-    Options* options = 0;
-    if (!mf.apply(getCommandLineArguments(), &options)) {
-        switch (mf.errorType()) {
-        case MakefileFactory::CommandLineError:
-            showUsage();
-            return 128;
-        case MakefileFactory::ParserError:
-        case MakefileFactory::IOError:
-            fprintf(stderr, "Error: %s\n", qPrintable(mf.errorString()));
-            return 2;
-        }
-    }
-
-    if (options->showUsageAndExit) {
-        if (options->showLogo)
-            showLogo();
-        showUsage();
-        return 0;
-    } else if (options->showVersionAndExit) {
-        printf("jom version %d.%d.%d\n", nVersionMajor, nVersionMinor, nVersionPatch);
-        return 0;
-    }
-
-    if (options->showLogo && !app.isSubJOM())
-        showLogo();
-
-    Makefile* mkfile = mf.makefile();
-    if (options->displayMakeInformation) {
-        printf("MACROS:\n\n");
-        mkfile->macroTable()->dump();
-        printf("\nINFERENCE RULES:\n\n");
-        mkfile->dumpInferenceRules();
-        printf("\nTARGETS:\n\n");
-        mkfile->dumpTargets();
-    }
-
-    // ### HACK: pass the modified MAKEFLAGS variable to our environment.
-    if (g_options.isMaxNumberOfJobsSet) {
-        ProcessEnvironment environment = mkfile->macroTable()->environment();
-        const QString makeFlags = mkfile->macroTable()->macroValue(QLatin1String("MAKEFLAGS"));
-        environment[QLatin1String("MAKEFLAGS")] = makeFlags;
-        MacroTable *mt = const_cast<MacroTable *>(mkfile->macroTable());
-        mt->setEnvironment(environment);
-        qSetEnvironmentVariable(QLatin1String("MAKEFLAGS"), makeFlags);
-    }
-
-    if (options->printWorkingDir) {
-        printf("jom: Entering directory '%s\n", qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
-        fflush(stdout);
-    }
-
-    TargetExecutor executor(mkfile->macroTable()->environment());
-    QObject::connect(&executor, SIGNAL(finished(int)), &app, SLOT(exit(int)));
-    g_pTargetExecutor = &executor;
+    int result = 0;
     try {
-        executor.apply(mkfile, mf.activeTargets());
-    }
-    catch (Exception &e) {
-        fprintf(stderr, "Error in executor: %s\n", qPrintable(e.message()));
-    }
+        SetConsoleCtrlHandler(&ConsoleCtrlHandlerRoutine, TRUE);
+        Application app(argc, argv);
+        QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
+        MakefileFactory mf;
+        Options* options = 0;
+        mf.setEnvironment(QProcess::systemEnvironment());
+        if (!mf.apply(getCommandLineArguments(), &options)) {
+            switch (mf.errorType()) {
+            case MakefileFactory::CommandLineError:
+                showUsage();
+                return 128;
+            case MakefileFactory::ParserError:
+            case MakefileFactory::IOError:
+                fprintf(stderr, "Error: %s\n", qPrintable(mf.errorString()));
+                return 2;
+            }
+        }
 
-    QMetaObject::invokeMethod(&executor, "startProcesses", Qt::QueuedConnection);
-    int result = app.exec();
-    g_pTargetExecutor = 0;
-    if (options->printWorkingDir) {
-        printf("jom: Leaving directory '%s'\n", qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
-        fflush(stdout);
+        if (options->showUsageAndExit) {
+            if (options->showLogo)
+                showLogo();
+            showUsage();
+            return 0;
+        } else if (options->showVersionAndExit) {
+            printf("jom version %d.%d.%d\n", nVersionMajor, nVersionMinor, nVersionPatch);
+            return 0;
+        }
+
+        if (options->showLogo && !app.isSubJOM())
+            showLogo();
+
+        QScopedPointer<Makefile> mkfile(mf.makefile());
+        if (options->displayMakeInformation) {
+            printf("MACROS:\n\n");
+            mkfile->macroTable()->dump();
+            printf("\nINFERENCE RULES:\n\n");
+            mkfile->dumpInferenceRules();
+            printf("\nTARGETS:\n\n");
+            mkfile->dumpTargets();
+        }
+
+        // ### HACK: pass the modified MAKEFLAGS variable to our environment.
+        if (g_options.isMaxNumberOfJobsSet) {
+            ProcessEnvironment environment = mkfile->macroTable()->environment();
+            const QString makeFlags = mkfile->macroTable()->macroValue(QLatin1String("MAKEFLAGS"));
+            environment[QLatin1String("MAKEFLAGS")] = makeFlags;
+            MacroTable *mt = const_cast<MacroTable *>(mkfile->macroTable());
+            mt->setEnvironment(environment);
+            qSetEnvironmentVariable(QLatin1String("MAKEFLAGS"), makeFlags);
+        }
+
+        if (options->printWorkingDir) {
+            printf("jom: Entering directory '%s\n",
+                   qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
+            fflush(stdout);
+        }
+
+        TargetExecutor executor(mkfile->macroTable()->environment());
+        QObject::connect(&executor, SIGNAL(finished(int)), &app, SLOT(exit(int)));
+        g_pTargetExecutor = &executor;
+        executor.apply(mkfile.data(), mf.activeTargets());
+
+        QMetaObject::invokeMethod(&executor, "startProcesses", Qt::QueuedConnection);
+        result = app.exec();
+        g_pTargetExecutor = 0;
+        if (options->printWorkingDir) {
+            printf("jom: Leaving directory '%s'\n",
+                   qPrintable(QDir::toNativeSeparators(QDir::currentPath())));
+            fflush(stdout);
+        }
+    } catch (const Exception &e) {
+        fprintf(stderr, "jom: %s", qPrintable(e.message()));
+        result = 2;
     }
-    delete mkfile;
     return result;
 }
