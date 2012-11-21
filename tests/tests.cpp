@@ -39,7 +39,6 @@ void ParserTest::initTestCase()
     m_makefileFactory = new MakefileFactory;
     m_preprocessor = 0;
     m_jomProcess = new QProcess(this);
-    m_bResetJomProcessEnvironment = false;
     m_oldCurrentPath = QDir::currentPath();
     QDir::setCurrent(SRCDIR "makefiles");
 }
@@ -875,6 +874,9 @@ void ParserTest::windowsPathsInTargetName()
     QCOMPARE(target->m_commands.count(), 2);
 }
 
+/**
+ * Note: this function clears the environment of m_jomProcess after every start.
+ */
 bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory)
 {
 #ifdef _DEBUG
@@ -895,10 +897,6 @@ bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory
         QDir::setCurrent(workingDirectory);
     }
     m_jomProcess->setProcessChannelMode(QProcess::MergedChannels);
-    if (m_bResetJomProcessEnvironment) {
-        m_bResetJomProcessEnvironment = false;
-        m_jomProcess->setEnvironment(QStringList());
-    }
     m_jomProcess->start(jomBinary, args);
     bool success = true;
     if (!m_jomProcess->waitForStarted()) {
@@ -911,6 +909,7 @@ bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory
     }
     if (!workingDirectory.isNull())
         QDir::setCurrent(oldWorkingDirectory);
+    m_jomProcess->setEnvironment(QStringList());
     return success;
 }
 
@@ -1031,10 +1030,8 @@ void ParserTest::environmentVariables()
     QFETCH(QString, expectedVar1);
     QFETCH(QString, expectedVar2);
 
-    m_bResetJomProcessEnvironment = false;
     m_jomProcess->setEnvironment(environment);
     QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/nologo" << arguments, "blackbox/environmentVariables"));
-    m_bResetJomProcessEnvironment = true;   // reset environment, if this test fails
     QCOMPARE(m_jomProcess->exitCode(), 0);
     QVERIFY(!m_jomProcess->atEnd());
     QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()),
@@ -1042,8 +1039,6 @@ void ParserTest::environmentVariables()
     QVERIFY(!m_jomProcess->atEnd());
     QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()),
              QString(QLatin1String("VAR2 ") + expectedVar2).trimmed());
-    m_jomProcess->setEnvironment(QStringList());
-    m_bResetJomProcessEnvironment = false;
 }
 
 void ParserTest::environmentVariablesInCommands()

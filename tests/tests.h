@@ -90,5 +90,4 @@ private:
     NMakeFile::Preprocessor* m_preprocessor;
     NMakeFile::MakefileFactory* m_makefileFactory;
     QProcess *m_jomProcess;
-    bool m_bResetJomProcessEnvironment;
 };
