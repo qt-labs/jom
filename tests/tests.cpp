@@ -1020,8 +1020,8 @@ void ParserTest::environmentVariables_data()
         << (QStringList() << "VAR1=override" << "VAR2=override")
         << "override" << "override";
 
-    // Environment variables that contain invalid macro invokations are ignored.
-    QTest::newRow("invalid macro invokations in environment variable value")
+    // Environment variables that contain invalid macro invocations are ignored.
+    QTest::newRow("invalid macro invocations in environment variable value")
         << (QStringList() << "VAR1=$+$P$_$G" << "VAR2=$+$P$_$G")
         << QStringList()
         << "file" << QString();

@@ -110,7 +110,7 @@ Changes since jom 0.9.2
 - Support file name macros in the file name part of inline file defitions.
   (QTCREATORBUG-1136)
 - Multiple file name macros per command line are possible now.
-- Single name macro invokation was added.
+- Single name macro invocation was added.
   They can be invoked like this: $A instead of $(A).
 - Several bugs related to file name macros have been fixed.
 - Handle quoted arguments from command files correctly.
