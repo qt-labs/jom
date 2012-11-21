@@ -38,7 +38,7 @@ void ParserTest::initTestCase()
 {
     m_makefileFactory = new MakefileFactory;
     m_preprocessor = 0;
-    m_jomProcess = 0;
+    m_jomProcess = new QProcess(this);
     m_bResetJomProcessEnvironment = false;
     m_oldCurrentPath = QDir::currentPath();
     QDir::setCurrent(SRCDIR "makefiles");
@@ -894,10 +894,7 @@ bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory
         oldWorkingDirectory = QDir::currentPath();
         QDir::setCurrent(workingDirectory);
     }
-    if (!m_jomProcess) {
-        m_jomProcess = new QProcess(this);
-        m_jomProcess->setProcessChannelMode(QProcess::MergedChannels);
-    }
+    m_jomProcess->setProcessChannelMode(QProcess::MergedChannels);
     if (m_bResetJomProcessEnvironment) {
         m_bResetJomProcessEnvironment = false;
         m_jomProcess->setEnvironment(QStringList());
@@ -1029,10 +1026,6 @@ void ParserTest::environmentVariables_data()
 
 void ParserTest::environmentVariables()
 {
-    if (!m_jomProcess)
-        runJom(QStringList() << "/version");    // make sure the QProcess object exists
-    QVERIFY(m_jomProcess);
-
     QFETCH(QStringList, environment);
     QFETCH(QStringList, arguments);
     QFETCH(QString, expectedVar1);
