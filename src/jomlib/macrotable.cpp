@@ -49,7 +49,8 @@ QString MacroTable::macroValue(const QString& macroName) const
  */
 void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString& value, bool readOnly)
 {
-    if (m_macros.contains(name))
+    const QString upperName = name.toUpper();
+    if (m_macros.contains(upperName))
         return;
     QString expandedValue;
     try {
@@ -62,12 +63,12 @@ void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString&
         // Infamous example: PROMPT=$+$P$_$G
         return;
     }
-    MacroData* macroData = internalSetMacroValue(name.toUpper(), value);
+    MacroData* macroData = internalSetMacroValue(upperName, value);
     if (!macroData)
         return;
     macroData->isEnvironmentVariable = true;
     macroData->isReadOnly = readOnly;
-    setEnvironmentVariable(name, expandedValue);
+    setEnvironmentVariable(upperName, expandedValue);
 }
 
 bool MacroTable::isMacroNameValid(const QString& name) const

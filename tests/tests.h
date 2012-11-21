@@ -67,6 +67,7 @@ private slots:
     void caseInsensitiveDependents();
     void environmentVariables_data();
     void environmentVariables();
+    void environmentVariablesCaseInsensitivity();
     void environmentVariablesInCommands();
     void ignoreExitCodes();
     void inlineFiles();

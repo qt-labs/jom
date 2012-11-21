@@ -1041,6 +1041,17 @@ void ParserTest::environmentVariables()
              QString(QLatin1String("VAR2 ") + expectedVar2).trimmed());
 }
 
+void ParserTest::environmentVariablesCaseInsensitivity()
+{
+    const QStringList environment = QStringList() << "Path=foobidoo";
+    m_jomProcess->setEnvironment(environment);
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/sl" << "PATH=C:\\Narf",
+                   "blackbox/environmentVariablesCaseInsensitivity"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    const QByteArray output = m_jomProcess->readAllStandardOutput().trimmed();
+    QCOMPARE(output.data(), "PATH C:\\Narf C:\\Narf");
+}
+
 void ParserTest::environmentVariablesInCommands()
 {
     QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/sl",
