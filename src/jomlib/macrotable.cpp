@@ -51,12 +51,23 @@ void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString&
 {
     if (m_macros.contains(name))
         return;
+    QString expandedValue;
+    try {
+        // The make variable gets the unexpanded value.
+        // The environment variable gets the expanded value.
+        expandedValue = expandMacros(value);
+    } catch (const Exception &) {
+        // Expanding the value caused an error. We don't create a Make variable for it.
+        // See section "Environment-Variable Macros" in the nmake documentation.
+        // Infamous example: PROMPT=$+$P$_$G
+        return;
+    }
     MacroData* macroData = internalSetMacroValue(name.toUpper(), value);
     if (!macroData)
         return;
     macroData->isEnvironmentVariable = true;
     macroData->isReadOnly = readOnly;
-    setEnvironmentVariable(name, expandMacros(macroData->value));
+    setEnvironmentVariable(name, expandedValue);
 }
 
 bool MacroTable::isMacroNameValid(const QString& name) const

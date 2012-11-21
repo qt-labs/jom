@@ -1019,6 +1019,12 @@ void ParserTest::environmentVariables_data()
         << (QStringList() << "VAR1=env" << "VAR2=env")
         << (QStringList() << "VAR1=override" << "VAR2=override")
         << "override" << "override";
+
+    // Environment variables that contain invalid macro invokations are ignored.
+    QTest::newRow("invalid macro invokations in environment variable value")
+        << (QStringList() << "VAR1=$+$P$_$G" << "VAR2=$+$P$_$G")
+        << QStringList()
+        << "file" << QString();
 }
 
 void ParserTest::environmentVariables()
@@ -1038,9 +1044,11 @@ void ParserTest::environmentVariables()
     m_bResetJomProcessEnvironment = true;   // reset environment, if this test fails
     QCOMPARE(m_jomProcess->exitCode(), 0);
     QVERIFY(!m_jomProcess->atEnd());
-    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()), QString(QLatin1String("VAR1 ") + expectedVar1));
+    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()),
+             QString(QLatin1String("VAR1 ") + expectedVar1).trimmed());
     QVERIFY(!m_jomProcess->atEnd());
-    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()), QString(QLatin1String("VAR2 ") + expectedVar2));
+    QCOMPARE(QString::fromLatin1(m_jomProcess->readLine().trimmed()),
+             QString(QLatin1String("VAR2 ") + expectedVar2).trimmed());
     m_jomProcess->setEnvironment(QStringList());
     m_bResetJomProcessEnvironment = false;
 }
