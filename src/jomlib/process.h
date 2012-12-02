@@ -64,7 +64,7 @@ public:
     const ProcessEnvironment &environment() const { return m_environment; }
     int exitCode() const { return m_exitCode; }
     ExitStatus exitStatus() const { return m_exitStatus; }
-    bool isStarted() const { return m_state == Running; }
+    bool isRunning() const { return m_state == Running; }
 
 signals:
     void error(Process::ProcessError);

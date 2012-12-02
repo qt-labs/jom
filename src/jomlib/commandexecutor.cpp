@@ -244,7 +244,7 @@ void CommandExecutor::executeCurrentCommandLine()
         //qDebug("+++ direct exec");
         m_ignoreProcessErrors = true;
         m_process.start(commandLine);
-        executionSucceeded = m_process.isStarted();
+        executionSucceeded = m_process.isRunning();
         m_ignoreProcessErrors = false;
     }
 
@@ -269,7 +269,7 @@ void CommandExecutor::executeCurrentCommandLine()
 
         commandLine = shellCmd + QLatin1Literal(" /C ") + commandLine;
         m_process.start(commandLine);
-        executionSucceeded = m_process.isStarted();
+        executionSucceeded = m_process.isRunning();
     }
 
     if (!executionSucceeded)
