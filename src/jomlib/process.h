@@ -25,6 +25,53 @@
 #include <QObject>
 #include <QStringList>
 
+#ifdef USE_QPROCESS
+
+#include <QProcess>
+
+namespace NMakeFile {
+
+class Process : public QProcess
+{
+    Q_OBJECT
+public:
+    enum ProcessError
+    {
+        UnknownError,
+        FailedToStart,
+        Crashed
+    };
+
+    enum ExitStatus
+    {
+        NormalExit,
+        CrashExit
+    };
+
+    Process(QObject *parent = 0);
+    void setBufferedOutput(bool bufferedOutput);
+    bool isBufferedOutputSet() const;
+    void setEnvironment(const ProcessEnvironment &e);
+    ProcessEnvironment environment() const;
+    bool isRunning() const;
+    void start(const QString &commandLine);
+    void writeToStdOutBuffer(const QByteArray &output);
+    void writeToStdErrBuffer(const QByteArray &output);
+    ExitStatus exitStatus() const;
+
+signals:
+    void error(Process::ProcessError);
+    void finished(int, Process::ExitStatus);
+
+private slots:
+    void forwardError(QProcess::ProcessError);
+    void forwardFinished(int, QProcess::ExitStatus);
+};
+
+} // namespace NMakeFile
+
+#else
+
 namespace NMakeFile {
 
 class Process : public QObject
@@ -95,5 +142,7 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // USE_QPROCESS
 
 #endif // PROCESS_H

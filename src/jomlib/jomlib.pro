@@ -41,6 +41,18 @@ MSYSPATH=C:\\msys
     QMAKE_EXTRA_COMPILERS += qlalr
 }
 
+win32-* {
+    HEADERS +=  \
+        iocompletionport.h
+    SOURCES += \
+        process.cpp \
+        iocompletionport.cpp
+} else {
+    DEFINES += USE_QPROCESS
+    SOURCES += \
+        process_qt.cpp
+}
+
 HEADERS +=  \
     fastfileinfo.h \
     filetime.h \
@@ -58,8 +70,7 @@ HEADERS +=  \
     targetexecutor.h \
     commandexecutor.h \
     process.h \
-    processenvironment.h \
-    iocompletionport.h
+    processenvironment.h
 
 SOURCES += \
     fastfileinfo.cpp \
@@ -77,9 +88,7 @@ SOURCES += \
     ppexpr_grammar.cpp \
     ppexprparser.cpp \
     targetexecutor.cpp \
-    commandexecutor.cpp \
-    process.cpp \
-    iocompletionport.cpp
+    commandexecutor.cpp
 
 OTHER_FILES += \
     ppexpr.g \
