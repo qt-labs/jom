@@ -85,8 +85,10 @@ void MakefileLineReader::growLineBuffer(size_t nGrow)
  */
 QString MakefileLineReader::readLine(bool bInlineFileMode)
 {
-    if (bInlineFileMode)
+    if (bInlineFileMode) {
+        m_nLineNumber++;
         return QString::fromLatin1(m_file.readLine());
+    }
 
     return (this->*m_readLineImpl)();
 }
