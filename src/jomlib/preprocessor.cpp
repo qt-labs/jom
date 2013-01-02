@@ -364,6 +364,8 @@ void Preprocessor::enterConditional(bool followElseBranch)
 
 void Preprocessor::exitConditional()
 {
+    if (m_conditionalStack.isEmpty())
+        error(QLatin1String("unexpected ENDIF"));
     m_conditionalStack.pop();
 }
 
