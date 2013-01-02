@@ -181,9 +181,15 @@ bool Preprocessor::parseMacro(const QString& line)
             ++parenthesisDepth;
         } else if (ch == QLatin1Char(')')) {
             --parenthesisDepth;
-        } else if (parenthesisDepth == 0 && ch == QLatin1Char('=')) {
-            equalsSignPos = i;
-            break;
+        } else if (parenthesisDepth == 0) {
+            if (ch == QLatin1Char('=')) {
+                equalsSignPos = i;
+                break;
+            } else if (ch == QLatin1Char(':')) {
+                // A colon (outside parenthesis) to the left of an equals sign is not a valid
+                // macro assignment. This is likely to be a description block.
+                break;
+            }
         }
     }
 

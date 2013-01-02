@@ -400,6 +400,14 @@ void ParserTest::descriptionBlocks()
     cmd = target->m_commands.first();
     QCOMPARE(cmd.m_commandLine, QLatin1String("echo three; @echo end of three"));
 
+    target = mkfile->target("four");
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.count(), 0);
+    QCOMPARE(target->m_commands.count(), 1);
+
+    cmd = target->m_commands.first();
+    QCOMPARE(cmd.m_commandLine, QLatin1String("echo four=4"));
+
     target = mkfile->target(".");
     QVERIFY(target != 0);
     QCOMPARE(target->m_dependents.count(), 0);

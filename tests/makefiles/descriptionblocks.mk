@@ -6,6 +6,7 @@ one: a b $(DEPENDENT_C)
     @echo one
 two:; @echo two
 three : "a;b" ;@echo three; @echo end of three
+four: ; @echo four=4
 
 a :
 b :
