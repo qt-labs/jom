@@ -18,7 +18,9 @@ post_check:
 test_basic:
 	copy << output\test_basic.txt
 line 1
+!ifndef UNDEFINED_MACRO
 line 2
+!endif
 line 3
 <<
 
