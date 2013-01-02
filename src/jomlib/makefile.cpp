@@ -239,7 +239,9 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
 
                 if (substitutionIdx > 0) {
                     int macroInvokationEnd;
-                    MacroTable::parseSubstitutionStatement(str, substitutionIdx, macroValue, macroInvokationEnd);
+                    const MacroTable::Substitution substitution =
+                            MacroTable::parseSubstitutionStatement(str, substitutionIdx, macroInvokationEnd);
+                    MacroTable::applySubstitution(substitution, macroValue);
                     replacementLength = macroInvokationEnd - idx - 2;  // because we're later adding 4
                 }
 

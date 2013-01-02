@@ -237,8 +237,10 @@ QString MacroTable::expandMacros(const QString& str, bool inDependentsLine, QSet
                     {
                         QString macroValue = cycleCheckedMacroValue(macroName, usedMacros);
                         macroValue = expandMacros(macroValue, inDependentsLine, usedMacros);
-                        if (macroNameEnd != macroInvokationEnd)
-                            parseSubstitutionStatement(str, macroNameEnd + 1, macroValue, macroInvokationEnd);
+                        if (macroNameEnd != macroInvokationEnd) {
+                            const Substitution s = parseSubstitutionStatement(str, macroNameEnd + 1, macroInvokationEnd);
+                            applySubstitution(s, macroValue);
+                        }
                         usedMacros.remove(macroName);
                         ret.append(macroValue);
                     }
@@ -334,7 +336,9 @@ void MacroTable::dump() const
  * equalsSignIdx:                       ^
  * macroInvokationEndIdx:                   ^
  */
-void MacroTable::parseSubstitutionStatement(const QString &str, int substitutionStartIdx, QString &value, int &macroInvokationEndIdx)
+MacroTable::Substitution MacroTable::parseSubstitutionStatement(const QString &str,
+                                                                int substitutionStartIdx,
+                                                                int &macroInvokationEndIdx)
 {
     macroInvokationEndIdx = -1;
     int equalsSignIdx = -1;
@@ -360,11 +364,17 @@ void MacroTable::parseSubstitutionStatement(const QString &str, int substitution
     if (equalsSignIdx < 0 || macroInvokationEndIdx < 0)
         throw Exception(QLatin1String("Cannot find = after : in macro substitution."));
 
-    QString before = str.mid(substitutionStartIdx, equalsSignIdx - substitutionStartIdx);
-    QString after = str.mid(equalsSignIdx + 1, macroInvokationEndIdx - equalsSignIdx - 1);
+    Substitution result;
+    result.before = str.mid(substitutionStartIdx, equalsSignIdx - substitutionStartIdx);
+    result.after = str.mid(equalsSignIdx + 1, macroInvokationEndIdx - equalsSignIdx - 1);
     for (int i=quotePositions.count() - 1; i >= 0; --i)
-        after.remove(quotePositions.at(i) - equalsSignIdx - 1, 1);
-    value.replace(before, after);
+        result.after.remove(quotePositions.at(i) - equalsSignIdx - 1, 1);
+    return result;
+}
+
+void MacroTable::applySubstitution(const MacroTable::Substitution &substitution, QString &value)
+{
+    value.replace(substitution.before, substitution.after);
 }
 
 } // namespace NMakeFile
