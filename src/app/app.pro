@@ -5,7 +5,7 @@ CONFIG += console depend_includepath
 DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
 DEFINES += QT_USE_FAST_CONCATENATION QT_USE_FAST_OPERATOR_PLUS
 TARGET = jom
-build_pass:CONFIG(debug, debug|release) {
+CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
 }
 
