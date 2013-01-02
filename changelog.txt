@@ -1,4 +1,11 @@
-This is the changelog for jom 1.0.13, the parallel make tool.
+This is the changelog for jom 1.0.14, the parallel make tool.
+
+Changes since jom 1.0.13
+- Fix file name macro modifers for $** and $?. (QTCREATORBUG-6932)
+- Fix equal signs in semicolon command syntax. (QTCREATORBUG-7942)
+- Fix error line numbers for inline files. (QTCREATORBUG-8451)
+- Ignore macro assignments in inline files. (QTCREATORBUG-8452)
+- Yield error on unexpected !ENDIF directive.
 
 Changes since jom 1.0.12
 - Fix spurious "Can't start command" error.
