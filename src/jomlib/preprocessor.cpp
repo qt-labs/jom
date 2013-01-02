@@ -121,9 +121,14 @@ bool Preprocessor::internalOpenFile(QString fileName)
 QString Preprocessor::readLine()
 {
     QString line;
-    do {
+    for (;;) {
         basicReadLine(line);
-    } while (parseMacro(line) || parsePreprocessingDirective(line));
+        if (!m_bInlineFileMode && parseMacro(line))
+            continue;
+        if (parsePreprocessingDirective(line))
+            continue;
+        break;
+    }
     return line;
 }
 
