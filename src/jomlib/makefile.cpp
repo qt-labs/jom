@@ -158,6 +158,23 @@ inline void quoteStringIfNeeded(QString& str)
     }
 }
 
+static QString joinMacroValues(const QStringList &macroValues, bool mustQuote)
+{
+    QString result;
+    for (int i = 0; i < macroValues.count(); ++i) {
+        if (i > 0)
+            result += QLatin1Char(' ');
+        if (mustQuote) {
+            QString value = macroValues.at(i);
+            quoteStringIfNeeded(value);
+            result += value;
+        } else  {
+            result += macroValues.at(i);
+        }
+    }
+    return result;
+}
+
 /**
  * Expands the filename macros in a given string.
  *
@@ -195,30 +212,44 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
             int substitutionIdx = -1;
             bool substitutionStateKnown = false;
             bool fileNameReturned;
-            QString macroValue = getFileNameMacroValue(str.midRef(idx+1), replacementLength,
-                                                       depIdx, dependentsForbidden, fileNameReturned);
-            if (!macroValue.isNull()) {
-                int k;
+            QStringList macroValues = getFileNameMacroValues(str.midRef(idx+1), replacementLength,
+                                                             depIdx, dependentsForbidden,
+                                                             fileNameReturned);
+            if (macroValues.isEmpty()) {
+                str.remove(idx - 1, replacementLength + 3);
+            } else {
                 ch = str.at(idx + replacementLength + 1).toLatin1();
                 switch (ch)
                 {
                 case 'D':
-                    k = macroValue.lastIndexOf(QLatin1Char('\\'));
-                    if (k == -1)
-                        macroValue = QLatin1String(".");
-                    else
-                        macroValue = macroValue.left(k);
+                    for (int i = 0; i < macroValues.count(); ++i) {
+                        QString &macroValue = macroValues[i];
+                        int k = macroValue.lastIndexOf(QLatin1Char('\\'));
+                        if (k == -1)
+                            macroValue = QLatin1String(".");
+                        else
+                            macroValue = macroValue.left(k);
+                    }
                     break;
                 case 'B':
-                    macroValue = QFileInfo(macroValue).baseName();
+                    for (int i = 0; i < macroValues.count(); ++i) {
+                        QString &macroValue = macroValues[i];
+                        macroValue = QFileInfo(macroValue).baseName();
+                    }
                     break;
                 case 'F':
-                    macroValue = QFileInfo(macroValue).fileName();
+                    for (int i = 0; i < macroValues.count(); ++i) {
+                        QString &macroValue = macroValues[i];
+                        macroValue = QFileInfo(macroValue).fileName();
+                    }
                     break;
                 case 'R':
-                    k = macroValue.lastIndexOf(QLatin1Char('.'));
-                    if (k > -1)
-                        macroValue = macroValue.left(k);
+                    for (int i = 0; i < macroValues.count(); ++i) {
+                        QString &macroValue = macroValues[i];
+                        int k = macroValue.lastIndexOf(QLatin1Char('.'));
+                        if (k > -1)
+                            macroValue = macroValue.left(k);
+                    }
                     break;
                 case ':':
                     substitutionStateKnown = true;
@@ -241,35 +272,35 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
                     int macroInvokationEnd;
                     const MacroTable::Substitution substitution =
                             MacroTable::parseSubstitutionStatement(str, substitutionIdx, macroInvokationEnd);
-                    MacroTable::applySubstitution(substitution, macroValue);
+                    for (int i = 0; i < macroValues.count(); ++i) {
+                        MacroTable::applySubstitution(substitution, macroValues[i]);
+                    }
                     replacementLength = macroInvokationEnd - idx - 2;  // because we're later adding 4
                 }
 
-                if (fileNameReturned)
-                    quoteStringIfNeeded(macroValue);
+                const QString macroValue = joinMacroValues(macroValues, fileNameReturned);
                 str.replace(idx - 1, replacementLength + 4, macroValue);
-            } else {
-                str.remove(idx - 1, replacementLength + 3);
             }
         } else {
             bool fileNameReturned;
-            QString macroValue = getFileNameMacroValue(str.midRef(idx), replacementLength, depIdx,
-                                                       dependentsForbidden, fileNameReturned);
-            if (!macroValue.isNull()) {
-                if (fileNameReturned)
-                    quoteStringIfNeeded(macroValue);
-                str.replace(idx - 1, replacementLength + 1, macroValue);
-            } else {
+            QStringList macroValues = getFileNameMacroValues(str.midRef(idx), replacementLength,
+                                                             depIdx, dependentsForbidden,
+                                                             fileNameReturned);
+            if (macroValues.isEmpty()) {
                 str.remove(idx - 1, replacementLength + 1);
+            } else {
+                const QString macroValue = joinMacroValues(macroValues, fileNameReturned);
+                str.replace(idx - 1, replacementLength + 1, macroValue);
             }
         }
     }
 }
 
-QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& replacementLength,
-                                                int depIdx, bool dependentsForbidden, bool& returnsFileName)
+QStringList DescriptionBlock::getFileNameMacroValues(const QStringRef& str, int& replacementLength,
+                                                     int depIdx, bool dependentsForbidden,
+                                                     bool& returnsFileName)
 {
-    QString result;
+    QStringList results;
     QStringList dependentCandidates;
     returnsFileName = false;
     if (!dependentsForbidden) {
@@ -282,7 +313,7 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
     switch (str.at(0).toLatin1()) {
         case '@':
             replacementLength = 1;
-            result = targetName();
+            results += targetName();
             returnsFileName = true;
             break;
         case '*':
@@ -292,14 +323,15 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                         throw Exception(QLatin1String("Macro $** not allowed here."));
                     }
                     replacementLength = 2;
-                    result = dependentCandidates.join(QLatin1String(" "));
+                    results = dependentCandidates;
                 } else {
                     returnsFileName = true;
                     replacementLength = 1;
-                    result = targetName();
-                    int idx = result.lastIndexOf(QLatin1Char('.'));
+                    QString tgt = targetName();
+                    int idx = tgt.lastIndexOf(QLatin1Char('.'));
                     if (idx > -1)
-                        result.resize(idx);
+                        tgt.resize(idx);
+                    results += tgt;
                 }
             }
             break;
@@ -309,8 +341,6 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                     throw Exception(QLatin1String("Macro $? not allowed here."));
                 }
                 replacementLength = 1;
-                result.clear();
-                bool firstAppend = true;
                 const FileTime currentTimeStamp = FileTime::currentTime();
                 FileTime targetTimeStamp = FastFileInfo(targetName()).lastModified();
                 if (!targetTimeStamp.isValid())
@@ -322,19 +352,14 @@ QString DescriptionBlock::getFileNameMacroValue(const QStringRef& str, int& repl
                         dependentTimeStamp = currentTimeStamp;
 
                     if (targetTimeStamp <= dependentTimeStamp) {
-                        if (firstAppend)
-                            firstAppend = false;
-                        else
-                            result.append(QLatin1Char(' '));
-
-                        result.append(dependentName);
+                        results += dependentName;
                     }
                 }
             }
             break;
     }
 
-    return result;
+    return results;
 }
 
 InferenceRule::InferenceRule()
