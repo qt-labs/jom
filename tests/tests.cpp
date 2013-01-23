@@ -314,6 +314,8 @@ void ParserTest::conditionals()
     QCOMPARE(macroTable->macroValue("TEST4"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST5"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST6"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST7"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST8"), QLatin1String("true"));
 }
 
 void ParserTest::dotDirectives()
