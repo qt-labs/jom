@@ -12,7 +12,7 @@ build_pass:CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
 }
 
-MSYSPATH=C:\\msys
+isEmpty(MSYSPATH):MSYSPATH=C:\\msys
 !exists($$MSYSPATH): MSYSPATH=D:\\msys
 !exists($$MSYSPATH) {
     !build_pass:message("Can't locate path to MSYS. This is needed for flex.")
