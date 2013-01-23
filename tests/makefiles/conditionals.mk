@@ -75,5 +75,23 @@ TEST8=false
 TEST8=false
 !ENDIF
 
+TEST9=foo \
+bar \
+!IF 1
+baz \
+!ELSE
+boo \
+hoo
+!ENDIF
+
+TEST10=foo \
+bar \
+!IF 0
+baz \
+!ELSE
+boo \
+hoo
+!ENDIF
+
 all:
 
