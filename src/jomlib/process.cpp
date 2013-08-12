@@ -227,21 +227,22 @@ static QByteArray createEnvBlock(const ProcessEnvironment &environment)
         }
 
         int pos = 0;
-        QMap<QString,QString>::ConstIterator it = copy.constBegin(),
-                                             end = copy.constEnd();
+        ProcessEnvironment::const_iterator it = copy.constBegin();
+        const ProcessEnvironment::const_iterator end = copy.constEnd();
 
         static const wchar_t equal = L'=';
         static const wchar_t nul = L'\0';
 
         for ( ; it != end; ++it) {
-            uint tmpSize = sizeof(wchar_t) * (it.key().length() + it.value().length() + 2);
+            const QString &keystr = it.key().toQString();
+            uint tmpSize = sizeof(wchar_t) * (keystr.length() + it.value().length() + 2);
             // ignore empty strings
             if (tmpSize == sizeof(wchar_t) * 2)
                 continue;
             envlist.resize(envlist.size() + tmpSize);
 
-            tmpSize = it.key().length() * sizeof(wchar_t);
-            memcpy(envlist.data()+pos, it.key().utf16(), tmpSize);
+            tmpSize = keystr.length() * sizeof(wchar_t);
+            memcpy(envlist.data() + pos, keystr.utf16(), tmpSize);
             pos += tmpSize;
 
             memcpy(envlist.data()+pos, &equal, sizeof(wchar_t));
