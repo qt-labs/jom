@@ -29,7 +29,7 @@ namespace NMakeFile
     class MakefileFactory;
 }
 
-class ParserTest : public QObject
+class Tests : public QObject
 {
     Q_OBJECT
 private slots:

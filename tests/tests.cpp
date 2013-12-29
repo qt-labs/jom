@@ -34,7 +34,7 @@
 
 using namespace NMakeFile;
 
-void ParserTest::initTestCase()
+void Tests::initTestCase()
 {
     m_makefileFactory = new MakefileFactory;
     m_preprocessor = 0;
@@ -43,19 +43,19 @@ void ParserTest::initTestCase()
     QDir::setCurrent(SRCDIR "makefiles");
 }
 
-void ParserTest::cleanupTestCase()
+void Tests::cleanupTestCase()
 {
     delete m_makefileFactory;
     delete m_preprocessor;
     QDir::setCurrent(m_oldCurrentPath);
 }
 
-bool ParserTest::openMakefile(const QString& fileName)
+bool Tests::openMakefile(const QString& fileName)
 {
     return m_makefileFactory->apply(QStringList() << QLatin1String("/F") << fileName);
 }
 
-void ParserTest::includeFiles()
+void Tests::includeFiles()
 {
     MacroTable macroTable;
     Preprocessor pp;
@@ -79,7 +79,7 @@ void ParserTest::includeFiles()
     QCOMPARE(macroTable.macroValue("INCLUDE7"), QLatin1String("TRUE"));
 }
 
-void ParserTest::includeCycle()
+void Tests::includeCycle()
 {
     MacroTable macroTable;
     Preprocessor pp;
@@ -95,7 +95,7 @@ void ParserTest::includeCycle()
     QVERIFY(bExceptionCaught);
 }
 
-void ParserTest::macros()
+void Tests::macros()
 {
     MacroTable macroTable;
     Preprocessor pp;
@@ -140,7 +140,7 @@ void ParserTest::macros()
     QVERIFY(!bExceptionCaught);
 }
 
-void ParserTest::invalidMacros_data()
+void Tests::invalidMacros_data()
 {
     QTest::addColumn<QString>("expression");
     QTest::newRow("missing paranthesis")    << QString("$(FOO) $(MISSING_PARANTHESIS");
@@ -148,7 +148,7 @@ void ParserTest::invalidMacros_data()
     QTest::newRow("empty macro name 2") << QString("empty $() macro name");
 }
 
-void ParserTest::invalidMacros()
+void Tests::invalidMacros()
 {
     QFETCH(QString, expression);
     bool exceptionCaught = false;
@@ -162,7 +162,7 @@ void ParserTest::invalidMacros()
     QVERIFY(exceptionCaught);
 }
 
-void ParserTest::preprocessorExpressions_data()
+void Tests::preprocessorExpressions_data()
 {
     QTest::addColumn<QByteArray>("expression");
     QTest::addColumn<int>("expected");
@@ -219,7 +219,7 @@ void ParserTest::preprocessorExpressions_data()
     QTest::newRow("pretty random test") << QByteArray("1 == 1 || 2 == 2 + 1 + 1 + -1|| 3 == 3") << 1;
 }
 
-void ParserTest::preprocessorExpressions()
+void Tests::preprocessorExpressions()
 {
     if (!m_preprocessor)
         m_preprocessor = new Preprocessor;
@@ -252,7 +252,7 @@ void ParserTest::preprocessorExpressions()
     }
 }
 
-void ParserTest::preprocessorDivideByZero()
+void Tests::preprocessorDivideByZero()
 {
     if (!m_preprocessor)
         m_preprocessor = new Preprocessor;
@@ -269,7 +269,7 @@ void ParserTest::preprocessorDivideByZero()
     QVERIFY(error.message().contains("division by zero"));
 }
 
-void ParserTest::preprocessorInvalidExpressions_data()
+void Tests::preprocessorInvalidExpressions_data()
 {
      QTest::addColumn<QByteArray>("expression");
      QTest::newRow("empty") << QByteArray("");
@@ -281,7 +281,7 @@ void ParserTest::preprocessorInvalidExpressions_data()
      //QTest::newRow("") << QByteArray("");
 }
 
-void ParserTest::preprocessorInvalidExpressions()
+void Tests::preprocessorInvalidExpressions()
 {
     if (!m_preprocessor)
         m_preprocessor = new Preprocessor;
@@ -300,7 +300,7 @@ void ParserTest::preprocessorInvalidExpressions()
     QVERIFY(!error.message().isEmpty());
 }
 
-void ParserTest::conditionals()
+void Tests::conditionals()
 {
     QEXPECT_FAIL("", "QTCREATORBUG-8621", Continue);
     QVERIFY( openMakefile(QLatin1String("conditionals.mk")) );
@@ -323,7 +323,7 @@ void ParserTest::conditionals()
     QCOMPARE(macroTable->macroValue("TEST10"), QLatin1String("foo  bar  boo  hoo"));
 }
 
-void ParserTest::dotDirectives()
+void Tests::dotDirectives()
 {
     QVERIFY( openMakefile(QLatin1String("dotdirectives.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
@@ -374,7 +374,7 @@ void ParserTest::dotDirectives()
     QCOMPARE(mkfile->preciousTargets().at(2), QLatin1String("preciousness_three"));
 }
 
-void ParserTest::descriptionBlocks()
+void Tests::descriptionBlocks()
 {
     QVERIFY( openMakefile(QLatin1String("descriptionBlocks.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
@@ -450,7 +450,7 @@ static const char IRTM_Cleanup = 1;
 static const char IRTM_ParseTimeRule = 2;
 static const char IRTM_DeferredRule = 3;
 
-void ParserTest::inferenceRules_data()
+void Tests::inferenceRules_data()
 {
     QTest::addColumn<char>("mode");
     QTest::addColumn<QString>("targetName");
@@ -474,7 +474,7 @@ void ParserTest::inferenceRules_data()
             system("del " + fileName.toLocal8Bit());
 }
 
-void ParserTest::inferenceRules()
+void Tests::inferenceRules()
 {
     static QScopedPointer<Makefile> mkfile;
 
@@ -511,7 +511,7 @@ void ParserTest::inferenceRules()
     QCOMPARE(target->m_commands.first().m_commandLine, expectedCommandLine);
 }
 
-void ParserTest::cycleInTargets()
+void Tests::cycleInTargets()
 {
     MacroTable *macroTable = new MacroTable;
     Makefile mkfile(QLatin1String("cycle_in_targets.mk"));
@@ -531,7 +531,7 @@ void ParserTest::cycleInTargets()
     QVERIFY(exceptionThrown);
 }
 
-void ParserTest::dependentsWithSpace()
+void Tests::dependentsWithSpace()
 {
     QVERIFY( openMakefile(QLatin1String("depswithspace.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
@@ -544,7 +544,7 @@ void ParserTest::dependentsWithSpace()
     QCOMPARE(target->m_dependents.at(2), QLatin1String("three"));
 }
 
-void ParserTest::multipleTargets()
+void Tests::multipleTargets()
 {
     QVERIFY( openMakefile(QLatin1String("targetmultidef.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
@@ -566,7 +566,7 @@ void ParserTest::multipleTargets()
     QCOMPARE(target->m_commands.count(), 3);
 }
 
-void ParserTest::commandModifiers()
+void Tests::commandModifiers()
 {
     QVERIFY( openMakefile(QLatin1String("commandmodifiers.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
@@ -591,7 +591,7 @@ void ParserTest::commandModifiers()
     QCOMPARE(cmd.m_singleExecution, true);
 }
 
-void ParserTest::comments()
+void Tests::comments()
 {
     QVERIFY( openMakefile(QLatin1String("comments.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
@@ -625,7 +625,7 @@ void ParserTest::comments()
     QCOMPARE(target->m_commands.count(), 1);
 }
 
-void ParserTest::fileNameMacros()
+void Tests::fileNameMacros()
 {
     bool ok = m_makefileFactory->apply(QStringList() << "MAKEDIR=" + QDir::currentPath()
                                                      << "/f" << QLatin1String("filenamemacros.mk"));
@@ -794,7 +794,7 @@ void ParserTest::fileNameMacros()
     QCOMPARE(command.m_commandLine, QLatin1String("echo C:\\somewhere\\substitutionWithColon"));
 }
 
-void ParserTest::fileNameMacrosInDependents()
+void Tests::fileNameMacrosInDependents()
 {
     QVERIFY( openMakefile(QLatin1String("fileNameMacrosInDependents.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
@@ -856,7 +856,7 @@ void ParserTest::fileNameMacrosInDependents()
     QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $(*R)
 }
 
-void ParserTest::windowsPathsInTargetName()
+void Tests::windowsPathsInTargetName()
 {
     QVERIFY( openMakefile(QLatin1String("windowspaths.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
@@ -884,7 +884,7 @@ void ParserTest::windowsPathsInTargetName()
 /**
  * Note: this function clears the environment of m_jomProcess after every start.
  */
-bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory)
+bool Tests::runJom(const QStringList &args, const QString &workingDirectory)
 {
 #ifdef _DEBUG
     const QLatin1String jomBinaryName("jomd.exe");
@@ -920,7 +920,7 @@ bool ParserTest::runJom(const QStringList &args, const QString &workingDirectory
     return success;
 }
 
-bool ParserTest::fileContentsEqual(const QString& fileName1, const QString& fileName2)
+bool Tests::fileContentsEqual(const QString& fileName1, const QString& fileName2)
 {
     QFile file1(fileName1);
     if (!file1.open(QFile::ReadOnly)) {
@@ -953,7 +953,7 @@ bool ParserTest::fileContentsEqual(const QString& fileName1, const QString& file
     return true;
 }
 
-QStringList ParserTest::readJomStdOutput()
+QStringList Tests::readJomStdOutput()
 {
     QList<QByteArray> lines = m_jomProcess->readAllStandardOutput().split('\n');
     QStringList s;
@@ -966,7 +966,7 @@ QStringList ParserTest::readJomStdOutput()
     return s;
 }
 
-void ParserTest::touchFile(const QString &fileName)
+void Tests::touchFile(const QString &fileName)
 {
     QFile file(fileName);
     QVERIFY(file.exists());
@@ -976,13 +976,13 @@ void ParserTest::touchFile(const QString &fileName)
     file.resize(s);
 }
 
-void ParserTest::caseInsensitiveDependents()
+void Tests::caseInsensitiveDependents()
 {
     QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/nologo", "blackbox/caseInsensitiveDependents"));
     QCOMPARE(m_jomProcess->exitCode(), 0);
 }
 
-void ParserTest::environmentVariables_data()
+void Tests::environmentVariables_data()
 {
     QTest::addColumn<QStringList>("environment");
     QTest::addColumn<QStringList>("arguments");
@@ -1030,7 +1030,7 @@ void ParserTest::environmentVariables_data()
         << "file" << QString();
 }
 
-void ParserTest::environmentVariables()
+void Tests::environmentVariables()
 {
     QFETCH(QStringList, environment);
     QFETCH(QStringList, arguments);
@@ -1048,7 +1048,7 @@ void ParserTest::environmentVariables()
              QString(QLatin1String("VAR2 ") + expectedVar2).trimmed());
 }
 
-void ParserTest::environmentVariablesCaseInsensitivity()
+void Tests::environmentVariablesCaseInsensitivity()
 {
     const QStringList environment = QStringList() << "Path=foobidoo";
     m_jomProcess->setEnvironment(environment);
@@ -1059,7 +1059,7 @@ void ParserTest::environmentVariablesCaseInsensitivity()
     QCOMPARE(output.data(), "PATH C:\\Narf C:\\Narf");
 }
 
-void ParserTest::environmentVariablesInCommands()
+void Tests::environmentVariablesInCommands()
 {
     QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/sl",
                    "blackbox/environmentVariablesInCommands"));
@@ -1068,7 +1068,7 @@ void ParserTest::environmentVariablesInCommands()
     QCOMPARE(output.data(), "narf");
 }
 
-void ParserTest::ignoreExitCodes()
+void Tests::ignoreExitCodes()
 {
     QVERIFY(runJom(QStringList() << "/f" << "blackbox\\ignoreExitCodes\\test.mk"));
     QCOMPARE(m_jomProcess->exitCode(), 0);
@@ -1076,7 +1076,7 @@ void ParserTest::ignoreExitCodes()
     QVERIFY(output.contains("Failing command was properly ignored"));
 }
 
-void ParserTest::inlineFiles()
+void Tests::inlineFiles()
 {
     QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "init" << "tests", "blackbox/inlineFiles"));
     QCOMPARE(m_jomProcess->exitCode(), 0);
@@ -1085,14 +1085,14 @@ void ParserTest::inlineFiles()
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_escaping_expected.txt", "blackbox/inlineFiles/output/test_escaping.txt"));
 }
 
-void ParserTest::unicodeFiles_data()
+void Tests::unicodeFiles_data()
 {
     QTest::addColumn<QString>("fileName");
     QTest::newRow("UTF8") << QString("test_utf8.mk");
     QTest::newRow("UTF16") << QString("test_utf16.mk");
 }
 
-void ParserTest::unicodeFiles()
+void Tests::unicodeFiles()
 {
     QFETCH(QString, fileName);
     fileName.prepend(QLatin1String("blackbox\\unicodeFiles\\"));
@@ -1100,7 +1100,7 @@ void ParserTest::unicodeFiles()
     QCOMPARE(m_jomProcess->exitCode(), 0);
 }
 
-void ParserTest::builtin_cd_data()
+void Tests::builtin_cd_data()
 {
     QTest::addColumn<QString>("testCase");
     QTest::addColumn<QByteArray>("expectedOutput");
@@ -1109,7 +1109,7 @@ void ParserTest::builtin_cd_data()
     QTest::newRow("3") << QString("test3") << QByteArray("blackbox\\builtins");
 }
 
-void ParserTest::builtin_cd()
+void Tests::builtin_cd()
 {
     QFETCH(QString, testCase);
     QFETCH(QByteArray, expectedOutput);
@@ -1125,7 +1125,7 @@ void ParserTest::builtin_cd()
     QVERIFY(success);
 }
 
-void ParserTest::suffixes()
+void Tests::suffixes()
 {
     QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk", "blackbox/suffixes"));
     QList<QByteArray> output = m_jomProcess->readAllStandardOutput().split('\n');
@@ -1136,7 +1136,7 @@ void ParserTest::suffixes()
     QCOMPARE(output.takeFirst(), QByteArray("c -> x"));
 }
 
-void ParserTest::nonexistentDependent()
+void Tests::nonexistentDependent()
 {
     QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk", "blackbox/nonexistentdependent"));
     QCOMPARE(m_jomProcess->exitCode(), 2);
@@ -1146,7 +1146,7 @@ void ParserTest::nonexistentDependent()
     QVERIFY(output.contains("yo ho ho ho"));
 }
 
-void ParserTest::outOfDateCheck()
+void Tests::outOfDateCheck()
 {
     QVERIFY(runJom(QStringList() << "/nologo" << "/j1" << "/f" << "test.mk" << "clean" << "all",
             "blackbox/outofdatecheck"));
@@ -1209,4 +1209,4 @@ void ParserTest::outOfDateCheck()
     QVERIFY(output.isEmpty());
 }
 
-QTEST_MAIN(ParserTest)
+QTEST_MAIN(Tests)
