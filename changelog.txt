@@ -6,6 +6,7 @@ Changes since jom 1.0.13
 - Fix error line numbers for inline files. (QTCREATORBUG-8451)
 - Ignore macro assignments in inline files. (QTCREATORBUG-8452)
 - Yield error on unexpected !ENDIF directive.
+- Support wildcards in dependency lines. (QTCREATORBUG-10439)
 
 Changes since jom 1.0.12
 - Fix spurious "Can't start command" error.

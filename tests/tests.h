@@ -61,6 +61,7 @@ private slots:
     void comments();
     void fileNameMacros();
     void fileNameMacrosInDependents();
+    void wildcardsInDependencies();
     void windowsPathsInTargetName();
 
     // black-box tests

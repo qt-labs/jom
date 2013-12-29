@@ -856,6 +856,23 @@ void Tests::fileNameMacrosInDependents()
     QCOMPARE(target->m_dependents.takeFirst(), QLatin1String("C:\\MyProject\\tmp\\foo"));           // $(*R)
 }
 
+void Tests::wildcardsInDependencies()
+{
+    QVERIFY( openMakefile(QLatin1String("wildcardsInDependencies.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
+
+    DescriptionBlock *target = mkfile->firstTarget();
+    QVERIFY(target);
+    QCOMPARE(target->targetName(), QLatin1String("all"));
+
+    QCOMPARE(target->m_dependents.count(), 4);
+    QCOMPARE(target->m_dependents.at(0), QLatin1String("file#99.txt"));
+    QCOMPARE(target->m_dependents.at(1), QLatin1String("foo1.cpp"));
+    QCOMPARE(target->m_dependents.at(2), QLatin1String("foo3.cpp"));
+    QCOMPARE(target->m_dependents.at(3), QLatin1String("foo4.cpp"));
+}
+
 void Tests::windowsPathsInTargetName()
 {
     QVERIFY( openMakefile(QLatin1String("windowspaths.mk")) );

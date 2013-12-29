@@ -25,6 +25,7 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QDirIterator>
 
 namespace NMakeFile {
 
@@ -314,6 +315,30 @@ static QStringList splitTargetNames(const QString& str)
     return lst;
 }
 
+static QStringList expandWildcards(const QString &dirPath, const QStringList &lst)
+{
+    QStringList result;
+    result.reserve(lst.count());
+    const QRegExp rex(QLatin1String("[*?]"));
+    foreach (const QString &str, lst) {
+        if (str.contains(rex)) {
+            QDirIterator dit(dirPath, QStringList(str));
+            while (dit.hasNext()) {
+                QString filePath = dit.next();
+                if (filePath.startsWith(dirPath, Qt::CaseInsensitive)) {
+                    filePath.remove(0, dirPath.length());
+                    if (filePath.startsWith(QLatin1Char('/')))
+                       filePath.remove(0, 1);
+                }
+                result.append(filePath);
+            }
+        } else {
+            result.append(str);
+        }
+    }
+    return result;
+}
+
 void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int commandSeparatorPos)
 {
     QString target = m_line.left(separatorPos).trimmed();
@@ -345,6 +370,7 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
 
     const QStringList targets = splitTargetNames(target);
     QStringList dependents = splitTargetNames(value);
+    dependents = expandWildcards(m_makefile->dirPath(), dependents);
 
     // handle the special .SYNC dependents
     {
