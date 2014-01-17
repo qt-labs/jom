@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef PREPROCESSOR_H
+#define PREPROCESSOR_H
 
 #include <QRegExp>
 #include <QStack>
@@ -92,3 +94,5 @@ private:
 };
 
 } //namespace NMakeFile
+
+#endif // PREPROCESSOR_H

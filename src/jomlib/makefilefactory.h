@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef MAKEFILEFACTORY_H
+#define MAKEFILEFACTORY_H
 
 #include "processenvironment.h"
 #include <QtCore/QStringList>
@@ -58,3 +60,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // MAKEFILEFACTORY_H

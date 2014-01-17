@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef DEPENDENCYGRAPH_H
+#define DEPENDENCYGRAPH_H
 
 #include <QtCore/QHash>
 #include <QtCore/QSet>
@@ -71,3 +73,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // DEPENDENCYGRAPH_H

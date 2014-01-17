@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef COMMANDEXECUTOR_H
+#define COMMANDEXECUTOR_H
 
 #include "makefile.h"
 #include "process.h"
@@ -91,3 +93,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // COMMANDEXECUTOR_H

@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef TESTS_H
+#define TESTS_H
 
 #include <QtCore/QObject>
 #include <QtCore/QString>
@@ -93,3 +95,5 @@ private:
     NMakeFile::MakefileFactory* m_makefileFactory;
     QProcess *m_jomProcess;
 };
+
+#endif // TESTS_H

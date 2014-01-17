@@ -18,6 +18,9 @@
  **
  ****************************************************************************/
 
+#ifndef FILETIME_H
+#define FILETIME_H
+
 #include <QtGlobal>
 #include <QString>
 
@@ -56,3 +59,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // FILETIME_H

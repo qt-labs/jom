@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef EXCEPTION_H
+#define EXCEPTION_H
 
 #include <QString>
 
@@ -50,3 +52,5 @@ protected:
 };
 
 } // namespace NMakeFile
+
+#endif // EXCEPTION_H

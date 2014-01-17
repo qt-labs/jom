@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef PARSER_H
+#define PARSER_H
 
 #include <QRegExp>
 #include <QHash>
@@ -79,3 +81,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // PARSER_H

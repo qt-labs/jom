@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef MACROTABLE_H
+#define MACROTABLE_H
 
 #include "processenvironment.h"
 
@@ -79,3 +81,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // MACROTABLE_H

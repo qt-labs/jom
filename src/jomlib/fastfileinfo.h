@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef FASTFILEINFO_H
+#define FASTFILEINFO_H
 
 #include "filetime.h"
 
@@ -43,3 +45,5 @@ private:
 };
 
 } // NMakeFile
+
+#endif // FASTFILEINFO_H

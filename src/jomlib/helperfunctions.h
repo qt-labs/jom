@@ -18,7 +18,8 @@
  **
  ****************************************************************************/
 
-#pragma once
+#ifndef HELPERFUNCTIONS_H
+#define HELPERFUNCTIONS_H
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -71,3 +72,5 @@ QString trimLeft(const QString &s);
 
 QString qGetEnvironmentVariable(const wchar_t *lpName);
 bool qSetEnvironmentVariable(const QString &name, const QString &value);
+
+#endif // HELPERFUNCTIONS_H

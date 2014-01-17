@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef TARGETEXECUTOR_H
+#define TARGETEXECUTOR_H
 
 #include "makefile.h"
 #include <QEvent>
@@ -68,3 +70,5 @@ private:
 };
 
 } //namespace NMakeFile
+
+#endif // TARGETEXECUTOR_H

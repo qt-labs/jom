@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef APPLICATION_H
+#define APPLICATION_H
 
 #include <QtCore/QCoreApplication>
 
@@ -40,3 +42,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // APPLICATION_H

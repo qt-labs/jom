@@ -18,7 +18,8 @@
  **
  ****************************************************************************/
 
-#pragma once
+#ifndef MAKEFILELINEREADER_H
+#define MAKEFILELINEREADER_H
 
 #include <QtCore/QFile>
 #include <QtCore/QTextStream>
@@ -55,3 +56,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // MAKEFILELINEREADER_H

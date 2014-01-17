@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef OPTIONS_H
+#define OPTIONS_H
 
 #include <QtCore/QStringList>
 #include <QtCore/QSharedPointer>
@@ -77,3 +79,5 @@ public:
 extern GlobalOptions g_options;
 
 } // namespace NMakeFile
+
+#endif // OPTIONS_H

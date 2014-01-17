@@ -17,7 +17,9 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
-#pragma once
+
+#ifndef MAKEFILE_H
+#define MAKEFILE_H
 
 #include "fastfileinfo.h"
 #include "macrotable.h"
@@ -217,3 +219,5 @@ private:
 };
 
 } // namespace NMakeFile
+
+#endif // MAKEFILE_H
