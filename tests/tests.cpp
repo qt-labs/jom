@@ -17,6 +17,7 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
+
 #include "tests.h"
 
 #include <QTest>

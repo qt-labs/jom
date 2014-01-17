@@ -17,6 +17,7 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
+
 #include "macrotable.h"
 #include "exception.h"
 

@@ -17,6 +17,7 @@
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  **
  ****************************************************************************/
+
 #include "targetexecutor.h"
 #include "commandexecutor.h"
 #include "dependencygraph.h"
