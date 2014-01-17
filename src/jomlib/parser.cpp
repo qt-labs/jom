@@ -315,13 +315,40 @@ static QStringList splitTargetNames(const QString& str)
     return lst;
 }
 
+static bool containsWildcard(const QString &str)
+{
+    // Scan for * and ? but ignore patterns like $* and $?
+    enum State {
+        InitialState,
+        AfterDollarState,
+        AfterDollarParenState
+    };
+    State s = InitialState;
+    for (int i = 0; i < str.length(); ++i) {
+        const QChar ch = str.at(i);
+        if (ch == MacroTable::fileNameMacroMagicEscape) {
+            s = AfterDollarState;
+            continue;
+        }
+        if (s == AfterDollarState) {
+            s = (ch.unicode() == '(') ? AfterDollarParenState : InitialState;
+        } else if (s == AfterDollarParenState) {
+            s = InitialState;
+        } else {
+            const ushort c = ch.unicode();
+            if (c == '*' || c == '?')
+                return true;
+        }
+    }
+    return false;
+}
+
 static QStringList expandWildcards(const QString &dirPath, const QStringList &lst)
 {
     QStringList result;
     result.reserve(lst.count());
-    const QRegExp rex(QLatin1String("[*?]"));
     foreach (const QString &str, lst) {
-        if (str.contains(rex)) {
+        if (containsWildcard(str)) {
             QDirIterator dit(dirPath, QStringList(str));
             while (dit.hasNext()) {
                 QString filePath = dit.next();
