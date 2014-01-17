@@ -7,6 +7,7 @@ Changes since jom 1.0.13
 - Ignore macro assignments in inline files. (QTCREATORBUG-8452)
 - Yield error on unexpected !ENDIF directive.
 - Support wildcards in dependency lines. (QTCREATORBUG-10439)
+- Use IcrediBuild's BuildConsole instead of the XGE interface in ibjom.
 
 Changes since jom 1.0.12
 - Fix spurious "Can't start command" error.
