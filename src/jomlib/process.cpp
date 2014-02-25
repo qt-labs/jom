@@ -433,13 +433,13 @@ void Process::onProcessFinished()
     safelyCloseHandle(d->hProcessThread);
     printBufferedOutput();
     m_state = NotRunning;
-    DWORD exitCode = d->exitCode;
+    m_exitCode = d->exitCode;
     d->exitCode = STILL_ACTIVE;
 
     //### for now we assume a crash if exit code is less than -1 or the magic number
-    bool crashed = (exitCode == 0xf291 || (int)exitCode < 0);
+    const bool crashed = (m_exitCode == 0xf291 || m_exitCode < 0);
     ExitStatus exitStatus = crashed ? Process::CrashExit : Process::NormalExit;
-    emit finished(exitCode, exitStatus);
+    emit finished(m_exitCode, exitStatus);
 }
 
 bool Process::waitForFinished()
