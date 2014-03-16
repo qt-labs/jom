@@ -1,6 +1,7 @@
 This is the changelog for jom 1.0.14, the parallel make tool.
 
 Changes since jom 1.0.13
+- Fix exit code forwarding. (QTCREATORBUG-11556)
 - Fix file name macro modifers for $** and $?. (QTCREATORBUG-6932)
 - Fix equal signs in semicolon command syntax. (QTCREATORBUG-7942)
 - Fix error line numbers for inline files. (QTCREATORBUG-8451)
