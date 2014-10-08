@@ -159,19 +159,15 @@ inline void quoteStringIfNeeded(QString& str)
     }
 }
 
-static QString joinMacroValues(const QStringList &macroValues, bool mustQuote)
+static QString joinFileNameMacroValues(const QStringList &macroValues)
 {
     QString result;
     for (int i = 0; i < macroValues.count(); ++i) {
         if (i > 0)
             result += QLatin1Char(' ');
-        if (mustQuote) {
-            QString value = macroValues.at(i);
-            quoteStringIfNeeded(value);
-            result += value;
-        } else  {
-            result += macroValues.at(i);
-        }
+        QString value = macroValues.at(i);
+        quoteStringIfNeeded(value);
+        result += value;
     }
     return result;
 }
@@ -212,10 +208,8 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
         if (ch == '(') {
             int substitutionIdx = -1;
             bool substitutionStateKnown = false;
-            bool fileNameReturned;
             QStringList macroValues = getFileNameMacroValues(str.midRef(idx+1), replacementLength,
-                                                             depIdx, dependentsForbidden,
-                                                             fileNameReturned);
+                                                             depIdx, dependentsForbidden);
             if (macroValues.isEmpty()) {
                 str.remove(idx - 1, replacementLength + 3);
             } else {
@@ -279,18 +273,16 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
                     replacementLength = macroInvokationEnd - idx - 2;  // because we're later adding 4
                 }
 
-                const QString macroValue = joinMacroValues(macroValues, fileNameReturned);
+                const QString macroValue = joinFileNameMacroValues(macroValues);
                 str.replace(idx - 1, replacementLength + 4, macroValue);
             }
         } else {
-            bool fileNameReturned;
             QStringList macroValues = getFileNameMacroValues(str.midRef(idx), replacementLength,
-                                                             depIdx, dependentsForbidden,
-                                                             fileNameReturned);
+                                                             depIdx, dependentsForbidden);
             if (macroValues.isEmpty()) {
                 str.remove(idx - 1, replacementLength + 1);
             } else {
-                const QString macroValue = joinMacroValues(macroValues, fileNameReturned);
+                const QString macroValue = joinFileNameMacroValues(macroValues);
                 str.replace(idx - 1, replacementLength + 1, macroValue);
             }
         }
@@ -298,12 +290,10 @@ void DescriptionBlock::expandFileNameMacros(QString& str, int depIdx, bool depen
 }
 
 QStringList DescriptionBlock::getFileNameMacroValues(const QStringRef& str, int& replacementLength,
-                                                     int depIdx, bool dependentsForbidden,
-                                                     bool& returnsFileName)
+                                                     int depIdx, bool dependentsForbidden)
 {
     QStringList results;
     QStringList dependentCandidates;
-    returnsFileName = false;
     if (!dependentsForbidden) {
         if (depIdx == -1)
             dependentCandidates = m_dependents;
@@ -315,7 +305,6 @@ QStringList DescriptionBlock::getFileNameMacroValues(const QStringRef& str, int&
         case '@':
             replacementLength = 1;
             results += targetName();
-            returnsFileName = true;
             break;
         case '*':
             {
@@ -326,7 +315,6 @@ QStringList DescriptionBlock::getFileNameMacroValues(const QStringRef& str, int&
                     replacementLength = 2;
                     results = dependentCandidates;
                 } else {
-                    returnsFileName = true;
                     replacementLength = 1;
                     QString tgt = targetName();
                     int idx = tgt.lastIndexOf(QLatin1Char('.'));

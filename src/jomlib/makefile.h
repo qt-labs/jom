@@ -107,7 +107,7 @@ private:
     void expandFileNameMacros(Command& command, int depIdx);
     void expandFileNameMacros(QString& str, int depIdx, bool dependentsForbidden);
     QStringList getFileNameMacroValues(const QStringRef& str, int& replacementLength, int depIdx,
-                                       bool dependentsForbidden, bool& returnsFileName);
+                                       bool dependentsForbidden);
 
 private:
     QString m_targetName;

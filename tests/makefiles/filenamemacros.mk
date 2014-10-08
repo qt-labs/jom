@@ -15,11 +15,14 @@ Football:
 LolCatExtractorManager.tar.gz:
 	@echo $*
 
-manyDependents: Timmy Jimmy Kenny Eric Kyle Stan
+dependencyWithSpaces: foo "broken arrow" bar
+        @echo $$** $**
+
+manyDependents: "Mr. Garrison" Timmy Jimmy Kenny Eric Kyle Stan
 	@echo $**
 	@echo $?
 
-manyDependentsSingleExecution: Timmy Jimmy Kenny Eric Kyle Stan
+manyDependentsSingleExecution: "Mr. Garrison" Timmy Jimmy Kenny Eric Kyle Stan
 	!@echo $**
 	!@echo $?
 

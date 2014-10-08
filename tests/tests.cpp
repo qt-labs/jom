@@ -669,16 +669,19 @@ void Tests::fileNameMacros()
     target->expandFileNameMacros();
     QVERIFY(!target->m_commands.isEmpty());
     command = target->m_commands.takeFirst();
-    QCOMPARE(command.m_commandLine, QLatin1String("echo Timmy Jimmy Kenny Eric Kyle Stan"));
+    QCOMPARE(command.m_commandLine,
+             QLatin1String("echo \"Mr. Garrison\" Timmy Jimmy Kenny Eric Kyle Stan"));
     QVERIFY(!target->m_commands.isEmpty());
     command = target->m_commands.takeFirst();
-    QCOMPARE(command.m_commandLine, QLatin1String("echo Timmy Jimmy Kenny Eric Kyle Stan"));
+    QCOMPARE(command.m_commandLine,
+             QLatin1String("echo \"Mr. Garrison\" Timmy Jimmy Kenny Eric Kyle Stan"));
 
     target = mkfile->target(QLatin1String("manyDependentsSingleExecution"));
     QVERIFY(target);
     target->expandFileNameMacros();
-    QCOMPARE(target->m_commands.size(), 12);
-    QStringList lst = QStringList() << "Timmy" << "Jimmy" << "Kenny" << "Eric" << "Kyle" << "Stan";
+    QCOMPARE(target->m_commands.size(), 14);
+    QStringList lst = QStringList() << "\"Mr. Garrison\"" << "Timmy" << "Jimmy" << "Kenny" << "Eric"
+                                    << "Kyle" << "Stan";
     lst.append(lst);
     foreach (const QString& str, lst) {
         QVERIFY(!target->m_commands.isEmpty());
