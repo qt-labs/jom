@@ -1096,7 +1096,7 @@ void Tests::ignoreExitCodes()
 
 void Tests::inlineFiles()
 {
-    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "init" << "tests", "blackbox/inlineFiles"));
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "tests", "blackbox/inlineFiles"));
     QCOMPARE(m_jomProcess->exitCode(), 0);
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_basic_expected.txt", "blackbox/inlineFiles/output/test_basic.txt"));
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_multipleFiles_expected.txt", "blackbox/inlineFiles/output/test_multipleFiles.txt"));

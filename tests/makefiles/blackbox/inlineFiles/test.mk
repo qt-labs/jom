@@ -15,7 +15,7 @@ init:
 post_check:
 	@output\post_check.cmd
 
-test_basic:
+test_basic: init
 	copy << output\test_basic.txt
 line 1
 !ifndef UNDEFINED_MACRO
@@ -24,7 +24,7 @@ line 2
 line 3
 <<
 
-test_fileRemoval:
+test_fileRemoval: init
 	echo @if exist << exit /b 1 >> output\post_check.cmd
 some random text
 <<
@@ -35,12 +35,12 @@ some random text
 some random text
 <<NOKEEP
 
-test_keepFile:
+test_keepFile: test_fileRemoval
 	echo @if not exist <<"output\named inline file3.txt" exit /b 1 >> output\post_check.cmd
 some random text
 <<KEEP
 
-test_multipleFiles:
+test_multipleFiles: init
 	type << << >output\test_multipleFiles.txt
 one
 two
@@ -49,7 +49,7 @@ three
 four
 <<
 
-test_escaping:
+test_escaping: init
     copy << output\test_escaping.txt
 InRoot$$$$Sections
 # This line should be there.
