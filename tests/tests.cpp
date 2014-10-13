@@ -1101,6 +1101,8 @@ void Tests::inlineFiles()
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_basic_expected.txt", "blackbox/inlineFiles/output/test_basic.txt"));
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_multipleFiles_expected.txt", "blackbox/inlineFiles/output/test_multipleFiles.txt"));
     QVERIFY(fileContentsEqual("blackbox/inlineFiles/test_escaping_expected.txt", "blackbox/inlineFiles/output/test_escaping.txt"));
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "post_check", "blackbox/inlineFiles"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
 }
 
 void Tests::unicodeFiles_data()
