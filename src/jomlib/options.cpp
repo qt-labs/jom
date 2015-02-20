@@ -180,14 +180,14 @@ bool Options::handleCommandLineOption(const QStringList &originalArguments, QStr
                 makeflags.append(QLatin1Char('L'));
                 arg.remove(0, 6);
                 showLogo = false;
-            } else if (upperArg.startsWith(QLatin1String("DUMPGRAPH"))) {
-                arg.remove(0, 9);
-                dumpDependencyGraph = true;
-                showLogo = false;
             } else if (upperArg.startsWith(QLatin1String("DUMPGRAPHDOT"))) {
                 arg.remove(0, 12);
                 dumpDependencyGraph = true;
                 dumpDependencyGraphDot = true;
+                showLogo = false;
+            } else if (upperArg.startsWith(QLatin1String("DUMPGRAPH"))) {
+                arg.remove(0, 9);
+                dumpDependencyGraph = true;
                 showLogo = false;
             } else if (upperArg.startsWith(QLatin1String("DEBUG"))) {
                 arg.remove(0, 5);
