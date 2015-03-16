@@ -796,6 +796,13 @@ void Tests::fileNameMacros()
     QCOMPARE(command.m_commandLine, QLatin1String("echo C:\\somewhere\\substitutionWithColon"));
     command = target->m_commands.at(1);
     QCOMPARE(command.m_commandLine, QLatin1String("echo C:\\somewhere\\substitutionWithColon"));
+
+    target = mkfile->target("nonexistenttarget");
+    QVERIFY(target);
+    target->expandFileNameMacros();
+    QCOMPARE(target->m_commands.count(), 1);
+    command = target->m_commands.at(0);
+    QCOMPARE(command.m_commandLine, QLatin1String("echo $? filenamemacros.mk"));
 }
 
 void Tests::fileNameMacrosInDependents()

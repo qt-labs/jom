@@ -2,7 +2,7 @@ all: Footb$$@ LolCatExtractorManager.tar.gz manyDependents \
      manyDependentsSingleExecution manyDependentsSubstitutedNames \
      manyDependentsInlineFile \
      gen_init generated.txt gen_cleanup macros.mk $(MAKEDIR)\infrules.mk \
-     root_dir\substitutionWithColon
+     root_dir\substitutionWithColon nonexistenttarget
 
 # $** and $? are undefined here and should be evaluated to empty strings.
 Football:
@@ -96,3 +96,6 @@ force:
 root_dir\substitutionWithColon:
     @echo $(@:root_dir=C:\somewhere)
     @echo $(@R:root_dir=C:\somewhere)
+
+nonexistenttarget: filenamemacros.mk
+    @echo $$? $?

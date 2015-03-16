@@ -330,16 +330,9 @@ QStringList DescriptionBlock::getFileNameMacroValues(const QStringRef& str, int&
                     throw Exception(QLatin1String("Macro $? not allowed here."));
                 }
                 replacementLength = 1;
-                const FileTime currentTimeStamp = FileTime::currentTime();
                 FileTime targetTimeStamp = FastFileInfo(targetName()).lastModified();
-                if (!targetTimeStamp.isValid())
-                    targetTimeStamp = currentTimeStamp;
-
                 foreach (const QString& dependentName, dependentCandidates) {
                     FileTime dependentTimeStamp = FastFileInfo(dependentName).lastModified();
-                    if (!dependentTimeStamp.isValid())
-                        dependentTimeStamp = currentTimeStamp;
-
                     if (targetTimeStamp <= dependentTimeStamp) {
                         results += dependentName;
                     }
