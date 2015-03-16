@@ -1,7 +1,8 @@
 all: Footb$$@ LolCatExtractorManager.tar.gz manyDependents \
      manyDependentsSingleExecution manyDependentsSubstitutedNames \
      manyDependentsInlineFile \
-     gen_init generated.txt gen_cleanup macros.mk $(MAKEDIR)\infrules.mk
+     gen_init generated.txt gen_cleanup macros.mk $(MAKEDIR)\infrules.mk \
+     root_dir\substitutionWithColon
 
 # $** and $? are undefined here and should be evaluated to empty strings.
 Football:
