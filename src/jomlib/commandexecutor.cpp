@@ -121,7 +121,7 @@ void CommandExecutor::onProcessFinished(int exitCode, Process::ExitStatus exitSt
         exitCode = 2;
 
     const Command &currentCommand = m_pTarget->m_commands.at(m_currentCommandIdx);
-    if (exitCode > currentCommand.m_maxExitCode) {
+    if (static_cast<unsigned int>(exitCode) > currentCommand.m_maxExitCode) {
         QByteArray msg = "jom: ";
         msg += QDir::toNativeSeparators(QDir::currentPath() + QDir::separator()).toLocal8Bit();
         msg += m_pTarget->makefile()->fileName().toLocal8Bit();

@@ -21,9 +21,12 @@
 #include "makefile.h"
 #include "exception.h"
 #include "options.h"
+
 #include <QFileInfo>
 #include <QDebug>
 #include <QDir>
+
+#include <limits>
 
 namespace NMakeFile {
 
@@ -76,13 +79,14 @@ void Command::evaluateModifiers()
         if (firstChar == QLatin1Char('-')) {
             m_commandLine.remove(0, 1);
             int i = 0;
+            // Read the (optional) number after the minus.
             while (i < m_commandLine.length() && m_commandLine.at(i).isDigit())
                 ++i;
             if (i > 0) {
-                m_maxExitCode = (unsigned char)m_commandLine.mid(0, i).toInt();
+                m_maxExitCode = m_commandLine.mid(0, i).toUInt();
                 m_commandLine.remove(0, i);
             } else {
-                m_maxExitCode = 255;
+                m_maxExitCode = std::numeric_limits<unsigned int>::max();
             }
         } else if (firstChar == QLatin1Char('@')) {
             m_commandLine.remove(0, 1);

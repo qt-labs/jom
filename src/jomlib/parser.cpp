@@ -28,6 +28,8 @@
 #include <QDir>
 #include <QDirIterator>
 
+#include <limits>
+
 namespace NMakeFile {
 
 Parser::Parser()
@@ -469,7 +471,7 @@ void Parser::parseCommandLine(const QString& cmdLine, QList<Command>& commands, 
 {
     commands.append(Command());
     Command& cmd = commands.last();
-    if (m_ignoreExitCodes) cmd.m_maxExitCode = 255;
+    if (m_ignoreExitCodes) cmd.m_maxExitCode = std::numeric_limits<unsigned int>::max();
     cmd.m_silent = m_silentCommands;
 
     if (inferenceRule) {

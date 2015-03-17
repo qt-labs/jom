@@ -52,7 +52,7 @@ public:
 
     QString m_commandLine;
     QList<InlineFile*> m_inlineFiles;
-    unsigned char m_maxExitCode;  // greatest allowed exit code
+    unsigned int m_maxExitCode;  // greatest allowed exit code
     bool m_silent;
     bool m_singleExecution;       // Execute this command for each dependent, if the command contains $** or $?.
 };

@@ -33,6 +33,8 @@
 #include <options.h>
 #include <exception.h>
 
+#include <limits>
+
 using namespace NMakeFile;
 
 void Tests::initTestCase()
@@ -361,7 +363,7 @@ void Tests::dotDirectives()
     QVERIFY(target != 0);
     QCOMPARE(target->m_commands.count(), 2);
     cmd = target->m_commands.takeFirst();
-    QCOMPARE(int(cmd.m_maxExitCode), 255);
+    QCOMPARE(cmd.m_maxExitCode, std::numeric_limits<unsigned int>::max());
 
     target = mkfile->target(QLatin1String("ignorance_three"));
     QVERIFY(target != 0);
@@ -580,13 +582,13 @@ void Tests::commandModifiers()
     QCOMPARE(cmd.m_silent, true);
 
     cmd = target->m_commands.at(1);
-    QCOMPARE((int)cmd.m_maxExitCode, 255);
+    QCOMPARE(cmd.m_maxExitCode, std::numeric_limits<unsigned int>::max());
 
     cmd = target->m_commands.at(2);
-    QCOMPARE((int)cmd.m_maxExitCode, 5);
+    QCOMPARE(cmd.m_maxExitCode, 5u);
 
     cmd = target->m_commands.at(3);
-    QCOMPARE((int)cmd.m_maxExitCode, 15);
+    QCOMPARE(cmd.m_maxExitCode, 15u);
 
     cmd = target->m_commands.at(4);
     QCOMPARE(cmd.m_singleExecution, true);
@@ -1101,7 +1103,10 @@ void Tests::ignoreExitCodes()
     QVERIFY(runJom(QStringList() << "/f" << "blackbox\\ignoreExitCodes\\test.mk"));
     QCOMPARE(m_jomProcess->exitCode(), 0);
     QByteArray output = m_jomProcess->readAllStandardOutput();
-    QVERIFY(output.contains("Failing command was properly ignored"));
+    QVERIFY(output.contains("---SUCCESS---"));
+
+    QVERIFY(runJom(QStringList() << "/f" << "blackbox\\ignoreExitCodes\\test.mk" << "test2"));
+    QCOMPARE(m_jomProcess->exitCode(), 2);
 }
 
 void Tests::inlineFiles()

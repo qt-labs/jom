@@ -1,11 +1,17 @@
 # test ignore exit codes in make files
-#
-# http://msdn.microsoft.com/en-us/library/1whxt45w.aspx
 
-all: test_ignoreExitCode
-	@echo ---SUCCESS---
+test1: testNonexistentCommand testExitCode1 testExitCode2
+    @echo ---SUCCESS---
 
-test_ignoreExitCode:
-	-nonexistent_command
-	@echo Failing command was properly ignored
+testNonexistentCommand:
+    -nonexistent_command 2>NUL
 
+testExitCode1:
+    -cmd /k exit 1
+
+testExitCode2:
+    -1cmd /k exit 1
+
+# target test2 is supposed to fail
+test2:
+    -6cmd /k exit 7
