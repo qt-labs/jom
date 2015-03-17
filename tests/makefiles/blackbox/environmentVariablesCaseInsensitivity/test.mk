@@ -1,3 +1,3 @@
-PATH = $(PATH);C:\Zort
+VAR1 = $(VAR1);C:\Zort
 first:
-    echo PATH $(PATH) %%PATH%%
+    echo VAR1 $(VAR1) %%VAR1%%

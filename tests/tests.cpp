@@ -1080,13 +1080,13 @@ void Tests::environmentVariables()
 
 void Tests::environmentVariablesCaseInsensitivity()
 {
-    const QStringList environment = QStringList() << "Path=foobidoo";
+    const QStringList environment = QStringList() << "Var1=foobidoo";
     m_jomProcess->setEnvironment(environment);
-    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/sl" << "PATH=C:\\Narf",
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/sl" << "VAR1=C:\\Narf",
                    "blackbox/environmentVariablesCaseInsensitivity"));
     QCOMPARE(m_jomProcess->exitCode(), 0);
     const QByteArray output = m_jomProcess->readAllStandardOutput().trimmed();
-    QCOMPARE(output.data(), "PATH C:\\Narf C:\\Narf");
+    QCOMPARE(output.data(), "VAR1 C:\\Narf C:\\Narf");
 }
 
 void Tests::environmentVariablesInCommands()
