@@ -77,9 +77,14 @@ void Command::evaluateModifiers()
             break;
         const QCharRef firstChar = m_commandLine[0];
         if (firstChar == QLatin1Char('-')) {
-            m_commandLine.remove(0, 1);
-            int i = 0;
+            // Remove all minus characters. Yes, nmake allows commands like -----7dir
+            int i = 1;
+            for (; i < m_commandLine.length() && m_commandLine.at(i) == QLatin1Char('-'); ++i)
+                ;
+            m_commandLine.remove(0, i);
+
             // Read the (optional) number after the minus.
+            i = 0;
             while (i < m_commandLine.length() && m_commandLine.at(i).isDigit())
                 ++i;
             if (i > 0) {
