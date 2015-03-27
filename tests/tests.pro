@@ -20,3 +20,4 @@ contains(QMAKE_CXXFLAGS_RELEASE, -MT) {
 HEADERS += tests.h
 SOURCES += tests.cpp
 
+OTHER_FILES += $$files(makefiles/*, true)
