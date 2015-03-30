@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
             fflush(stdout);
         }
     } catch (const Exception &e) {
-        fprintf(stderr, "jom: %s", qPrintable(e.message()));
+        fprintf(stderr, "jom: %s\n", qPrintable(e.message()));
         result = 2;
     }
     return result;
