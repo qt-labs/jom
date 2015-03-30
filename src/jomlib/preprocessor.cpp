@@ -130,6 +130,10 @@ QString Preprocessor::readLine()
             continue;
         break;
     }
+
+    if (line.isNull() && conditionalDepth())
+        error(QLatin1Literal("Missing !ENDIF directive."));
+
     return line;
 }
 
