@@ -18,47 +18,30 @@
  **
  ****************************************************************************/
 
-#ifndef FILETIME_H
-#define FILETIME_H
+#ifndef JOBCLIENTACQUIRETHREAD_H
+#define JOBCLIENTACQUIRETHREAD_H
 
-#include <QtGlobal>
-#include <QString>
+#include <QObject>
+#include <QSystemSemaphore>
 
 namespace NMakeFile {
 
-class FileTime
+class JobClientAcquireHelper : public QObject
 {
+    Q_OBJECT
 public:
-    FileTime();
+    explicit JobClientAcquireHelper(QSystemSemaphore *semaphore);
 
-    typedef quint64 InternalType;
+public slots:
+    void acquire();
 
-    FileTime(const InternalType &ft)
-        : m_fileTime(ft)
-    { }
-
-    bool operator < (const FileTime &rhs) const;
-    bool operator <= (const FileTime &rhs) const
-    {
-        return operator < (rhs) || operator == (rhs);
-    }
-    bool operator == (const FileTime &rhs) const
-    {
-        return m_fileTime == rhs.m_fileTime;
-    }
-
-    void clear();
-    bool isValid() const;
-    QString toString() const;
-    InternalType internalRepresentation() const { return m_fileTime; }
-
-    static FileTime currentTime();
+signals:
+    void acquired();
 
 private:
-    friend class FastFileInfo;
-    InternalType m_fileTime;
+    QSystemSemaphore *m_semaphore;
 };
 
 } // namespace NMakeFile
 
-#endif // FILETIME_H
+#endif // JOBCLIENTACQUIRETHREAD_H

@@ -18,47 +18,52 @@
  **
  ****************************************************************************/
 
-#ifndef FILETIME_H
-#define FILETIME_H
+#ifndef JOBCLIENT_H
+#define JOBCLIENT_H
 
-#include <QtGlobal>
-#include <QString>
+#include "processenvironment.h"
+#include <QObject>
+
+QT_BEGIN_NAMESPACE
+class QSystemSemaphore;
+class QThread;
+QT_END_NAMESPACE
 
 namespace NMakeFile {
 
-class FileTime
+class JobClientAcquireHelper;
+
+class JobClient : public QObject
 {
+    Q_OBJECT
 public:
-    FileTime();
+    explicit JobClient(ProcessEnvironment *environment, QObject *parent = 0);
+    ~JobClient();
 
-    typedef quint64 InternalType;
+    bool start();
+    void asyncAcquire();
+    bool isAcquiring() const;
+    void release();
+    QString errorString() const;
 
-    FileTime(const InternalType &ft)
-        : m_fileTime(ft)
-    { }
+signals:
+    void startAcquisition();
+    void acquired();
 
-    bool operator < (const FileTime &rhs) const;
-    bool operator <= (const FileTime &rhs) const
-    {
-        return operator < (rhs) || operator == (rhs);
-    }
-    bool operator == (const FileTime &rhs) const
-    {
-        return m_fileTime == rhs.m_fileTime;
-    }
-
-    void clear();
-    bool isValid() const;
-    QString toString() const;
-    InternalType internalRepresentation() const { return m_fileTime; }
-
-    static FileTime currentTime();
+private slots:
+    void onHelperAcquired();
 
 private:
-    friend class FastFileInfo;
-    InternalType m_fileTime;
+    void setError(const QString &errorMessage);
+
+    ProcessEnvironment *m_environment;
+    QString m_errorString;
+    QSystemSemaphore *m_semaphore;
+    QThread *m_acquireThread;
+    JobClientAcquireHelper *m_acquireHelper;
+    bool m_isAcquiring;
 };
 
 } // namespace NMakeFile
 
-#endif // FILETIME_H
+#endif // JOBCLIENT_H

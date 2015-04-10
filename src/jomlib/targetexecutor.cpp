@@ -21,6 +21,7 @@
 #include "targetexecutor.h"
 #include "commandexecutor.h"
 #include "dependencygraph.h"
+#include "jobclient.h"
 #include "options.h"
 #include "exception.h"
 
@@ -31,25 +32,29 @@
 namespace NMakeFile {
 
 TargetExecutor::TargetExecutor(const ProcessEnvironment &environment)
-:   m_bAborted(false),
-    m_allCommandsSuccessfullyExecuted(true)
+    : m_environment(environment)
+    , m_jobClient(0)
+    , m_bAborted(false)
+    , m_allCommandsSuccessfullyExecuted(true)
 {
     m_makefile = 0;
     m_depgraph = new DependencyGraph();
 
-    for (int i=0; i < g_options.maxNumberOfJobs; ++i) {
-        CommandExecutor* process = new CommandExecutor(this, environment);
-        if (i == 0) process->setBufferedOutput(false);
-        connect(process, SIGNAL(finished(CommandExecutor*, bool)), this, SLOT(onChildFinished(CommandExecutor*, bool)));
-        m_availableProcesses.append(process);
-        m_processes.append(process);
-    }
+    for (int i = 0; i < g_options.maxNumberOfJobs; ++i) {
+        CommandExecutor* executor = new CommandExecutor(this, environment);
+        connect(executor, SIGNAL(finished(CommandExecutor*, bool)),
+                this, SLOT(onChildFinished(CommandExecutor*, bool)));
 
-    foreach (CommandExecutor *process, m_processes)
-        foreach (CommandExecutor *otherProcess, m_processes)
-            if (process != otherProcess)
-                connect(process, SIGNAL(environmentChanged(const ProcessEnvironment &)),
-                        otherProcess, SLOT(setEnvironment(const ProcessEnvironment &)));
+        foreach (CommandExecutor *other, m_processes) {
+            connect(executor, SIGNAL(environmentChanged(const ProcessEnvironment &)),
+                    other, SLOT(setEnvironment(const ProcessEnvironment &)));
+            connect(other, SIGNAL(environmentChanged(const ProcessEnvironment &)),
+                    executor, SLOT(setEnvironment(const ProcessEnvironment &)));
+        }
+        m_processes.append(executor);
+    }
+    m_availableProcesses = m_processes;
+    m_availableProcesses.first()->setBufferedOutput(false);
 }
 
 TargetExecutor::~TargetExecutor()
@@ -57,16 +62,22 @@ TargetExecutor::~TargetExecutor()
     delete m_depgraph;
 }
 
-bool TargetExecutor::hasPendingTargets() const
-{
-    return !m_pendingTargets.isEmpty() || m_availableProcesses.count() < m_processes.count();
-}
-
 void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 {
     m_bAborted = false;
     m_allCommandsSuccessfullyExecuted = true;
     m_makefile = mkfile;
+    m_jobAcquisitionCount = 0;
+    m_nextTarget = 0;
+
+    if (!m_jobClient) {
+        m_jobClient = new JobClient(&m_environment, this);
+        if (!m_jobClient->start()) {
+            const QString msg = QLatin1String("Can't connect to job server: %1");
+            throw Exception(msg.arg(m_jobClient->errorString()));
+        }
+        connect(m_jobClient, &JobClient::acquired, this, &TargetExecutor::buildNextTarget);
+    }
 
     DescriptionBlock* descblock;
     if (targets.isEmpty()) {
@@ -93,42 +104,62 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
         else
             m_depgraph->dump();
         finishBuild(0);
+        return;
     }
+
+    QMetaObject::invokeMethod(this, "startProcesses", Qt::QueuedConnection);
 }
 
 void TargetExecutor::startProcesses()
 {
+    if (m_bAborted || m_jobClient->isAcquiring() || m_availableProcesses.isEmpty())
+        return;
+
+    try {
+        if (!m_nextTarget)
+            findNextTarget();
+
+        if (m_nextTarget) {
+            if (numberOfRunningProcesses() == 0) {
+                // Use up the internal job token.
+                buildNextTarget();
+            } else {
+                // Acquire a job token from the server. Will call buildNextTarget() when done.
+                m_jobAcquisitionCount++;
+                m_jobClient->asyncAcquire();
+            }
+        } else {
+            if (numberOfRunningProcesses() == 0) {
+                if (m_pendingTargets.isEmpty()) {
+                    finishBuild(0);
+                } else {
+                    m_depgraph->clear();
+                    m_makefile->invalidateTimeStamps();
+                    m_depgraph->build(m_pendingTargets.takeFirst());
+                    QMetaObject::invokeMethod(this, "startProcesses", Qt::QueuedConnection);
+                }
+            }
+        }
+    } catch (Exception &e) {
+        m_bAborted = true;
+        fprintf(stderr, "Error: %s\n", qPrintable(e.message()));
+        finishBuild(1);
+    }
+}
+
+void TargetExecutor::buildNextTarget()
+{
+    Q_ASSERT(m_nextTarget);
+
     if (m_bAborted)
         return;
 
     try {
-        DescriptionBlock* nextTarget = 0;
-        while (!m_availableProcesses.isEmpty() && (nextTarget = m_depgraph->findAvailableTarget())) {
-            if (nextTarget->m_commands.isEmpty()) {
-                // Short cut for targets without commands.
-                // We're not really interested in these.
-                m_depgraph->removeLeaf(nextTarget);
-                continue;
-            }
-
-            CommandExecutor* process = m_availableProcesses.takeFirst();
-            process->start(nextTarget);
-            if (m_bAborted)
-                return;
-        }
-
-        if (m_availableProcesses.count() == g_options.maxNumberOfJobs) {
-            if (m_pendingTargets.isEmpty()) {
-                finishBuild(0);
-            } else {
-                m_depgraph->clear();
-                nextTarget = m_pendingTargets.takeFirst();
-                m_makefile->invalidateTimeStamps();
-                m_depgraph->build(nextTarget);
-                QMetaObject::invokeMethod(this, "startProcesses", Qt::QueuedConnection);
-            }
-        }
-    } catch (Exception &e) {
+        CommandExecutor *executor = m_availableProcesses.takeFirst();
+        executor->start(m_nextTarget);
+        m_nextTarget = 0;
+        QMetaObject::invokeMethod(this, "startProcesses", Qt::QueuedConnection);
+    } catch (const Exception &e) {
         m_bAborted = true;
         fprintf(stderr, "Error: %s\n", qPrintable(e.message()));
         finishBuild(1);
@@ -153,11 +184,28 @@ void TargetExecutor::finishBuild(int exitCode)
     emit finished(exitCode);
 }
 
+void TargetExecutor::findNextTarget()
+{
+    forever {
+        m_nextTarget = m_depgraph->findAvailableTarget();
+        if (m_nextTarget && m_nextTarget->m_commands.isEmpty()) {
+            // Short cut for targets without commands.
+            m_depgraph->removeLeaf(m_nextTarget);
+        } else {
+            return;
+        }
+    }
+}
+
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFailed)
 {
     Q_CHECK_PTR(executor->target());
     FastFileInfo::clearCacheForFile(executor->target()->targetName());
     m_depgraph->removeLeaf(executor->target());
+    if (m_jobAcquisitionCount > 0) {
+        m_jobClient->release();
+        m_jobAcquisitionCount--;
+    }
     m_availableProcesses.append(executor);
     if (!executor->isBufferedOutputSet()) {
         executor->setBufferedOutput(true);
@@ -185,6 +233,11 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFail
     }
 
     QMetaObject::invokeMethod(this, "startProcesses", Qt::QueuedConnection);
+}
+
+int TargetExecutor::numberOfRunningProcesses() const
+{
+    return m_processes.count() - m_availableProcesses.count();
 }
 
 void TargetExecutor::removeTempFiles()

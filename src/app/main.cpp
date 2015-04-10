@@ -19,6 +19,7 @@
  ****************************************************************************/
 #include "application.h"
 #include <helperfunctions.h>
+#include <jobserver.h>
 #include <options.h>
 #include <parser.h>
 #include <preprocessor.h>
@@ -107,6 +108,42 @@ QStringList getCommandLineArguments()
     return commandLineArguments;
 }
 
+static bool initJobServer(const Application &app, ProcessEnvironment *environment,
+                          JobServer **outJobServer)
+{
+    bool mustCreateJobServer = false;
+    if (app.isSubJOM()) {
+        int inheritedMaxNumberOfJobs = g_options.maxNumberOfJobs;
+        const QString str = environment->value(QLatin1String("_JOMJOBCOUNT_"));
+        if (!str.isEmpty()) {
+            bool ok;
+            const int n = str.toInt(&ok);
+            if (ok && n > 0)
+                inheritedMaxNumberOfJobs = n;
+        }
+        if (g_options.isMaxNumberOfJobsSet
+                && g_options.maxNumberOfJobs != inheritedMaxNumberOfJobs)
+        {
+            fprintf(stderr, "jom: Overriding inherited number of jobs %d with %d. "
+                    "New jobserver created.\n",
+                    inheritedMaxNumberOfJobs, g_options.maxNumberOfJobs);
+            mustCreateJobServer = true;
+        }
+    } else {
+        mustCreateJobServer = true;
+    }
+
+    if (mustCreateJobServer) {
+        JobServer *jobServer = new JobServer(environment);
+        *outJobServer = jobServer;
+        if (!jobServer->start(g_options.maxNumberOfJobs)) {
+            fprintf(stderr, "Cannot start job server: %s.", qPrintable(jobServer->errorString()));
+            return false;
+        }
+    }
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     int result = 0;
@@ -152,15 +189,11 @@ int main(int argc, char* argv[])
             mkfile->dumpTargets();
         }
 
-        // ### HACK: pass the modified MAKEFLAGS variable to our environment.
-        if (g_options.isMaxNumberOfJobsSet) {
-            ProcessEnvironment environment = mkfile->macroTable()->environment();
-            const QString makeFlags = mkfile->macroTable()->macroValue(QLatin1String("MAKEFLAGS"));
-            environment[QLatin1String("MAKEFLAGS")] = makeFlags;
-            MacroTable *mt = const_cast<MacroTable *>(mkfile->macroTable());
-            mt->setEnvironment(environment);
-            qSetEnvironmentVariable(QLatin1String("MAKEFLAGS"), makeFlags);
-        }
+        JobServer *jobServer = 0;
+        ProcessEnvironment processEnvironment = mkfile->macroTable()->environment();
+        if (!initJobServer(app, &processEnvironment, &jobServer))
+            return 3;
+        QScopedPointer<JobServer> jobServerDeleter(jobServer);
 
         if (options->printWorkingDir) {
             printf("jom: Entering directory '%s\n",
@@ -168,7 +201,7 @@ int main(int argc, char* argv[])
             fflush(stdout);
         }
 
-        TargetExecutor executor(mkfile->macroTable()->environment());
+        TargetExecutor executor(processEnvironment);
         QObject::connect(&executor, SIGNAL(finished(int)), &app, SLOT(exit(int)));
         g_pTargetExecutor = &executor;
         executor.apply(mkfile.data(), mf.activeTargets());

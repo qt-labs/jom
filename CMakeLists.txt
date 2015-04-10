@@ -42,6 +42,8 @@ set(JOM_MOCS
     src/jomlib/targetexecutor.h
     src/jomlib/process.h
     src/jomlib/commandexecutor.h
+    src/jomlib/jobclient.h
+    src/jomlib/jobclientacquirehelper.h
 )
 
 set(JOM_SRCS
@@ -52,6 +54,9 @@ set(JOM_SRCS
     src/jomlib/filetime.cpp
     src/jomlib/helperfunctions.cpp
     src/jomlib/iocompletionport.cpp
+    src/jomlib/jobclient.cpp
+    src/jomlib/jobclientacquirehelper.cpp
+    src/jomlib/jobserver.cpp
     src/jomlib/macrotable.cpp
     src/jomlib/makefile.cpp
     src/jomlib/makefilefactory.cpp

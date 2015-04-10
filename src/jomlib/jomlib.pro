@@ -57,6 +57,7 @@ HEADERS +=  \
     fastfileinfo.h \
     filetime.h \
     helperfunctions.h \
+    jobserver.h \
     makefile.h \
     makefilefactory.h \
     makefilelinereader.h \
@@ -70,12 +71,16 @@ HEADERS +=  \
     targetexecutor.h \
     commandexecutor.h \
     process.h \
-    processenvironment.h
+    processenvironment.h \
+    iocompletionport.h \
+    jobclient.h \
+    jobclientacquirehelper.h
 
 SOURCES += \
     fastfileinfo.cpp \
     filetime.cpp \
     helperfunctions.cpp \
+    jobserver.cpp \
     macrotable.cpp \
     makefile.cpp \
     makefilefactory.cpp \
@@ -88,7 +93,9 @@ SOURCES += \
     ppexpr_grammar.cpp \
     ppexprparser.cpp \
     targetexecutor.cpp \
-    commandexecutor.cpp
+    commandexecutor.cpp \
+    jobclient.cpp \
+    jobclientacquirehelper.cpp
 
 OTHER_FILES += \
     ppexpr.g \

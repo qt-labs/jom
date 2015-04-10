@@ -33,6 +33,7 @@ namespace NMakeFile {
 
 class CommandExecutor;
 class DependencyGraph;
+class JobClient;
 
 class TargetExecutor : public QObject {
     Q_OBJECT
@@ -42,28 +43,32 @@ public:
 
     void apply(Makefile* mkfile, const QStringList& targets);
     void removeTempFiles();
-    bool hasPendingTargets() const;
 
 signals:
     void finished(int exitCode);
 
-public slots:
-   void startProcesses();
-
 private slots:
+    void startProcesses();
+    void buildNextTarget();
     void onChildFinished(CommandExecutor*, bool commandFailed);
 
 private:
+    int numberOfRunningProcesses() const;
     void waitForProcesses();
     void finishBuild(int exitCode);
+    void findNextTarget();
 
 private:
+    ProcessEnvironment m_environment;
     Makefile* m_makefile;
     DependencyGraph* m_depgraph;
     QList<DescriptionBlock*> m_pendingTargets;
+    JobClient *m_jobClient;
     bool m_bAborted;
+    int m_jobAcquisitionCount;
     QList<CommandExecutor*> m_availableProcesses;
     QList<CommandExecutor*> m_processes;
+    DescriptionBlock *m_nextTarget;
     bool m_allCommandsSuccessfullyExecuted;
 };
 

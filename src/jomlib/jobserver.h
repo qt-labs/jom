@@ -18,47 +18,34 @@
  **
  ****************************************************************************/
 
-#ifndef FILETIME_H
-#define FILETIME_H
+#ifndef JOBSERVER_H
+#define JOBSERVER_H
 
-#include <QtGlobal>
-#include <QString>
+#include "processenvironment.h"
+
+QT_BEGIN_NAMESPACE
+class QSystemSemaphore;
+QT_END_NAMESPACE
 
 namespace NMakeFile {
 
-class FileTime
+class JobServer
 {
 public:
-    FileTime();
+    JobServer(ProcessEnvironment *environment);
+    ~JobServer();
 
-    typedef quint64 InternalType;
-
-    FileTime(const InternalType &ft)
-        : m_fileTime(ft)
-    { }
-
-    bool operator < (const FileTime &rhs) const;
-    bool operator <= (const FileTime &rhs) const
-    {
-        return operator < (rhs) || operator == (rhs);
-    }
-    bool operator == (const FileTime &rhs) const
-    {
-        return m_fileTime == rhs.m_fileTime;
-    }
-
-    void clear();
-    bool isValid() const;
-    QString toString() const;
-    InternalType internalRepresentation() const { return m_fileTime; }
-
-    static FileTime currentTime();
+    bool start(int maxNumberOfJobs);
+    QString errorString() const;
 
 private:
-    friend class FastFileInfo;
-    InternalType m_fileTime;
+    void setError(const QString &errorMessage);
+
+    QString m_errorString;
+    QSystemSemaphore *m_semaphore;
+    ProcessEnvironment *m_environment;
 };
 
 } // namespace NMakeFile
 
-#endif // FILETIME_H
+#endif // JOBSERVER_H
