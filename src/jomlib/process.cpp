@@ -33,6 +33,7 @@
 #include <QMetaType>
 #include <QMutex>
 #include <QTimer>
+#include <QWinEventNotifier>
 
 #include <qt_windows.h>
 #include <errno.h>
@@ -134,6 +135,7 @@ public:
     OutputChannel stderrChannel;
     QMutex bufferedOutputModeSwitchMutex;
     DWORD exitCode;
+    QWinEventNotifier deathNotifier;
 };
 
 Process::Process(QObject *parent)
@@ -152,6 +154,8 @@ Process::Process(QObject *parent)
         qRegisterMetaType<ProcessState>("Process::ProcessState");
         runtime()->start();
     }
+    connect(&d->deathNotifier, &QWinEventNotifier::activated,
+            this, &Process::tryToRetrieveExitCode);
 }
 
 Process::~Process()
@@ -403,6 +407,8 @@ void Process::start(const QString &commandLine)
     safelyCloseHandle(d->stdoutPipe.hWrite);
     safelyCloseHandle(d->stderrPipe.hWrite);
 
+    d->deathNotifier.setHandle(pi.hProcess);
+    d->deathNotifier.setEnabled(true);
     d->hProcess = pi.hProcess;
     d->hProcessThread = pi.hThread;
     m_state = Running;
@@ -425,6 +431,7 @@ void Process::onProcessFinished()
     if (m_state != Running)
         return;
 
+    d->deathNotifier.setEnabled(false);
     iocp()->unregisterObserver(&d->stdoutChannel);
     iocp()->unregisterObserver(&d->stderrChannel);
     safelyCloseHandle(d->stdoutPipe.hRead);
