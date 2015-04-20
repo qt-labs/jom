@@ -32,6 +32,7 @@
 #include <QMap>
 #include <QMetaType>
 #include <QMutex>
+#include <QSysInfo>
 #include <QTimer>
 #include <QWinEventNotifier>
 
@@ -277,11 +278,7 @@ void Process::setEnvironment(const ProcessEnvironment &environment)
 
 static bool runsWindowsVistaOrGreater()
 {
-    OSVERSIONINFO osvi = {0};
-    osvi.dwOSVersionInfoSize = sizeof(osvi);
-    if (!GetVersionEx(&osvi))
-        qErrnoWarning("GetVersionEx failed.");
-    return osvi.dwMajorVersion >= 6;
+    return QSysInfo::windowsVersion() >= QSysInfo::WV_VISTA;
 }
 
 enum PipeType { InputPipe, OutputPipe };
