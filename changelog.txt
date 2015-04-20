@@ -1,6 +1,7 @@
 This is the changelog for jom 1.0.15, the parallel make tool.
 
 Changes since jom 1.0.14
+- Fix potential hang on error in a sub-jom.
 - Yield error on missing !endif directives (QTCREATORBUG-14211).
 - Fix ignoring exit codes greater than 255.
 - Fix /DUMPGRAPHDOT option (QTCREATORBUG-14004).
