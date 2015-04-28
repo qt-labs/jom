@@ -530,8 +530,8 @@ int yy_flex_debug = 0;
 char *yytext;
 /****************************************************************************
  **
- ** Copyright (C) 2008-2014 Digia Plc and/or its subsidiary(-ies).
- ** Contact: http://www.qt-project.org/legal
+ ** Copyright (C) 2015 The Qt Company Ltd.
+ ** Contact: http://www.qt.io/licensing/
  **
  ** This file is part of the jom project on Trolltech Labs.
  **
