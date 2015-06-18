@@ -47,7 +47,6 @@
 
 namespace NMakeFile {
 
-Q_GLOBAL_STATIC(IoCompletionPort, iocp)
 Q_GLOBAL_STATIC(QElapsedTimer, runtime)
 
 struct Pipe
@@ -161,8 +160,8 @@ Process::Process(QObject *parent)
 
 Process::~Process()
 {
-    iocp()->unregisterObserver(&d->stdoutChannel);
-    iocp()->unregisterObserver(&d->stderrChannel);
+    IoCompletionPort::instance()->unregisterObserver(&d->stdoutChannel);
+    IoCompletionPort::instance()->unregisterObserver(&d->stderrChannel);
 
     if (m_state == Running)
         qWarning("Process: destroyed while process still running.");
@@ -362,8 +361,8 @@ void Process::start(const QString &commandLine)
     if (!setupPipe(d->stderrPipe, &sa, OutputPipe))
         qFatal("Cannot setup pipe for stderr.");
 
-    iocp()->registerObserver(&d->stdoutChannel, d->stdoutPipe.hRead);
-    iocp()->registerObserver(&d->stderrChannel, d->stderrPipe.hRead);
+    IoCompletionPort::instance()->registerObserver(&d->stdoutChannel, d->stdoutPipe.hRead);
+    IoCompletionPort::instance()->registerObserver(&d->stderrChannel, d->stderrPipe.hRead);
     if (!d->startRead()) {
         m_state = NotRunning;
         emit error(FailedToStart);
@@ -429,8 +428,8 @@ void Process::onProcessFinished()
         return;
 
     d->deathNotifier.setEnabled(false);
-    iocp()->unregisterObserver(&d->stdoutChannel);
-    iocp()->unregisterObserver(&d->stderrChannel);
+    IoCompletionPort::instance()->unregisterObserver(&d->stdoutChannel);
+    IoCompletionPort::instance()->unregisterObserver(&d->stderrChannel);
     safelyCloseHandle(d->stdoutPipe.hRead);
     safelyCloseHandle(d->stderrPipe.hRead);
     safelyCloseHandle(d->hProcess);
