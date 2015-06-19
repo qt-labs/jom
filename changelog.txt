@@ -1,6 +1,7 @@
 This is the changelog for jom 1.0.16, the parallel make tool.
 
 Changes since jom 1.0.15
+- Fix occasional hang on exit (QTCREATORBUG-14600).
 
 Changes since jom 1.0.14
 - Fix potential hang on error in a sub-jom.
