@@ -12,13 +12,22 @@ build_pass:CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
 }
 
-isEmpty(MSYSPATH):MSYSPATH=C:\\msys
-!exists($$MSYSPATH): MSYSPATH=D:\\msys
+isEmpty(MSYSPATH):MSYSPATH=C:/msys
+!exists($$MSYSPATH): MSYSPATH=D:/msys
+!exists($$MSYSPATH): MSYSPATH=C:/msys64
+MSYS_BIN_PATHS = 1.0/bin usr/bin
 !exists($$MSYSPATH) {
     !build_pass:message("Can't locate path to MSYS. This is needed for flex.")
-} else:!exists($$MSYSPATH\\1.0\\bin\\flex.exe) {
-    !build_pass:message("MSYSPATH is set but flex cannot be found.")
 } else {
+    for(bin_path, MSYS_BIN_PATHS) {
+        test_flex_bin = $$MSYSPATH/$$bin_path/flex.exe
+        exists($$test_flex_bin):FLEX_BIN = $$test_flex_bin
+    }
+    isEmpty(FLEX_BIN) {
+        !build_pass:message("MSYSPATH is set but flex cannot be found.")
+    }
+}
+!isEmpty(FLEX_BIN) {
     # One special extra compiler for ppexpr.l because
     # msys flex does not understand backslashes and I have no way
     # to translate the slashes in ${QMAKE_FILE_IN}. /me rolls eyes...
@@ -26,7 +35,7 @@ isEmpty(MSYSPATH):MSYSPATH=C:\\msys
     flex.name = flex ppexpr.l
     flex.input = PPEXPR_FLEX_FILE
     flex.output = ${QMAKE_FILE_BASE}-lex.inc
-    flex.commands = $$MSYSPATH\\1.0\\bin\\flex.exe --noline $$PPEXPR_FLEX_FILE
+    flex.commands = $$FLEX_BIN --noline $$PPEXPR_FLEX_FILE
     flex.CONFIG += no_link explicit_dependencies
     QMAKE_EXTRA_COMPILERS += flex
 
