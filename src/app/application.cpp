@@ -19,6 +19,8 @@
  ****************************************************************************/
 
 #include "application.h"
+#include <iocompletionport.h>
+
 #include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
 #include <QtCore/QSet>
@@ -74,6 +76,11 @@ Application::Application(int &argc, char **argv)
 {
     QString exeName = QFileInfo(QCoreApplication::applicationFilePath()).fileName();
     m_bIsSubJOM = NMakeFile::isSubJOM(exeName);
+}
+
+Application::~Application()
+{
+    IoCompletionPort::destroyInstance();
 }
 
 void Application::exit(int exitCode)

@@ -32,6 +32,8 @@ public:
     static Application *instance() { return static_cast<Application*>(QCoreApplication::instance()); }
 
     Application(int &argc, char **argv);
+    ~Application();
+
     const bool isSubJOM() const { return m_bIsSubJOM; }
 
 public slots:

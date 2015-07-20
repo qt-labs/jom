@@ -37,8 +37,8 @@ public:
 class IoCompletionPort : protected QThread
 {
 public:
-    IoCompletionPort();
-    ~IoCompletionPort();
+    static IoCompletionPort *instance();
+    static void destroyInstance();
 
     void registerObserver(IoCompletionPortObserver *notifier, HANDLE hFile);
     void unregisterObserver(IoCompletionPortObserver *notifier);
@@ -47,6 +47,10 @@ protected:
     void run();
 
 private:
+    IoCompletionPort();
+    ~IoCompletionPort();
+
+    static IoCompletionPort *m_instance;
     HANDLE hPort;
     QSet<IoCompletionPortObserver *> observers;
     QMutex mutex;

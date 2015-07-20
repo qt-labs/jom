@@ -22,6 +22,8 @@
 
 namespace NMakeFile {
 
+IoCompletionPort *IoCompletionPort::m_instance = 0;
+
 IoCompletionPort::IoCompletionPort()
     : hPort(INVALID_HANDLE_VALUE)
 {
@@ -39,6 +41,19 @@ IoCompletionPort::~IoCompletionPort()
     PostQueuedCompletionStatus(hPort, 0, NULL, NULL);
     QThread::wait();
     CloseHandle(hPort);
+}
+
+IoCompletionPort *IoCompletionPort::instance()
+{
+    if (!m_instance)
+        m_instance = new IoCompletionPort;
+    return m_instance;
+}
+
+void IoCompletionPort::destroyInstance()
+{
+    delete m_instance;
+    m_instance = 0;
 }
 
 void IoCompletionPort::registerObserver(IoCompletionPortObserver *observer, HANDLE hFile)
