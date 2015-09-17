@@ -1,4 +1,8 @@
-This is the changelog for jom 1.0.16, the parallel make tool.
+This is the changelog for jom 1.1.0, the parallel make tool.
+
+Changes since jom 1.0.16
+- Restrict the number of parallel jobs in recursively called instances
+  similar to GNU make's jobserver (QTCREATORBUG-10846).
 
 Changes since jom 1.0.15
 - Fix occasional hang on exit (QTCREATORBUG-14600).
