@@ -185,6 +185,8 @@ public:
     const QString &dirPath() const;
     void setOptions(Options *o) { m_options = o; }
     const Options* options() const { return m_options; }
+    void setParallelExecutionDisabled(bool disabled) { m_parallelExecutionDisabled = disabled; }
+    bool isParallelExecutionDisabled() const { return m_parallelExecutionDisabled; }
 
     void setMacroTable(MacroTable *mt) { m_macroTable = mt; }
     const MacroTable* macroTable() const { return m_macroTable; }
@@ -216,6 +218,7 @@ private:
     Options* m_options;
     QSet<const InferenceRule*> m_batchModeRules;
     QMultiHash<const InferenceRule*, DescriptionBlock*> m_batchModeTargets;
+    bool m_parallelExecutionDisabled;
 };
 
 } // namespace NMakeFile

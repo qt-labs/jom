@@ -201,6 +201,11 @@ int main(int argc, char* argv[])
             fflush(stdout);
         }
 
+        if (mkfile->isParallelExecutionDisabled()) {
+            printf("jom: parallel job execution disabled for %s\n", qPrintable(mkfile->fileName()));
+            g_options.maxNumberOfJobs = 1;
+        }
+
         TargetExecutor executor(processEnvironment);
         QObject::connect(&executor, SIGNAL(finished(int)), &app, SLOT(exit(int)));
         g_pTargetExecutor = &executor;

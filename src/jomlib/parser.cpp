@@ -421,6 +421,11 @@ void Parser::parseDescriptionBlock(int separatorPos, int separatorLength, int co
     }
 
     foreach (const QString& t, targets) {
+        if (t == QStringLiteral(".NOTPARALLEL")) {
+            m_makefile->setParallelExecutionDisabled(true);
+            continue;
+        }
+
         DescriptionBlock* descblock = m_makefile->target(t);
         DescriptionBlock::AddCommandsState canAddCommands = separatorLength > 1 ? DescriptionBlock::ACSEnabled : DescriptionBlock::ACSDisabled;
         if (descblock) {

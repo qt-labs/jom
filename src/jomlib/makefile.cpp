@@ -401,7 +401,8 @@ Makefile::Makefile(const QString &fileName)
 :   m_fileName(fileName),
     m_macroTable(0),
     m_firstTarget(0),
-    m_options(0)
+    m_options(0),
+    m_parallelExecutionDisabled(false)
 {
 }
 
