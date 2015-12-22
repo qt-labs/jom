@@ -19,9 +19,3 @@ contains(QMAKE_CXXFLAGS_RELEASE, -MT) {
 INCLUDEPATH += ../jomlib
 HEADERS = application.h
 SOURCES = main.cpp application.cpp
-
-!CONFIG(static) {
-    !build_pass:warning("You're building jom with a shared Qt.")
-    LIBS += user32.lib
-}
-
