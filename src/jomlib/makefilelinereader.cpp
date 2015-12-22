@@ -101,15 +101,16 @@ QString MakefileLineReader::readLine_impl_local8bit()
     QString line;
     bool multiLineAppendix = false;
     bool endOfLineReached = false;
-    qint64 bytesRead;
+    size_t bytesRead;
     do {
         do {
             m_nLineNumber++;
-            bytesRead = m_file.readLine(m_lineBuffer, m_nLineBufferSize - 1);
-            if (bytesRead <= 0)
+            const qint64 n = m_file.readLine(m_lineBuffer, m_nLineBufferSize - 1);
+            if (n <= 0)
                 return QString();
 
-            while (m_lineBuffer[bytesRead-1] != '\n') {
+            bytesRead = n;
+            while (m_lineBuffer[bytesRead - 1] != '\n') {
                 if (m_file.atEnd()) {
                     // The file didn't end with a newline.
                     // Code below relies on having a trailing newline.
@@ -131,7 +132,7 @@ QString MakefileLineReader::readLine_impl_local8bit()
         m_lineBuffer[bytesRead] = '\0';
 
         char* buf = m_lineBuffer;
-        int bufLength = bytesRead;
+        int bufLength = static_cast<int>(bytesRead);
         if (multiLineAppendix) {
             // skip leading whitespace characters
             while (*buf && (*buf == ' ' || *buf == '\t'))

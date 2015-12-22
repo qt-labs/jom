@@ -142,7 +142,7 @@ static int yywrap()
 }
 
 <STATE_STRING>{
-    [^\n\"]+    yylval.str->append(yytext, yyleng);
+    [^\n\"]+    yylval.str->append(yytext, static_cast<int>(yyleng));
     \"\"        yylval.str->append('\"');
     \"          {
                     BEGIN(INITIAL);
@@ -151,7 +151,7 @@ static int yywrap()
 }
 
 <STATE_SHELLCOMMAND>{
-    [^\n\x5b\x5d\x5e]+    yylval.str->append(yytext, yyleng);
+    [^\n\x5b\x5d\x5e]+    yylval.str->append(yytext, static_cast<int>(yyleng));
     "^["        yylval.str->append('[');
     "^]"        yylval.str->append(']');
     "]"         {

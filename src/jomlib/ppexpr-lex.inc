@@ -1010,7 +1010,7 @@ YY_RULE_SETUP
 
 case 34:
 YY_RULE_SETUP
-yylval.str->append(yytext, yyleng);
+yylval.str->append(yytext, static_cast<int>(yyleng));
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
@@ -1026,7 +1026,7 @@ YY_RULE_SETUP
 
 case 37:
 YY_RULE_SETUP
-yylval.str->append(yytext, yyleng);
+yylval.str->append(yytext, static_cast<int>(yyleng));
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
