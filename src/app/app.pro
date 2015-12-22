@@ -1,9 +1,8 @@
 TEMPLATE = app
 DESTDIR = ../../bin
 QT = core
-CONFIG += console depend_includepath
+CONFIG += console
 DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
-DEFINES += QT_USE_FAST_CONCATENATION QT_USE_FAST_OPERATOR_PLUS
 TARGET = jom
 CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)

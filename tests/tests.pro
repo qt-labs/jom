@@ -1,6 +1,5 @@
 TEMPLATE = app
 QT += testlib
-CONFIG += depend_includepath
 INCLUDEPATH += ../src/jomlib
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
