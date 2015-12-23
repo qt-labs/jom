@@ -36,10 +36,6 @@
 #include <windows.h>
 #include <Tlhelp32.h>
 
-#ifndef __in
-#define __in
-#endif
-
 using namespace NMakeFile;
 
 const int nVersionMajor = 1;
@@ -86,8 +82,9 @@ static void showUsage()
 
 static TargetExecutor* g_pTargetExecutor = 0;
 
-BOOL WINAPI ConsoleCtrlHandlerRoutine(__in  DWORD /*dwCtrlType*/)
+BOOL WINAPI ConsoleCtrlHandlerRoutine(DWORD dwCtrlType)
 {
+    Q_UNUSED(dwCtrlType);
     fprintf(stderr, "jom terminated by user (pid=%u)\n", QCoreApplication::applicationPid());
     fflush(stderr);
 
