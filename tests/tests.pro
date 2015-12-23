@@ -1,7 +1,6 @@
 TEMPLATE = app
 QT += testlib
 INCLUDEPATH += ../src/jomlib
-DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
 CONFIG(debug, debug|release) {
     TARGET = testsd

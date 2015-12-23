@@ -43,7 +43,7 @@ void Tests::initTestCase()
     m_preprocessor = 0;
     m_jomProcess = new QProcess(this);
     m_oldCurrentPath = QDir::currentPath();
-    QDir::setCurrent(SRCDIR "makefiles");
+    QDir::setCurrent(QFINDTESTDATA("makefiles"));
 }
 
 void Tests::cleanupTestCase()
