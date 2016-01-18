@@ -80,6 +80,8 @@ void Tests::includeFiles()
     QCOMPARE(macroTable.macroValue("INCLUDE5"), QLatin1String("TRUE"));
     QCOMPARE(macroTable.macroValue("INCLUDE6"), QLatin1String("TRUE"));
     QCOMPARE(macroTable.macroValue("INCLUDE7"), QLatin1String("TRUE"));
+    QCOMPARE(macroTable.macroValue("INCLUDE8"), QLatin1String("TRUE"));
+    QCOMPARE(macroTable.macroValue("INCLUDE9"), QLatin1String("TRUE"));
 }
 
 void Tests::includeCycle()

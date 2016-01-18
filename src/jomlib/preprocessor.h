@@ -55,6 +55,7 @@ private:
     void basicReadLine(QString& line);
     bool parseMacro(const QString& line);
     bool parsePreprocessingDirective(const QString& line);
+    QString findIncludeFile(const QString &filePathToInclude);
     bool isPreprocessingDirective(const QString& line, QString& directive, QString& value);
     void skipUntilNextMatchingConditional();
     void error(const QString& msg);

@@ -62,36 +62,6 @@ bool Preprocessor::openFile(const QString& fileName)
 
 bool Preprocessor::internalOpenFile(QString fileName)
 {
-    if (fileName.startsWith(QLatin1Char('"')) && fileName.endsWith(QLatin1Char('"')))
-        fileName = fileName.mid(1, fileName.length() - 2);
-    else if (fileName.startsWith(QLatin1Char('<')) && fileName.endsWith(QLatin1Char('>'))) {
-        fileName = fileName.mid(1, fileName.length() - 2);
-        QString includeVar = m_macroTable->macroValue(QLatin1String("INCLUDE")).replace(QLatin1Char('\t'), QLatin1Char(' '));
-        QStringList includeDirs = includeVar.split(QLatin1Char(';'), QString::SkipEmptyParts);
-        QString fullFileName;
-        foreach (const QString& includeDir, includeDirs) {
-            fullFileName = includeDir + QDir::separator() + fileName;
-            if (QFile::exists(fullFileName)) {
-                fileName = fullFileName;
-                break;
-            }
-        }
-    } else {
-        QString fullFileName = fileName;
-        QStack<TextFile> tmpStack;
-        while (m_fileStack.count() >= 1) {
-            if (QFile::exists(fullFileName)) {
-                fileName = fullFileName;
-                break;
-            }
-            TextFile textFile = m_fileStack.pop();
-            tmpStack.push(textFile);
-            fullFileName = textFile.fileDirectory + QDir::separator() + fileName;
-        }
-        while (!tmpStack.isEmpty())
-            m_fileStack.push(tmpStack.pop());
-    }
-
     // make file name absolute for safe cycle detection
     const QString origFileName = fileName;
     QFileInfo fileInfo(fileName);
@@ -227,7 +197,7 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
     } else if (directive == QLatin1String("MESSAGE")) {
         puts(qPrintable(value));
     } else if (directive == QLatin1String("INCLUDE")) {
-        internalOpenFile(value);
+        internalOpenFile(findIncludeFile(value));
     } else if (directive == QLatin1String("IF")) {
         bool followElseBranch = evaluateExpression(value) == 0;
         enterConditional(followElseBranch);
@@ -286,6 +256,47 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
     }
 
     return true;
+}
+
+QString Preprocessor::findIncludeFile(const QString &filePathToInclude)
+{
+    QString filePath = filePathToInclude;
+    bool angleBrackets = false;
+    if (filePath.startsWith(QLatin1Char('<')) && filePath.endsWith(QLatin1Char('>'))) {
+        angleBrackets = true;
+        filePath.chop(1);
+        filePath.remove(0, 1);
+    }
+    removeDoubleQuotes(filePath);
+
+    QFileInfo fi(filePath);
+    if (fi.exists())
+        return fi.absoluteFilePath();
+
+    // Search recursively through all directories of all parent makefiles.
+    for (QStack<TextFile>::const_iterator it = m_fileStack.constEnd();
+         it != m_fileStack.constBegin();) {
+        --it;
+        fi.setFile(it->fileDirectory + QLatin1Char('/') + filePath);
+        if (fi.exists())
+            return fi.absoluteFilePath();
+    }
+
+    if (angleBrackets) {
+        // Search through all directories in the INCLUDE macro.
+        const QString includeVar = m_macroTable->macroValue(QLatin1String("INCLUDE"))
+                .replace(QLatin1Char('\t'), QLatin1Char(' '));
+        const QStringList includeDirs = includeVar.split(QLatin1Char(';'), QString::SkipEmptyParts);
+        foreach (const QString& includeDir, includeDirs) {
+            fi.setFile(includeDir + QLatin1Char('/') + filePath);
+            if (fi.exists())
+                return fi.absoluteFilePath();
+        }
+    }
+
+    const QString msg = QLatin1String("File %1 cannot be found.");
+    error(msg.arg(filePathToInclude));
+    return QString();
 }
 
 bool Preprocessor::isPreprocessingDirective(const QString& line, QString& directive, QString& value)
