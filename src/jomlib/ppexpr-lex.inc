@@ -522,24 +522,29 @@ int yy_flex_debug = 0;
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
 /****************************************************************************
- **
- ** Copyright (C) 2015 The Qt Company Ltd.
- ** Contact: http://www.qt.io/licensing/
- **
- ** This file is part of the jom project on Trolltech Labs.
- **
- ** This file may be used under the terms of the GNU General Public
- ** License version 2.0 or 3.0 as published by the Free Software Foundation
- ** and appearing in the file LICENSE.GPL included in the packaging of
- ** this file.  Please review the following information to ensure GNU
- ** General Public Licensing requirements will be met:
- ** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
- ** http://www.gnu.org/copyleft/gpl.html.
- **
- ** This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
- ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- **
- ****************************************************************************/
+**
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of jom.
+**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+****************************************************************************/
 #define YY_NO_UNISTD_H 1
 /*%option nodefault*/
 /*%option header-file="ppexpr-lex.h"*/
