@@ -7,7 +7,9 @@ sub_tests.depends = sub_jomlib sub_app
 SUBDIRS = sub_app sub_jomlib sub_tests
 
 OTHER_FILES = \
-    changelog.txt
+    changelog.txt \
+    LICENSE.GPL \
+    README
 
 defineTest(minQtVersion) {
     maj = $$1
