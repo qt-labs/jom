@@ -37,6 +37,14 @@ We assume that everything we do happens in the folder X:\build-jom
     X:\build-jom\> nmake test
     ...
 
+== Environment variables ==
+
+Like nmake, jom reads default command line arguments from an environment variable: JOMFLAGS.
+If JOMFLAGS is not set, MAKEFLAGS is read.
+This is useful to set up separate flags for nmake and jom, e.g.
+    set MAKEFLAGS=L
+    set JOMFLAGS=Lj8
+
 == .SYNC dependents ==
 
 You can use the .SYNC directive on the right side of a description

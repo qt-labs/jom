@@ -105,7 +105,9 @@ BOOL WINAPI ConsoleCtrlHandlerRoutine(DWORD dwCtrlType)
 QStringList getCommandLineArguments()
 {
     QStringList commandLineArguments = qApp->arguments().mid(1);
-    QString makeFlags = qGetEnvironmentVariable(L"MAKEFLAGS");
+    QString makeFlags = qGetEnvironmentVariable(L"JOMFLAGS");
+    if (makeFlags.isEmpty())
+        makeFlags = qGetEnvironmentVariable(L"MAKEFLAGS");
     if (!makeFlags.isEmpty())
         commandLineArguments.prepend(QLatin1Char('/') + makeFlags);
     return commandLineArguments;
