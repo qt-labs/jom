@@ -354,10 +354,17 @@ static bool containsWildcard(const QString &str)
 static QStringList expandWildcards(const QString &dirPath, const QStringList &lst)
 {
     QStringList result;
-    result.reserve(lst.count());
-    foreach (const QString &str, lst) {
+    foreach (QString str, lst) {
         if (containsWildcard(str)) {
-            QDirIterator dit(dirPath, QStringList(str));
+            QString path = dirPath;
+            str = QDir::fromNativeSeparators(str);
+            int idx = str.lastIndexOf(QLatin1Char('/'));
+            if (idx != -1) {
+                path += QLatin1Char('/') + str.left(idx);
+                str.remove(0, idx + 1);
+            }
+
+            QDirIterator dit(path, QStringList(str));
             while (dit.hasNext()) {
                 QString filePath = dit.next();
                 if (filePath.startsWith(dirPath, Qt::CaseInsensitive)) {
@@ -365,7 +372,7 @@ static QStringList expandWildcards(const QString &dirPath, const QStringList &ls
                     if (filePath.startsWith(QLatin1Char('/')))
                        filePath.remove(0, 1);
                 }
-                result.append(filePath);
+                result.append(QDir::toNativeSeparators(filePath));
             }
         } else {
             result.append(str);

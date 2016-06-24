@@ -891,6 +891,13 @@ void Tests::wildcardsInDependencies()
     QCOMPARE(target->m_dependents.at(1), QLatin1String("foo1.cpp"));
     QCOMPARE(target->m_dependents.at(2), QLatin1String("foo3.cpp"));
     QCOMPARE(target->m_dependents.at(3), QLatin1String("foo4.cpp"));
+
+    target = mkfile->target("more");
+    QVERIFY(target);
+    QCOMPARE(target->m_dependents.count(), 3);
+    QCOMPARE(target->m_dependents.at(0), QLatin1String("subdir\\foo1.cpp"));
+    QCOMPARE(target->m_dependents.at(1), QLatin1String("subdir\\foo2.cpp"));
+    QCOMPARE(target->m_dependents.at(2), QLatin1String("subdir\\foo4.cpp"));
 }
 
 void Tests::windowsPathsInTargetName()
