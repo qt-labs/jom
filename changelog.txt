@@ -1,4 +1,15 @@
-This is the changelog for jom 1.1.0, the parallel make tool.
+This is the changelog for jom 1.1.1, the parallel make tool.
+
+Changes since jom 1.1.0
+- Added the special .NOTPARALLEL target that disables parallel build for the
+  containing makefile.
+- Fixed glitches in !include directives. Includes like <"foo.mk"> were not
+  possible. Includes like "foo.mk" did not recursively search through parent
+  makefiles directories.
+- Introduced the JOMFLAGS environment variable. This is a MAKEFLAGS pendant.
+  JOMFLAGS is useful to set up separate flags for nmake and jom.
+- Renamed ibjom.cmd to ibjom.bat for consistency.
+- Added xgejom.bat, a wrapper for the IncrediBuild XGE interface.
 
 Changes since jom 1.0.16
 - Restrict the number of parallel jobs in recursively called instances
