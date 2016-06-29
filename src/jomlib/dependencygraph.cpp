@@ -281,23 +281,25 @@ void DependencyGraph::removeLeaf(Node* node)
     deleteNode(node);
 }
 
-DescriptionBlock* DependencyGraph::findAvailableTarget()
+DescriptionBlock *DependencyGraph::findAvailableTarget(bool ignoreTimeStamps)
 {
     if (m_leavesSet.isEmpty())
         return 0;
 
-    // remove all leaves that are not up-to-date
-    QList<Node*> upToDateNodes;
-    while (m_bDirtyLeaves) {
-        m_bDirtyLeaves = false;
-        foreach (Node *leaf, m_leavesList)
-            if (leaf->state != Node::ExecutingState && isTargetUpToDate(leaf->target))
-                upToDateNodes.append(leaf);
-        foreach (Node *leaf, upToDateNodes) {
-            displayNodeBuildInfo(leaf, true);
-            removeLeaf(leaf);
+    if (!ignoreTimeStamps) {
+        // remove all leaves that are not up-to-date
+        QList<Node *> upToDateNodes;
+        while (m_bDirtyLeaves) {
+            m_bDirtyLeaves = false;
+            foreach (Node *leaf, m_leavesList)
+                if (leaf->state != Node::ExecutingState && isTargetUpToDate(leaf->target))
+                    upToDateNodes.append(leaf);
+            foreach (Node *leaf, upToDateNodes) {
+                displayNodeBuildInfo(leaf, true);
+                removeLeaf(leaf);
+            }
+            upToDateNodes.clear();
         }
-        upToDateNodes.clear();
     }
 
     // apply inference rules separated by makefiles
@@ -314,7 +316,7 @@ DescriptionBlock* DependencyGraph::findAvailableTarget()
     foreach (Node *leaf, m_leavesList) {
         if (leaf->state != Node::ExecutingState) {
             leaf->state = Node::ExecutingState;
-            displayNodeBuildInfo(leaf, false);
+            displayNodeBuildInfo(leaf, ignoreTimeStamps ? isTargetUpToDate(leaf->target) : false);
             return leaf->target;
         }
     }

@@ -42,7 +42,7 @@ public:
     void build(DescriptionBlock* target);
     bool isEmpty() const;
     void removeLeaf(DescriptionBlock* target);
-    DescriptionBlock* findAvailableTarget();
+    DescriptionBlock *findAvailableTarget(bool ignoreTimeStamps);
     void dump();
     void dotDump();
     void clear();

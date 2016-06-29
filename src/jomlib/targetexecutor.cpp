@@ -192,7 +192,7 @@ void TargetExecutor::finishBuild(int exitCode)
 void TargetExecutor::findNextTarget()
 {
     forever {
-        m_nextTarget = m_depgraph->findAvailableTarget();
+        m_nextTarget = m_depgraph->findAvailableTarget(m_makefile->options()->buildAllTargets);
         if (m_nextTarget && m_nextTarget->m_commands.isEmpty()) {
             // Short cut for targets without commands.
             m_depgraph->removeLeaf(m_nextTarget);
