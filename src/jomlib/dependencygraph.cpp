@@ -69,7 +69,8 @@ void DependencyGraph::build(DescriptionBlock* target)
 {
     m_bDirtyLeaves = true;
     m_root = createNode(target, 0);
-    internalBuild(m_root);
+    QSet<Node *> seen;
+    internalBuild(m_root, seen);
     //dump();
     //qDebug() << "\n\n-------------------------------------------------\n";
 
@@ -160,8 +161,13 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
     return isUpToDate;
 }
 
-void DependencyGraph::internalBuild(Node* node)
+void DependencyGraph::internalBuild(Node *node, QSet<Node *> &seen)
 {
+    const int c = seen.count();
+    seen << node;
+    if (c == seen.count())
+        return;
+
     foreach (const QString& dependentName, node->target->m_dependents) {
         Makefile* const makefile = node->target->makefile();
         DescriptionBlock* dependent = makefile->target(dependentName);
@@ -186,7 +192,7 @@ void DependencyGraph::internalBuild(Node* node)
         else
             child = createNode(dependent, node);
 
-        internalBuild(child);
+        internalBuild(child, seen);
     }
 
     if (node->children.isEmpty() && !m_leavesSet.contains(node)) {
