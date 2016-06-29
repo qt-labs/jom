@@ -180,11 +180,10 @@ void DependencyGraph::internalBuild(Node* node)
             continue;
         }
 
-        Node* child;
-        if (m_nodeContainer.contains(dependent)) {
-            child = m_nodeContainer.value(dependent);
+        Node* child = m_nodeContainer.value(dependent);
+        if (child)
             addEdge(node, child);
-        } else
+        else
             child = createNode(dependent, node);
 
         internalBuild(child);
