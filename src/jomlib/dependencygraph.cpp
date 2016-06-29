@@ -195,10 +195,8 @@ void DependencyGraph::internalBuild(Node *node, QSet<Node *> &seen)
         internalBuild(child, seen);
     }
 
-    if (node->children.isEmpty() && !m_leavesSet.contains(node)) {
-        m_leavesSet.insert(node);
-        m_leavesList.append(node);
-    }
+    if (node->children.isEmpty())
+        m_leaves.append(node);
 }
 
 void DependencyGraph::dump()
@@ -241,8 +239,7 @@ void DependencyGraph::clear()
     m_root = 0;
     qDeleteAll(m_nodeContainer);
     m_nodeContainer.clear();
-    m_leavesSet.clear();
-    m_leavesList.clear();
+    m_leaves.clear();
 }
 
 void DependencyGraph::addEdge(Node* parent, Node* child)
@@ -270,8 +267,7 @@ void DependencyGraph::removeLeaf(Node* node)
     Q_ASSERT(node);
     Q_ASSERT(node->children.isEmpty());
 
-    m_leavesSet.remove(node);
-    m_leavesList.removeAll(node);
+    m_leaves.removeAll(node);
 
     QList<Node*>::iterator it;
     foreach (Node* parent, node->parents) {
@@ -279,8 +275,7 @@ void DependencyGraph::removeLeaf(Node* node)
         parent->children.erase(it);
         if (parent->children.isEmpty()) {
             m_bDirtyLeaves = true;
-            m_leavesSet.insert(parent);
-            m_leavesList.append(parent);
+            m_leaves.append(parent);
         }
     }
     deleteNode(node);
@@ -288,7 +283,7 @@ void DependencyGraph::removeLeaf(Node* node)
 
 DescriptionBlock *DependencyGraph::findAvailableTarget(bool ignoreTimeStamps)
 {
-    if (m_leavesSet.isEmpty())
+    if (m_leaves.isEmpty())
         return 0;
 
     if (!ignoreTimeStamps) {
@@ -296,7 +291,7 @@ DescriptionBlock *DependencyGraph::findAvailableTarget(bool ignoreTimeStamps)
         QList<Node *> upToDateNodes;
         while (m_bDirtyLeaves) {
             m_bDirtyLeaves = false;
-            foreach (Node *leaf, m_leavesList)
+            foreach (Node *leaf, m_leaves)
                 if (leaf->state != Node::ExecutingState && isTargetUpToDate(leaf->target))
                     upToDateNodes.append(leaf);
             foreach (Node *leaf, upToDateNodes) {
@@ -310,7 +305,7 @@ DescriptionBlock *DependencyGraph::findAvailableTarget(bool ignoreTimeStamps)
     // apply inference rules separated by makefiles
     QSet<Makefile*> makefileSet;
     QMultiHash<Makefile*, DescriptionBlock*> multiHash;
-    foreach (Node *leaf, m_leavesList) {
+    foreach (Node *leaf, m_leaves) {
         makefileSet.insert(leaf->target->makefile());
         multiHash.insert(leaf->target->makefile(), leaf->target);
     }
@@ -318,7 +313,7 @@ DescriptionBlock *DependencyGraph::findAvailableTarget(bool ignoreTimeStamps)
         mf->applyInferenceRules(multiHash.values(mf));
 
     // return the first leaf that is not currently executed
-    foreach (Node *leaf, m_leavesList) {
+    foreach (Node *leaf, m_leaves) {
         if (leaf->state != Node::ExecutingState) {
             leaf->state = Node::ExecutingState;
             displayNodeBuildInfo(leaf, ignoreTimeStamps ? isTargetUpToDate(leaf->target) : false);

@@ -72,8 +72,7 @@ private:
 private:
     Node* m_root;
     QHash<DescriptionBlock*, Node*> m_nodeContainer;
-    QSet<Node*> m_leavesSet;
-    QList<Node*> m_leavesList;
+    QList<Node *> m_leaves;
     bool m_bDirtyLeaves;
 };
 
