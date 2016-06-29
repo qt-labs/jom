@@ -91,7 +91,7 @@ static TargetExecutor* g_pTargetExecutor = 0;
 BOOL WINAPI ConsoleCtrlHandlerRoutine(DWORD dwCtrlType)
 {
     Q_UNUSED(dwCtrlType);
-    fprintf(stderr, "jom terminated by user (pid=%u)\n", QCoreApplication::applicationPid());
+    fprintf(stderr, "jom terminated by user (pid=%lld)\n", QCoreApplication::applicationPid());
     fflush(stderr);
 
     GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
