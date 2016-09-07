@@ -27,6 +27,7 @@
 #define TARGETEXECUTOR_H
 
 #include "makefile.h"
+#include <QObject>
 #include <QEvent>
 #include <QtCore/QMap>
 

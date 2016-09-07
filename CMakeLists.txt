@@ -1,6 +1,7 @@
 project(jom)
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.11)
 
+set(CMAKE_AUTOMOC ON)
 
 option(JOM_ENABLE_TESTS "Enable unit-testing for jom" OFF)
 
@@ -12,13 +13,9 @@ endif(JOM_ENABLE_TESTS)
 # where to look first for cmake modules
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
 
-# search for Qt4 - it is required
-find_package(Qt4 REQUIRED)
+find_package(Qt5Core)
 
-# some general definitions & the directories that should be included
-add_definitions(${QT_DEFINITIONS})
 include_directories(
-  ${QT_INCLUDES}
   ${CMAKE_BINARY_DIR}
   src/jomlib
 )
@@ -86,7 +83,6 @@ set(JOM_SRCS
 )
 
  # run moc on all headers and add the moc files to the SRCS
- qt4_wrap_cpp(JOM_GENERATED_SRCS ${JOM_MOCS})
  list(APPEND JOM_SRCS ${JOM_GENERATED_SRCS} ${JOM_MOCS})
 
 
@@ -97,15 +93,14 @@ set(JOM_SRCS
     src/app/main.cpp
     src/app/application.cpp
 )
- qt4_wrap_cpp(JOM_APP_GENERATED_SRCS ${JOM_APP_MOCS})
  list(APPEND JOM_APP_SRCS ${JOM_APP_GENERATED_SRCS} ${JOM_APP_MOCS})
  source_group("Generated Sources" FILES ${JOM_GENERATED_SRCS} ${JOM_APP_GENERATED_SRCS})
 
  add_executable(jom ${JOM_APP_SRCS} ${JOM_SRCS})
  if(WIN32)
-    target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY} ws2_32)
+    target_link_libraries(jom Qt5::Core ws2_32)
  else(WIN32)
-    target_link_libraries(jom ${QT_QTMAIN_LIBRARY} ${QT_QTCORE_LIBRARY})
+    target_link_libraries(jom Qt5::Core)
  endif(WIN32)
 
  # install binaries to bin/, libraries to lib/ and import libraries to lib/ too
@@ -117,11 +112,8 @@ set(JOM_SRCS
  if(JOM_ENABLE_TESTS)
      # in subdirectory tests:
      set(TESTS_SRCS tests/tests.cpp tests/tests.h)
-     qt4_wrap_cpp(TESTS_SRCS tests/tests.h)
      add_executable(jom-test ${TESTS_SRCS} ${JOM_SRCS})
-     target_link_libraries(jom-test ${QT_QTMAIN_LIBRARY}
-                                    ${QT_QTCORE_LIBRARY}
-                                    ${QT_QTTEST_LIBRARY})
+     target_link_libraries(jom-test Qt5::Core Qt5::Test)
 
      # copy the data directory 'makefiles' over into the build directory as the tests should be run from there
      file(GLOB_RECURSE JOM_TEST_DATA RELATIVE ${CMAKE_SOURCE_DIR}/tests/makefiles/ "tests/makefiles/*")
