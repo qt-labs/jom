@@ -177,6 +177,16 @@ void TargetExecutor::waitForProcesses()
         process->waitForFinished();
 }
 
+void TargetExecutor::waitForJobClient()
+{
+    if (!m_jobClient->isAcquiring())
+        return;
+    QEventLoop loop;
+    connect(m_jobClient, &JobClient::acquired, &loop, &QEventLoop::quit);
+    loop.exec();
+    m_jobClient->release();
+}
+
 void TargetExecutor::finishBuild(int exitCode)
 {
     if (exitCode == 0
@@ -234,6 +244,7 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFail
         m_depgraph->clear();
         m_pendingTargets.clear();
         waitForProcesses();
+        waitForJobClient();
         finishBuild(2);
     }
 

@@ -61,6 +61,7 @@ private slots:
 private:
     int numberOfRunningProcesses() const;
     void waitForProcesses();
+    void waitForJobClient();
     void finishBuild(int exitCode);
     void findNextTarget();
 
