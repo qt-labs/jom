@@ -269,10 +269,8 @@ void DependencyGraph::removeLeaf(Node* node)
 
     m_leaves.removeAll(node);
 
-    QList<Node*>::iterator it;
     foreach (Node* parent, node->parents) {
-        it = qFind(parent->children.begin(), parent->children.end(), node);
-        parent->children.erase(it);
+        parent->children.removeOne(node);
         if (parent->children.isEmpty()) {
             m_bDirtyLeaves = true;
             m_leaves.append(parent);

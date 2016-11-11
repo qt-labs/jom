@@ -546,11 +546,7 @@ static bool infRulesPriorityGreaterThan(const InferenceRule *lhs, const Inferenc
 
 void Makefile::addInferenceRule(InferenceRule *rule)
 {
-    QVector<InferenceRule *>::iterator it = qFind(m_inferenceRules.begin(),
-                                                  m_inferenceRules.end(),
-                                                  rule);
-    if (it != m_inferenceRules.end())
-        m_inferenceRules.erase(it);
+    m_inferenceRules.removeOne(rule);
     m_inferenceRules.append(rule);
 }
 
