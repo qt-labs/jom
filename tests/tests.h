@@ -67,6 +67,7 @@ private slots:
     void windowsPathsInTargetName();
 
     // black-box tests
+    void buildUnrelatedTargetsOnError();
     void caseInsensitiveDependents();
     void environmentVariables_data();
     void environmentVariables();
@@ -84,10 +85,12 @@ private slots:
 
 private:
     bool openMakefile(const QString& fileName);
-    bool runJom(const QStringList &args, const QString &workingDirectory = QString());
+    bool runJom(const QStringList &args, const QString &workingDirectory = QString(),
+                QProcess::ProcessChannelMode channelMode = QProcess::MergedChannels);
     bool fileContentsEqual(const QString& fileName1, const QString& fileName2);
     QStringList readJomStdOutput();
     void touchFile(const QString &fileName);
+    static QList<QByteArray> splitOutput(const QByteArray &output);
 
 private:
     QString m_oldCurrentPath;

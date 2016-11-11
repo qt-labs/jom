@@ -40,6 +40,8 @@ public:
     ~DependencyGraph();
 
     void build(DescriptionBlock* target);
+    void markParentsRecursivlyUnbuildable(DescriptionBlock *target);
+    bool isUnbuildable(DescriptionBlock *target) const;
     bool isEmpty() const;
     void removeLeaf(DescriptionBlock* target);
     DescriptionBlock *findAvailableTarget(bool ignoreTimeStamps);
@@ -52,7 +54,7 @@ private:
 
     struct Node
     {
-        enum State {UnknownState, ExecutingState};
+        enum State {UnknownState, ExecutingState, Unbuildable};
 
         State state;
         DescriptionBlock* target;
@@ -68,6 +70,7 @@ private:
     void internalDump(Node* node, QString& indent);
     void internalDotDump(Node* node, const QString& parent);
     void displayNodeBuildInfo(Node* node, bool isUpToDate);
+    static void markParentsRecursivlyUnbuildable(Node *node);
 
 private:
     Node* m_root;

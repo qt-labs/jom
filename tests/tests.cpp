@@ -38,6 +38,7 @@
 #include <options.h>
 #include <exception.h>
 
+#include <algorithm>
 #include <limits>
 
 using namespace NMakeFile;
@@ -928,7 +929,8 @@ void Tests::windowsPathsInTargetName()
 /**
  * Note: this function clears the environment of m_jomProcess after every start.
  */
-bool Tests::runJom(const QStringList &args, const QString &workingDirectory)
+bool Tests::runJom(const QStringList &args, const QString &workingDirectory,
+                   QProcess::ProcessChannelMode channelMode)
 {
 #ifdef _DEBUG
     const QLatin1String jomBinaryName("jomd.exe");
@@ -947,7 +949,7 @@ bool Tests::runJom(const QStringList &args, const QString &workingDirectory)
         oldWorkingDirectory = QDir::currentPath();
         QDir::setCurrent(workingDirectory);
     }
-    m_jomProcess->setProcessChannelMode(QProcess::MergedChannels);
+    m_jomProcess->setProcessChannelMode(channelMode);
     m_jomProcess->start(jomBinary, args);
     bool success = true;
     if (!m_jomProcess->waitForStarted()) {
@@ -1018,6 +1020,29 @@ void Tests::touchFile(const QString &fileName)
     const qint64 s = file.size();
     file.resize(s + 1);
     file.resize(s);
+}
+
+QList<QByteArray> Tests::splitOutput(const QByteArray &output)
+{
+    QList<QByteArray> result = output.split('\n');
+    std::for_each(result.begin(), result.end(), [] (QByteArray &a) { a = a.trimmed(); });
+    return result;
+}
+
+void Tests::buildUnrelatedTargetsOnError()
+{
+    QVERIFY(runJom(QStringList() << "/f" << "test.mk" << "/nologo" << "/k",
+                   "blackbox/buildUnrelatedTargetsOnError", QProcess::SeparateChannels));
+    QCOMPARE(m_jomProcess->exitCode(), 1);
+    const QByteArray out = m_jomProcess->readAllStandardOutput();
+    QVERIFY(out.contains("Yay! This always works!"));
+    QVERIFY(!out.contains("We should not see this."));
+    const QList<QByteArray> err = splitOutput(m_jomProcess->readAllStandardError());
+    QVERIFY(std::find_if(err.begin(), err.end(), [] (const QByteArray &line)
+                { return line.endsWith("[failingTarget] Error 7"); }) != err.end());
+    QVERIFY(err.contains("jom: Option /K specified. Continuing."));
+    QVERIFY(err.contains("jom: Target 'dependsOnFailingTarget' "
+                         "cannot be built due to failed dependencies."));
 }
 
 void Tests::caseInsensitiveDependents()

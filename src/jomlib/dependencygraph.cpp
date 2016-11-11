@@ -82,6 +82,24 @@ void DependencyGraph::build(DescriptionBlock* target)
     //qDebug() << "\nFINISHED";
 }
 
+void DependencyGraph::markParentsRecursivlyUnbuildable(DescriptionBlock *target)
+{
+    markParentsRecursivlyUnbuildable(m_nodeContainer.value(target));
+}
+
+bool DependencyGraph::isUnbuildable(DescriptionBlock *target) const
+{
+    return m_nodeContainer.value(target)->state == Node::Unbuildable;
+}
+
+void DependencyGraph::markParentsRecursivlyUnbuildable(Node *node)
+{
+    foreach (Node *parent, node->parents) {
+        parent->state = Node::Unbuildable;
+        markParentsRecursivlyUnbuildable(parent);
+    }
+}
+
 bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
 {
     FastFileInfo fi(target->targetName());
@@ -313,7 +331,8 @@ DescriptionBlock *DependencyGraph::findAvailableTarget(bool ignoreTimeStamps)
     // return the first leaf that is not currently executed
     foreach (Node *leaf, m_leaves) {
         if (leaf->state != Node::ExecutingState) {
-            leaf->state = Node::ExecutingState;
+            if (leaf->state != Node::Unbuildable)
+                leaf->state = Node::ExecutingState;
             displayNodeBuildInfo(leaf, ignoreTimeStamps ? isTargetUpToDate(leaf->target) : false);
             return leaf->target;
         }

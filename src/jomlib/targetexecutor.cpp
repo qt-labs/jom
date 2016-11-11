@@ -203,18 +203,35 @@ void TargetExecutor::findNextTarget()
 {
     forever {
         m_nextTarget = m_depgraph->findAvailableTarget(m_makefile->options()->buildAllTargets);
-        if (m_nextTarget && m_nextTarget->m_commands.isEmpty()) {
-            // Short cut for targets without commands.
-            m_depgraph->removeLeaf(m_nextTarget);
-        } else {
-            return;
+        if (m_nextTarget) {
+            if (m_nextTarget->m_commands.isEmpty()) {
+                // Short cut for targets without commands.
+                m_depgraph->removeLeaf(m_nextTarget);
+                continue;
+            } else if (m_makefile->options()->buildUnrelatedTargetsOnError
+                       && m_depgraph->isUnbuildable(m_nextTarget)) {
+                fprintf(stderr, "jom: Target '%s' cannot be built due to failed dependencies.\n",
+                        qPrintable(m_nextTarget->targetName()));
+                m_depgraph->removeLeaf(m_nextTarget);
+                continue;
+            }
         }
+        return;
     }
 }
 
 void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFailed)
 {
     Q_CHECK_PTR(executor->target());
+    if (commandFailed) {
+        m_allCommandsSuccessfullyExecuted = false;
+        if (m_makefile->options()->buildUnrelatedTargetsOnError) {
+            // Recursively mark all parents of this node as unbuildable due to unsatisfied
+            // dependencies. This must happen before removing the node from the build graph.
+            m_depgraph->markParentsRecursivlyUnbuildable(executor->target());
+            fputs("jom: Option /K specified. Continuing.\n", stderr);
+        }
+    }
     FastFileInfo::clearCacheForFile(executor->target()->targetName());
     m_depgraph->removeLeaf(executor->target());
     if (m_jobAcquisitionCount > 0) {
@@ -234,9 +251,6 @@ void TargetExecutor::onChildFinished(CommandExecutor* executor, bool commandFail
         if (!found)
             m_availableProcesses.first()->setBufferedOutput(false);
     }
-
-    if (commandFailed)
-        m_allCommandsSuccessfullyExecuted = false;
 
     bool abortMakeProcess = commandFailed && !m_makefile->options()->buildUnrelatedTargetsOnError;
     if (abortMakeProcess) {
