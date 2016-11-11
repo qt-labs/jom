@@ -30,57 +30,18 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QSet>
 #include <qt_windows.h>
-#include <Tlhelp32.h>
 
 namespace NMakeFile {
 
-static bool isSubJOM(const QString &processExeName)
+static bool isSubJOM()
 {
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnapshot == INVALID_HANDLE_VALUE)
-        return false;
-    bool result = false;
-    QHash<DWORD, PROCESSENTRY32> processEntries;
-    QSet<DWORD> seenProcessIds;
-    PROCESSENTRY32 pe = {0};
-    pe.dwSize = sizeof(pe);
-    if (!Process32First(hSnapshot, &pe)) {
-        qWarning("Process32First failed with error code %d.", GetLastError());
-        goto done;
-    }
-    do {
-        processEntries.insert(pe.th32ProcessID, pe);
-    } while (Process32Next(hSnapshot, &pe));
-
-    const DWORD dwCurrentProcessId = GetCurrentProcessId();
-    DWORD dwProcessId = dwCurrentProcessId;
-    while (dwProcessId && !seenProcessIds.contains(dwProcessId)) {
-        seenProcessIds.insert(dwProcessId);
-        QHash<DWORD, PROCESSENTRY32>::iterator it = processEntries.find(dwProcessId);
-        if (it == processEntries.end())
-            break;
-
-        PROCESSENTRY32 &pe = it.value();
-        QString exeName = QString::fromUtf16((const ushort*)pe.szExeFile);
-        if (pe.th32ProcessID != dwCurrentProcessId && exeName == processExeName) {
-            result = true;
-            goto done;
-        }
-
-        dwProcessId = pe.th32ParentProcessID;
-        processEntries.erase(it);
-    }
-
-done:
-    CloseHandle(hSnapshot);
-    return result;
+    return GetEnvironmentVariableA("_JOMSRVKEY_", NULL, 0) > 0;
 }
 
 Application::Application(int &argc, char **argv)
 :   QCoreApplication(argc, argv)
 {
-    QString exeName = QFileInfo(QCoreApplication::applicationFilePath()).fileName();
-    m_bIsSubJOM = NMakeFile::isSubJOM(exeName);
+    m_bIsSubJOM = NMakeFile::isSubJOM();
 }
 
 Application::~Application()
