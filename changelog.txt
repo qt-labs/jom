@@ -1,4 +1,13 @@
-This is the changelog for jom 1.1.1, the parallel make tool.
+This is the changelog for jom 1.1.2, the parallel make tool.
+
+Changes since jom 1.1.1
+- Fixed exit code propagation in xgejom.bat and ibjom.bat (QTCREATORBUG-16619).
+- Updated the CMake build system to use Qt5.
+- Fixed bogus path in error message for failed targets.
+- Fixed error "JobClient destroyed while still acquiring." that could be yielded
+  for failed builds.
+- Fixed /k option (QTCREATORBUG-17131).
+- Fixed sub-jom detection for chocolatey shims (QTCREATORBUG-15494).
 
 Changes since jom 1.1.0
 - Added the special .NOTPARALLEL target that disables parallel build for the
