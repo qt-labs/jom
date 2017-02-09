@@ -37,7 +37,7 @@ add_definitions(
 #
 set(JOM_MOCS
     src/jomlib/targetexecutor.h
-    src/jomlib/process.h
+    src/jomlib/jomprocess.h
     src/jomlib/commandexecutor.h
     src/jomlib/jobclient.h
     src/jomlib/jobclientacquirehelper.h
@@ -50,7 +50,6 @@ set(JOM_SRCS
     src/jomlib/fastfileinfo.cpp
     src/jomlib/filetime.cpp
     src/jomlib/helperfunctions.cpp
-    src/jomlib/iocompletionport.cpp
     src/jomlib/jobclient.cpp
     src/jomlib/jobclientacquirehelper.cpp
     src/jomlib/jobserver.cpp
@@ -63,7 +62,6 @@ set(JOM_SRCS
     src/jomlib/ppexpr_grammar.cpp
     src/jomlib/ppexprparser.cpp
     src/jomlib/preprocessor.cpp
-    src/jomlib/process.cpp
     src/jomlib/targetexecutor.cpp
     src/jomlib/dependencygraph.h
     src/jomlib/exception.h
@@ -85,6 +83,20 @@ set(JOM_SRCS
  # run moc on all headers and add the moc files to the SRCS
  list(APPEND JOM_SRCS ${JOM_GENERATED_SRCS} ${JOM_MOCS})
 
+if(WIN32)
+    list(APPEND JOM_SRCS
+        src/jomlib/iocompletionport.h
+        src/jomlib/iocompletionport.cpp
+        src/jomlib/jomprocess.cpp
+    )
+else()
+    add_definitions(
+      -DUSE_QPROCESS
+    )
+    list(APPEND JOM_SRCS
+        src/jomlib/jomprocess_qt.cpp
+    )
+endif()
 
  set(JOM_APP_MOCS
     src/app/application.h

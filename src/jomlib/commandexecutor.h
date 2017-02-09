@@ -27,7 +27,7 @@
 #define COMMANDEXECUTOR_H
 
 #include "makefile.h"
-#include "process.h"
+#include "jomprocess.h"
 #include <QFile>
 #include <QString>
 

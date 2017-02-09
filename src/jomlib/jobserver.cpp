@@ -47,8 +47,8 @@ bool JobServer::start(int maxNumberOfJobs)
 {
     Q_ASSERT(m_environment);
 
-    const uint randomId = (FileTime::currentTime().internalRepresentation() % UINT_MAX)
-        ^ reinterpret_cast<uint>(&maxNumberOfJobs);
+    const quint64 randomId = (FileTime::currentTime().internalRepresentation() % UINT_MAX)
+        ^ reinterpret_cast<quint64>(&maxNumberOfJobs);
     const QString semaphoreKey = QLatin1String("jomsrv-")
             + QString::number(QCoreApplication::applicationPid()) + QLatin1Char('-')
             + QString::number(randomId);

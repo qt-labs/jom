@@ -26,7 +26,7 @@
 #define _CRT_RAND_S
 #include <cstdlib>
 
-#include "process.h"
+#include "jomprocess.h"
 #include "helperfunctions.h"
 #include "iocompletionport.h"
 

@@ -53,12 +53,12 @@ win32-* {
     HEADERS +=  \
         iocompletionport.h
     SOURCES += \
-        process.cpp \
+        jomprocess.cpp \
         iocompletionport.cpp
 } else {
     DEFINES += USE_QPROCESS
     SOURCES += \
-        process_qt.cpp
+        jomprocess_qt.cpp
 }
 
 HEADERS +=  \
@@ -78,9 +78,8 @@ HEADERS +=  \
     ppexprparser.h \
     targetexecutor.h \
     commandexecutor.h \
-    process.h \
+    jomprocess.h \
     processenvironment.h \
-    iocompletionport.h \
     jobclient.h \
     jobclientacquirehelper.h
 

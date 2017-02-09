@@ -23,7 +23,7 @@
 **
 ****************************************************************************/
 
-#include "process.h"
+#include "jomprocess.h"
 #include <cstdio>
 
 namespace NMakeFile {
