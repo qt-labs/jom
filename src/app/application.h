@@ -39,7 +39,7 @@ public:
     Application(int &argc, char **argv);
     ~Application();
 
-    const bool isSubJOM() const { return m_bIsSubJOM; }
+    bool isSubJOM() const { return m_bIsSubJOM; }
 
 public slots:
     void exit(int exitCode);
