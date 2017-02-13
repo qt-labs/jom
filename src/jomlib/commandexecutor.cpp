@@ -275,7 +275,7 @@ void CommandExecutor::createTempFiles()
                 fileName = inlineFile->m_filename;
 
             TempFile tempFile;
-            tempFile.keep = inlineFile->m_keep || m_pTarget->makefile()->options()->keepTemporaryFiles;
+            tempFile.keep = inlineFile->m_keep;
             tempFile.file = new QFile(fileName);
             if (!tempFile.file->open(QFile::WriteOnly)) {
                 delete tempFile.file;

@@ -64,7 +64,6 @@ Options::Options()
     dumpDependencyGraphDot(false),
     displayMakeInformation(false),
     showUsageAndExit(false),
-    keepTemporaryFiles(false),
     displayBuildInfo(false),
     debugMode(false),
     showVersionAndExit(false)
@@ -200,9 +199,6 @@ bool Options::handleCommandLineOption(const QStringList &originalArguments, QStr
             } else if (upperArg.startsWith(QLatin1String("ERRORREPORT"))) {
                 arg.remove(0, 11);
                 // ignore - we don't send stuff to Microsoft :)
-            } else if (upperArg.startsWith(QLatin1String("KEEPTEMPFILES"))) {
-                arg.remove(0, 13);
-                keepTemporaryFiles = true;
             } else if (upperArg.startsWith(QLatin1String("VERSION"))) {
                 arg.remove(0, 7);
                 showVersionAndExit = true;

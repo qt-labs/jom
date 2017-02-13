@@ -82,7 +82,6 @@ static void showUsage()
            "/DUMPGRAPH show the generated dependency graph\n"
            "/DUMPGRAPHDOT dump dependency graph in dot format\n"
            "/J <n> use up to n processes in parallel\n"
-           "/KEEPTEMPFILES keep all temporary files\n"
            "/VERSION print version and exit\n");
 }
 
