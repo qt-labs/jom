@@ -57,8 +57,8 @@ Command::Command()
 }
 
 Command::Command(const Command& rhs)
-:   m_maxExitCode(rhs.m_maxExitCode),
-    m_commandLine(rhs.m_commandLine),
+:   m_commandLine(rhs.m_commandLine),
+    m_maxExitCode(rhs.m_maxExitCode),
     m_silent(rhs.m_silent),
     m_singleExecution(rhs.m_singleExecution)
 {
@@ -112,8 +112,8 @@ void Command::evaluateModifiers()
 
 DescriptionBlock::DescriptionBlock(Makefile* mkfile)
 :   m_bFileExists(false),
-    m_canAddCommands(ACSUnknown),
     m_bVisitedByCycleCheck(false),
+    m_canAddCommands(ACSUnknown),
     m_pMakefile(mkfile)
 {
 }
@@ -367,10 +367,10 @@ InferenceRule::InferenceRule()
 InferenceRule::InferenceRule(const InferenceRule& rhs)
 :   CommandContainer(rhs),
     m_batchMode(rhs.m_batchMode),
-    m_fromExtension(rhs.m_fromExtension),
     m_fromSearchPath(rhs.m_fromSearchPath),
-    m_toExtension(rhs.m_toExtension),
+    m_fromExtension(rhs.m_fromExtension),
     m_toSearchPath(rhs.m_toSearchPath),
+    m_toExtension(rhs.m_toExtension),
     m_priority(rhs.m_priority)
 {
 }
@@ -404,8 +404,8 @@ QString InferenceRule::inferredDependent(const QString &targetName) const
 
 Makefile::Makefile(const QString &fileName)
 :   m_fileName(fileName),
-    m_macroTable(0),
     m_firstTarget(0),
+    m_macroTable(0),
     m_options(0),
     m_parallelExecutionDisabled(false)
 {
