@@ -18,3 +18,4 @@ contains(QMAKE_CXXFLAGS_RELEASE, -MT) {
 INCLUDEPATH += ../jomlib
 HEADERS = application.h
 SOURCES = main.cpp application.cpp
+RESOURCES = app.qrc
