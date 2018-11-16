@@ -12,7 +12,7 @@ endif(JOM_ENABLE_TESTS)
 # where to look first for cmake modules
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
 
-find_package(Qt5Core)
+find_package(Qt5Core 5.2.0 REQUIRED)
 
 include_directories(
   ${CMAKE_BINARY_DIR}
