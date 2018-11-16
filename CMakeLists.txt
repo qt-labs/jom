@@ -21,15 +21,12 @@ include_directories(
 )
 if(MSVC)
     add_definitions(
-      -D_CRT_SECURE_NO_DEPRECATE
+    -D_CRT_SECURE_NO_WARNINGS
     )
-   # Qt disables the native wchar_t type, do it too to avoid linking issues
-   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Zc:wchar_t-" )
 endif(MSVC)
 add_definitions(
+  -DQT_NO_CAST_FROM_ASCII
   -DQT_NO_CAST_TO_ASCII
-  -DQT_USE_FAST_CONCATENATION
-  -DQT_USE_FAST_OPERATOR_PLUS
   -DUNICODE
 )
 
