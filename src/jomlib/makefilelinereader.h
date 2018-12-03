@@ -31,6 +31,24 @@
 
 namespace NMakeFile {
 
+enum class LineContinuationType
+{
+    None,
+    Backslash,
+    Caret
+};
+
+struct MakefileLine
+{
+    QString content;
+    LineContinuationType continuation = LineContinuationType::None;
+};
+
+inline bool isComplete(const MakefileLine &line)
+{
+    return line.continuation == LineContinuationType::None;
+}
+
 class MakefileLineReader {
 public:
     MakefileLineReader(const QString& filename);
@@ -38,17 +56,17 @@ public:
 
     bool open();
     void close();
-    QString readLine(bool bInlineFileMode);
+    MakefileLine readLine(bool bInlineFileMode);
     QString fileName() const { return m_file.fileName(); }
     uint lineNumber() const { return m_nLineNumber; }
 
 private:
     void growLineBuffer(size_t nGrow);
 
-    typedef QString (MakefileLineReader::*ReadLineImpl)();
+    typedef MakefileLine (MakefileLineReader::*ReadLineImpl)();
     ReadLineImpl m_readLineImpl;
-    QString readLine_impl_local8bit();
-    QString readLine_impl_unicode();
+    MakefileLine readLine_impl_local8bit();
+    MakefileLine readLine_impl_unicode();
 
 private:
     QFile m_file;

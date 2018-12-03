@@ -313,7 +313,6 @@ void Tests::preprocessorInvalidExpressions()
 
 void Tests::conditionals()
 {
-    QEXPECT_FAIL("", "QTCREATORBUG-8621", Continue);
     QVERIFY( openMakefile(QLatin1String("conditionals.mk")) );
     QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
     QVERIFY(mkfile);
@@ -328,9 +327,7 @@ void Tests::conditionals()
     QCOMPARE(macroTable->macroValue("TEST6"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST7"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST8"), QLatin1String("true"));
-    QEXPECT_FAIL("", "QTCREATORBUG-8621", Continue);
     QCOMPARE(macroTable->macroValue("TEST9"), QLatin1String("foo  bar  baz"));
-    QEXPECT_FAIL("", "QTCREATORBUG-8621", Continue);
     QCOMPARE(macroTable->macroValue("TEST10"), QLatin1String("foo  bar  boo  hoo"));
 }
 

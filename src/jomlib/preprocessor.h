@@ -26,6 +26,8 @@
 #ifndef PREPROCESSOR_H
 #define PREPROCESSOR_H
 
+#include "makefilelinereader.h"
+
 #include <QRegExp>
 #include <QStack>
 #include <QStringList>
@@ -57,7 +59,13 @@ public:
 
 private:
     bool internalOpenFile(QString fileName);
-    void basicReadLine(QString& line);
+    MakefileLine basicReadLine();
+    typedef void (*JoinFunc)(MakefileLine &, const MakefileLine &);
+    static void joinLines(MakefileLine &line, const MakefileLine &next);
+    static void joinPreprocessingDirectiveLines(MakefileLine &line, const MakefileLine &next);
+    void completeLineImpl(MakefileLine &line, JoinFunc joinFunc);
+    void completeLine(MakefileLine &line);
+    void completePreprocessingDirectiveLine(MakefileLine &line);
     bool parseMacro(const QString& line);
     bool parsePreprocessingDirective(const QString& line);
     QString findIncludeFile(const QString &filePathToInclude);

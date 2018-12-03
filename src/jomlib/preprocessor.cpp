@@ -27,7 +27,6 @@
 #include "ppexprparser.h"
 #include "macrotable.h"
 #include "exception.h"
-#include "makefilelinereader.h"
 #include "helperfunctions.h"
 #include "fastfileinfo.h"
 
@@ -96,20 +95,31 @@ bool Preprocessor::internalOpenFile(QString fileName)
 
 QString Preprocessor::readLine()
 {
-    QString line;
+    MakefileLine line;
     for (;;) {
-        basicReadLine(line);
-        if (!m_bInlineFileMode && parseMacro(line))
+        MakefileLine next = basicReadLine();
+        if (next.content.startsWith(QLatin1Char('!'))) {
+            completePreprocessingDirectiveLine(next);
+            parsePreprocessingDirective(next.content);
             continue;
-        if (parsePreprocessingDirective(line))
+        }
+        if (isComplete(line))
+            line = std::move(next);
+        else
+            joinLines(line, next);
+        if (!isComplete(line))
+            continue;
+        if (!m_bInlineFileMode && parseMacro(line.content))
+            continue;
+        if (parsePreprocessingDirective(line.content))
             continue;
         break;
     }
 
-    if (line.isNull() && conditionalDepth())
+    if (line.content.isNull() && conditionalDepth())
         error(QLatin1Literal("Missing !ENDIF directive."));
 
-    return line;
+    return line.content;
 }
 
 uint Preprocessor::lineNumber() const
@@ -126,26 +136,72 @@ QString Preprocessor::currentFileName() const
     return m_fileStack.top().reader->fileName();
 }
 
-void Preprocessor::basicReadLine(QString& line)
+MakefileLine Preprocessor::basicReadLine()
 {
-    if (!m_linesPutBack.isEmpty()) {
-        line = m_linesPutBack.takeFirst();
-        return;
-    }
+    if (!m_linesPutBack.isEmpty())
+        return { m_linesPutBack.takeFirst() };
 
-    if (m_fileStack.isEmpty()) {
-        line = QString();
-        return;
-    }
+    if (m_fileStack.isEmpty())
+        return {};
 
-    line = m_fileStack.top().reader->readLine(m_bInlineFileMode);
-    while (line.isNull()) {
+    MakefileLine line = m_fileStack.top().reader->readLine(m_bInlineFileMode);
+    while (line.content.isNull()) {
         delete m_fileStack.top().reader;
         m_fileStack.pop();
         if (m_fileStack.isEmpty())
-            return;
+            break;
         line = m_fileStack.top().reader->readLine(m_bInlineFileMode);
     }
+    return line;
+}
+
+static QString leftTrimmed(const QString &str)
+{
+    if (str.isEmpty())
+        return str;
+    int n = 0;
+    for (; n < str.length() && str.at(n).isSpace(); ++n);
+    return str.mid(n);
+}
+
+void Preprocessor::joinLines(MakefileLine &line, const MakefileLine &next)
+{
+    if (line.continuation == LineContinuationType::Backslash)
+        line.content += QLatin1Char(' ');
+    else if (line.continuation == LineContinuationType::Caret)
+        line.content += QLatin1Char('\n');
+    line.content += leftTrimmed(next.content);
+    line.continuation = next.continuation;
+}
+
+void Preprocessor::joinPreprocessingDirectiveLines(MakefileLine &line, const MakefileLine &next)
+{
+    if (line.continuation == LineContinuationType::Caret)
+        line.content += QLatin1Char('^');
+    line.content += next.content;
+    line.continuation = next.continuation;
+}
+
+void Preprocessor::completeLineImpl(MakefileLine &line, JoinFunc join)
+{
+    while (!isComplete(line)) {
+        MakefileLine next = basicReadLine();
+        if (next.content.isNull()) {
+            line.continuation = LineContinuationType::None;
+            break;
+        }
+        join(line, next);
+    }
+}
+
+void Preprocessor::completeLine(MakefileLine &line)
+{
+    completeLineImpl(line, &joinLines);
+}
+
+void Preprocessor::completePreprocessingDirectiveLine(MakefileLine &line)
+{
+    completeLineImpl(line, &joinPreprocessingDirectiveLines);
 }
 
 bool Preprocessor::parseMacro(const QString& line)
@@ -258,6 +314,8 @@ bool Preprocessor::parsePreprocessingDirective(const QString& line)
         exitConditional();
     } else if (directive == QLatin1String("UNDEF")) {
         m_macroTable->undefineMacro(value);
+    } else {
+        error(QString(QStringLiteral("Unknown preprocessor directive !%1")).arg(directive));
     }
 
     return true;
@@ -345,16 +403,20 @@ bool Preprocessor::isPreprocessingDirective(const QString& line, QString& direct
 void Preprocessor::skipUntilNextMatchingConditional()
 {
     uint depth = 0;
-    QString line, directive, value;
+    MakefileLine line;
+    QString directive, value;
 
     enum DirectiveToken { TOK_IF, TOK_ENDIF, TOK_ELSE, TOK_UNINTERESTING };
     DirectiveToken token;
     do {
-        basicReadLine(line);
-        if (line.isNull())
+        line = basicReadLine();
+        if (line.content.isNull())
             return;
 
-        QString expandedLine = m_macroTable->expandMacros(line);
+        if (line.content.startsWith(QLatin1Char('!')))
+            completePreprocessingDirectiveLine(line);
+
+        QString expandedLine = m_macroTable->expandMacros(line.content);
         if (!isPreprocessingDirective(expandedLine, directive, value))
             continue;
 
@@ -386,7 +448,7 @@ void Preprocessor::skipUntilNextMatchingConditional()
         else if (token == TOK_IF)
             ++depth;
 
-    } while (!line.isNull());
+    } while (!line.content.isNull());
 }
 
 void Preprocessor::enterConditional(bool followElseBranch)

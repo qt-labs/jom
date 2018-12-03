@@ -88,11 +88,11 @@ void MakefileLineReader::growLineBuffer(size_t nGrow)
  *    - combines multi-lines (lines with \ at the end) into a single long line
  *    - handles the ^ escape character for \ and \n at the end
  */
-QString MakefileLineReader::readLine(bool bInlineFileMode)
+MakefileLine MakefileLineReader::readLine(bool bInlineFileMode)
 {
     if (bInlineFileMode) {
         m_nLineNumber++;
-        return QString::fromLatin1(m_file.readLine());
+        return MakefileLine{ QString::fromLatin1(m_file.readLine()) };
     }
 
     return (this->*m_readLineImpl)();
@@ -101,83 +101,56 @@ QString MakefileLineReader::readLine(bool bInlineFileMode)
 /**
  * readLine implementation optimized for 8 bit files.
  */
-QString MakefileLineReader::readLine_impl_local8bit()
+MakefileLine MakefileLineReader::readLine_impl_local8bit()
 {
-    QString line;
-    bool multiLineAppendix = false;
-    bool endOfLineReached = false;
     size_t bytesRead;
     do {
-        do {
-            m_nLineNumber++;
-            const qint64 n = m_file.readLine(m_lineBuffer, m_nLineBufferSize - 1);
-            if (n <= 0)
-                return QString();
+        m_nLineNumber++;
+        const qint64 n = m_file.readLine(m_lineBuffer, m_nLineBufferSize - 1);
+        if (n <= 0)
+            return {};
 
-            bytesRead = n;
-            while (m_lineBuffer[bytesRead - 1] != '\n') {
-                if (m_file.atEnd()) {
-                    // The file didn't end with a newline.
-                    // Code below relies on having a trailing newline.
-                    // We're imitating it by increasing the string length.
-                    if (bytesRead >= (m_nLineBufferSize - 2))
-                        growLineBuffer(1);
-                    ++bytesRead;
-                    break;
-                }
-
-                growLineBuffer(m_nLineBufferGrowSize);
-                int moreBytesRead = m_file.readLine(m_lineBuffer + bytesRead, m_nLineBufferSize - 1 - bytesRead);
-                if (moreBytesRead <= 0)
-                    break;
-                bytesRead += moreBytesRead;
+        bytesRead = n;
+        while (m_lineBuffer[bytesRead - 1] != '\n') {
+            if (m_file.atEnd()) {
+                // The file didn't end with a newline.
+                // Code below relies on having a trailing newline.
+                // We're imitating it by increasing the string length.
+                if (bytesRead >= (m_nLineBufferSize - 2))
+                    growLineBuffer(1);
+                ++bytesRead;
+                break;
             }
 
-        } while (m_lineBuffer[0] == '#');
-        m_lineBuffer[bytesRead] = '\0';
-
-        char* buf = m_lineBuffer;
-        int bufLength = static_cast<int>(bytesRead);
-        if (multiLineAppendix) {
-            // skip leading whitespace characters
-            while (*buf && (*buf == ' ' || *buf == '\t'))
-                buf++;
-            if (buf != m_lineBuffer) {
-                buf--;          // make sure, we keep one whitespace
-                *buf = ' ';     // convert possible tab to space
-                bufLength -= buf - m_lineBuffer;
-            }
+            growLineBuffer(m_nLineBufferGrowSize);
+            int moreBytesRead = m_file.readLine(m_lineBuffer + bytesRead, m_nLineBufferSize - 1 - bytesRead);
+            if (moreBytesRead <= 0)
+                break;
+            bytesRead += moreBytesRead;
         }
 
-        if (bufLength >= 2 && buf[bufLength - 2] == '\\') {
-            if (bufLength >= 3 && buf[bufLength - 3] == '^') {
-                buf[bufLength - 3] = '\\';      // replace "^\\\n" -> "\\\\\n"
-                bufLength -= 2;                 // remove "\\\n"
-                line.append(QString::fromLatin1(buf, bufLength));
-                endOfLineReached = true;
-            } else {
-                bufLength -= 2; // remove "\\\n"
-                line.append(QString::fromLatin1(buf, bufLength));
-                multiLineAppendix = true;
-            }
-        } else if (bufLength >= 2 && buf[bufLength - 2] == '^') {
-            bufLength--;
-            buf[bufLength-1] = '\n';
-            line.append(QString::fromLatin1(buf, bufLength));
-            multiLineAppendix = true;
+    } while (m_lineBuffer[0] == '#');
+    m_lineBuffer[bytesRead] = '\0';
+
+    MakefileLine line;
+    char* buf = m_lineBuffer;
+    int bufLength = static_cast<int>(bytesRead);
+    if (bufLength >= 2 && buf[bufLength - 2] == '\\') {
+        if (bufLength >= 3 && buf[bufLength - 3] == '^') {
+            buf[bufLength - 3] = '\\';      // replace "^\\\n" -> "\\\\\n"
+            bufLength -= 2;                 // remove "\\\n"
         } else {
-            bufLength--;    // remove trailing \n
-            line.append(QString::fromLatin1(buf, bufLength));
-            endOfLineReached = true;
+            bufLength -= 2; // remove "\\\n"
+            line.continuation = LineContinuationType::Backslash;
         }
-    } while (!endOfLineReached);
+    } else if (bufLength >= 2 && buf[bufLength - 2] == '^') {
+        bufLength -= 2;
+        line.continuation = LineContinuationType::Caret;
+    } else {
+        bufLength--;    // remove trailing \n
+    }
 
-    // trim whitespace from the right
-    int idx = line.length() - 1;
-    while (idx > 0 && isSpaceOrTab(line.at(idx)))
-        --idx;
-    line.truncate(idx+1);
-
+    line.content = QString::fromLatin1(buf, bufLength);
     return line;
 }
 
@@ -185,41 +158,29 @@ QString MakefileLineReader::readLine_impl_local8bit()
  * readLine implementation for unicode files.
  * Much slower than the 8 bit version.
  */
-QString MakefileLineReader::readLine_impl_unicode()
+MakefileLine MakefileLineReader::readLine_impl_unicode()
 {
-    QString line;
-    bool endOfLineReached = false;
-    bool multilineAppendix = false;
+    MakefileLine line;
+    QString str;
     do {
         m_nLineNumber++;
-        QString str = m_textStream.readLine();
-        if (str.isNull())
-            break;
+        str = m_textStream.readLine();
+    } while (str.startsWith(QLatin1Char('#')));
 
-        if (str.startsWith(QLatin1Char('#')))
-            continue;
+    if (str.isNull())
+        return line;
 
-        if (multilineAppendix && (str.startsWith(QLatin1Char(' ')) || str.startsWith(QLatin1Char('\t')))) {
-            str = str.trimmed();
-            str.prepend(QLatin1Char(' '));
-        }
+    if (str.endsWith(QLatin1String("^\\"))) {
+        str.remove(str.length() - 2, 1);
+    } else if (str.endsWith(QLatin1Char('\\'))) {
+        str.chop(1);
+        line.continuation = LineContinuationType::Backslash;
+    } else if (str.endsWith(QLatin1Char('^'))) {
+        str.chop(1);
+        line.continuation = LineContinuationType::Caret;
+    }
 
-        if (str.endsWith(QLatin1String("^\\"))) {
-            str.remove(str.length() - 2, 1);
-            endOfLineReached = true;
-        } else if (str.endsWith(QLatin1Char('\\'))) {
-            str.chop(1);
-            multilineAppendix = true;
-        } else if (str.endsWith(QLatin1Char('^'))) {
-            str.chop(1);
-            str.append(QLatin1Char('\n'));
-            multilineAppendix = true;
-        } else {
-            endOfLineReached = true;
-        }
-
-        line.append(str);
-    } while (!endOfLineReached);
+    line.content = str;
     return line;
 }
 
