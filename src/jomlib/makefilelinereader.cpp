@@ -139,6 +139,8 @@ MakefileLine MakefileLineReader::readLine_impl_local8bit()
         if (bufLength >= 3 && buf[bufLength - 3] == '^') {
             buf[bufLength - 3] = '\\';      // replace "^\\\n" -> "\\\\\n"
             bufLength -= 2;                 // remove "\\\n"
+        } else if (bufLength >= 3 && buf[bufLength - 3] == '\\') {
+            bufLength--;    // remove trailing \n
         } else {
             bufLength -= 2; // remove "\\\n"
             line.continuation = LineContinuationType::Backslash;
@@ -172,6 +174,8 @@ MakefileLine MakefileLineReader::readLine_impl_unicode()
 
     if (str.endsWith(QLatin1String("^\\"))) {
         str.remove(str.length() - 2, 1);
+    } else if (str.endsWith(QLatin1String("\\\\"))) {
+        // Do nothing. Double backslash at the end is not altered.
     } else if (str.endsWith(QLatin1Char('\\'))) {
         str.chop(1);
         line.continuation = LineContinuationType::Backslash;

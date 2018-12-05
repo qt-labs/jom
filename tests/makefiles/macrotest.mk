@@ -17,6 +17,7 @@ Literal4 = backslash at the end^\
 !UNDEF ThisIsNotDefined
 Literal5 = backslash at the end\#
 Literal6 = backslash at the end\ # errm i don't have anything to say...
+Literal7 = double backslash at the end\\
 SplitOverLines= \
 				 one \
 				 two\

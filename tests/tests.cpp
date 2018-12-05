@@ -127,6 +127,7 @@ void Tests::macros()
         QCOMPARE(macroTable.macroValue("Literal4"), QLatin1String("backslash at the end\\"));
         QCOMPARE(macroTable.macroValue("Literal5"), QLatin1String("backslash at the end\\"));
         QCOMPARE(macroTable.macroValue("Literal6"), QLatin1String("backslash at the end\\"));
+        QCOMPARE(macroTable.macroValue("Literal7"), QLatin1String("double backslash at the end\\\\"));
         QCOMPARE(macroTable.macroValue("SplitOverLines"), QLatin1String("one  two three"));
         QCOMPARE(macroTable.macroValue("Incremental"), QLatin1String("one two"));
         QCOMPARE(macroTable.expandMacros(macroTable.macroValue("LateDefinition")),
