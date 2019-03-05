@@ -280,7 +280,7 @@ bool Options::handleCommandLineOption(const QStringList &originalArguments, QStr
                                 break;
                             nJobsStr += arg.at(i);
                         }
-                        arg.clear();
+                        arg.remove(0, nJobsStr.length());
                     }
                     bool ok;
                     g_options.maxNumberOfJobs = nJobsStr.toUInt(&ok);
