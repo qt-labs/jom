@@ -1218,6 +1218,14 @@ void Tests::nonexistentDependent()
     QVERIFY(output.contains("yo ho ho ho"));
 }
 
+void Tests::noTargets()
+{
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk", "blackbox/noTargets"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QByteArray output = m_jomProcess->readAllStandardOutput().trimmed();
+    QCOMPARE(output, QByteArray("Hello there!"));
+}
+
 void Tests::outOfDateCheck()
 {
     QVERIFY(runJom(QStringList() << "/nologo" << "/j1" << "/f" << "test.mk" << "clean" << "all",

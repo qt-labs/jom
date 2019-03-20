@@ -81,6 +81,7 @@ private slots:
     void builtin_cd();
     void suffixes();
     void nonexistentDependent();
+    void noTargets();
     void outOfDateCheck();
 
 private:

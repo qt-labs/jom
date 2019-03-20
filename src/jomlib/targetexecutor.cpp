@@ -86,9 +86,10 @@ void TargetExecutor::apply(Makefile* mkfile, const QStringList& targets)
 
     DescriptionBlock* descblock;
     if (targets.isEmpty()) {
-        if (mkfile->targets().isEmpty())
-            throw Exception(QLatin1String("no targets in makefile"));
-
+        if (mkfile->targets().isEmpty()) {
+            finishBuild(0);
+            return;
+        }
         descblock = mkfile->firstTarget();
     } else {
         const QString targetName = targets.first();
