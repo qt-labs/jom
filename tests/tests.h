@@ -80,6 +80,8 @@ private slots:
     void builtin_cd_data();
     void builtin_cd();
     void suffixes();
+    void macrosOnCommandLine_data();
+    void macrosOnCommandLine();
     void nonexistentDependent();
     void noTargets();
     void outOfDateCheck();

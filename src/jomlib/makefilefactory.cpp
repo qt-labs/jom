@@ -133,26 +133,26 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments, Options **o
 
     readEnvironment(m_environment, macroTable, options->overrideEnvVarMacros);
     if (!options->ignorePredefinedRulesAndMacros) {
-        macroTable->setMacroValue("MAKE", encloseInDoubleQuotesIfNeeded(options->fullAppPath));
-        macroTable->setMacroValue("MAKEDIR", encloseInDoubleQuotesIfNeeded(QDir::currentPath()));
-        macroTable->setMacroValue("AS", "ml");       // Macro Assembler
-        macroTable->setMacroValue("ASFLAGS", QString());
-        macroTable->setMacroValue("BC", "bc");       // Basic Compiler
-        macroTable->setMacroValue("BCFLAGS", QString());
-        macroTable->setMacroValue("CC", "cl");       // C Compiler
-        macroTable->setMacroValue("CCFLAGS", QString());
-        macroTable->setMacroValue("COBOL", "cobol"); // COBOL Compiler
-        macroTable->setMacroValue("COBOLFLAGS", QString());
-        macroTable->setMacroValue("CPP", "cl");      // C++ Compiler
-        macroTable->setMacroValue("CPPFLAGS", QString());
-        macroTable->setMacroValue("CXX", "cl");      // C++ Compiler
-        macroTable->setMacroValue("CXXFLAGS", QString());
-        macroTable->setMacroValue("FOR", "fl");      // FORTRAN Compiler
-        macroTable->setMacroValue("FORFLAGS", QString());
-        macroTable->setMacroValue("PASCAL", "pl");   // Pascal Compiler
-        macroTable->setMacroValue("PASCALFLAGS", QString());
-        macroTable->setMacroValue("RC", "rc");       // Resource Compiler
-        macroTable->setMacroValue("RCFLAGS", QString());
+        macroTable->predefineValue("MAKE", encloseInDoubleQuotesIfNeeded(options->fullAppPath));
+        macroTable->predefineValue("MAKEDIR", encloseInDoubleQuotesIfNeeded(QDir::currentPath()));
+        macroTable->predefineValue("AS", "ml");       // Macro Assembler
+        macroTable->predefineValue("ASFLAGS", QString());
+        macroTable->predefineValue("BC", "bc");       // Basic Compiler
+        macroTable->predefineValue("BCFLAGS", QString());
+        macroTable->predefineValue("CC", "cl");       // C Compiler
+        macroTable->predefineValue("CCFLAGS", QString());
+        macroTable->predefineValue("COBOL", "cobol"); // COBOL Compiler
+        macroTable->predefineValue("COBOLFLAGS", QString());
+        macroTable->predefineValue("CPP", "cl");      // C++ Compiler
+        macroTable->predefineValue("CPPFLAGS", QString());
+        macroTable->predefineValue("CXX", "cl");      // C++ Compiler
+        macroTable->predefineValue("CXXFLAGS", QString());
+        macroTable->predefineValue("FOR", "fl");      // FORTRAN Compiler
+        macroTable->predefineValue("FORFLAGS", QString());
+        macroTable->predefineValue("PASCAL", "pl");   // Pascal Compiler
+        macroTable->predefineValue("PASCALFLAGS", QString());
+        macroTable->predefineValue("RC", "rc");       // Resource Compiler
+        macroTable->predefineValue("RCFLAGS", QString());
     }
 
     try {

@@ -48,9 +48,14 @@ public:
     bool isMacroNameValid(const QString& name) const;
     QString macroValue(const QString& macroName) const;
     void defineEnvironmentMacroValue(const QString& name, const QString& value, bool readOnly = false);
+    void defineCommandLineMacroValue(const QString &name, const QString &value);
+    void defineImplicitCommandLineMacroValue(const QString &name, const QString &value);
     void setMacroValue(const QString& name, const QString& value);
     void setMacroValue(const char *szStr, const QString& value) { setMacroValue(QString::fromLatin1(szStr), value); }
     void setMacroValue(const char *szStr, const char *szValue) { setMacroValue(QString::fromLatin1(szStr), QString::fromLatin1(szValue)); }
+    void predefineValue(const QString &name, const QString &value);
+    void predefineValue(const char *szStr, const QString &value) { predefineValue(QString::fromLatin1(szStr), value); }
+    void predefineValue(const char *szStr, const char *szValue) { predefineValue(QString::fromLatin1(szStr), QString::fromLatin1(szValue)); }
     void undefineMacro(const QString& name);
     QString expandMacros(const QString& str, bool inDependentsLine = false) const;
     void dump() const;
@@ -65,18 +70,27 @@ public:
     static void applySubstitution(const Substitution &substitution, QString &value);
 
 private:
+    enum class MacroSource
+    {
+        CommandLine,
+        CommandLineImplicit,
+        MakeFile,
+        Environment,
+        Predefinition
+    };
+
     struct MacroData
     {
-        MacroData()
-            : isEnvironmentVariable(false), isReadOnly(false)
-        {}
-
-        bool isEnvironmentVariable;
-        bool isReadOnly;
+        MacroSource source = MacroSource::MakeFile;
+        bool isReadOnly = false;
         QString value;
     };
 
-    MacroData* internalSetMacroValue(const QString& name, const QString& value);
+    void setMacroValueImpl(const QString &name, const QString &value, MacroSource source);
+    void defineCommandLineMacroValueImpl(const QString &name, const QString &value,
+                                         MacroSource source);
+    MacroData* internalSetMacroValue(const QString &name, const QString &value,
+                                     bool ignoreReadOnly = false);
     void setEnvironmentVariable(const QString& name, const QString& value);
     QString expandMacros(const QString& str, bool inDependentsLine, QSet<QString>& usedMacros) const;
     QString cycleCheckedMacroValue(const QString& macroName, QSet<QString>& usedMacros) const;

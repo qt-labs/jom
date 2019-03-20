@@ -25,11 +25,12 @@
 
 #include "tests.h"
 
-#include <QTest>
-#include <QDir>
-#include <QScopedPointer>
 #include <QDebug>
+#include <QDir>
+#include <QHash>
+#include <QScopedPointer>
 #include <QStringBuilder>
+#include <QTest>
 
 #include <ppexprparser.h>
 #include <makefilefactory.h>
@@ -39,6 +40,7 @@
 #include <exception.h>
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 
 using namespace NMakeFile;
@@ -1206,6 +1208,77 @@ void Tests::suffixes()
     QCOMPARE(output.takeFirst(), QByteArray("a -> x"));
     QCOMPARE(output.takeFirst(), QByteArray("b -> x"));
     QCOMPARE(output.takeFirst(), QByteArray("c -> x"));
+}
+
+using ByteArrayDict = QHash<QByteArray, QByteArray>;
+
+void Tests::macrosOnCommandLine_data()
+{
+    QTest::addColumn<QStringList>("arguments");
+    QTest::addColumn<ByteArrayDict>("expectedMacros");
+    QTest::newRow("no_arguments")
+            << QStringList()
+            << ByteArrayDict{ { "FooBar", "1" }, { "FOOBAR", "" } };
+    QTest::newRow("FooBar")
+            << QStringList{ "FooBar=2" }
+            << ByteArrayDict{ { "FooBar", "2" }, { "FOOBAR", "2" } };
+    QTest::newRow("FOOBAR")
+            << QStringList{ "FOOBAR=2" }
+            << ByteArrayDict{ { "FooBar", "1" }, { "FOOBAR", "2" } };
+    QTest::newRow("foobar")
+            << QStringList{ "foobar=2" }
+            << ByteArrayDict{ { "FooBar", "1" }, { "FOOBAR", "2" } };
+    QTest::newRow("FooBar_FOOBAR")
+            << QStringList{ "FooBar=2", "FOOBAR=3" }
+            << ByteArrayDict{ { "FooBar", "2" }, { "FOOBAR", "3" } };
+    QTest::newRow("FOOBAR_FooBar")
+            << QStringList{ "FOOBAR=2", "FooBar=3" }
+            << ByteArrayDict{ { "FooBar", "3" }, { "FOOBAR", "2" } };
+    QTest::newRow("FooBar_FOOBAR_foobar")
+            << QStringList{ "FooBar=2", "FOOBAR=3", "foobar=4" }
+            << ByteArrayDict{ { "FooBar", "2" }, { "FOOBAR", "3" } };
+    QTest::newRow("foobar_FooBar_FOOBAR")
+            << QStringList{ "foobar=2", "FooBar=3", "FOOBAR=4" }
+            << ByteArrayDict{ { "FooBar", "3" }, { "FOOBAR", "4" } };
+    QTest::newRow("FooBar_FooBar")
+            << QStringList{ "FooBar=2", "FooBar=3" }
+            << ByteArrayDict{ { "FooBar", "2" }, { "FOOBAR", "3" } };
+    QTest::newRow("FooBar_FooBar_FooBar")
+            << QStringList{ "FooBar=2", "FooBar=3", "FooBar=4" }
+            << ByteArrayDict{ { "FooBar", "2" }, { "FOOBAR", "4" } };
+    QTest::newRow("FOOBAR_FOOBAR")
+            << QStringList{ "FOOBAR=2", "FOOBAR=3" }
+            << ByteArrayDict{ { "FooBar", "1" }, { "FOOBAR", "2" } };
+    QTest::newRow("FOOBAR_FOOBAR_FOOBAR")
+            << QStringList{ "FOOBAR=2", "FOOBAR=3", "FOOBAR=4" }
+            << ByteArrayDict{ { "FooBar", "1" }, { "FOOBAR", "2" } };
+    QTest::newRow("FooBar_FooBar_FOOBAR_FOOBAR")
+            << QStringList{ "FooBar=2", "FooBar=3", "FOOBAR=4", "FOOBAR=5" }
+            << ByteArrayDict{ { "FooBar", "2" }, { "FOOBAR", "4" } };
+}
+
+void Tests::macrosOnCommandLine()
+{
+    QFETCH(QStringList, arguments);
+    QFETCH(ByteArrayDict, expectedMacros);
+    QVERIFY(runJom(arguments << "/nologo" << "/f" << "test.mk", "blackbox/macrosOnCommandLine"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QList<QByteArray> output = m_jomProcess->readAllStandardOutput().split('\n');
+    std::transform(output.cbegin(), output.cend(), output.begin(),
+                   [](const QByteArray &line) { return line.trimmed(); });
+    auto it = std::remove_if(output.begin(), output.end(), std::mem_fn(&QByteArray::isEmpty));
+    if (it != output.end())
+        output.erase(it, output.end());
+    ByteArrayDict macros;
+    for (const QByteArray &line : qAsConst(output)) {
+        auto x = line.split(':');
+        macros[x.at(0)] = x.at(1);
+    }
+    if (macros != expectedMacros) {
+        qDebug() << "  actual:" << macros;
+        qDebug() << "expected:" << expectedMacros;
+        QFAIL("Unexpected macro values");
+    }
 }
 
 void Tests::nonexistentDependent()

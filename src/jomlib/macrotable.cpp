@@ -56,8 +56,14 @@ QString MacroTable::macroValue(const QString& macroName) const
 void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString& value, bool readOnly)
 {
     const QString upperName = name.toUpper();
-    if (m_macros.contains(upperName))
+    if (m_macros.contains(upperName)) {
+        MacroData &md = m_macros[upperName];
+        if (md.source == MacroSource::CommandLine) {
+            md.source = MacroSource::Environment;
+            setEnvironmentVariable(upperName, expandMacros(md.value));
+        }
         return;
+    }
     QString expandedValue;
     try {
         // The make variable gets the unexpanded value.
@@ -72,9 +78,29 @@ void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString&
     MacroData* macroData = internalSetMacroValue(upperName, value);
     if (!macroData)
         return;
-    macroData->isEnvironmentVariable = true;
+    macroData->source = MacroSource::Environment;
     macroData->isReadOnly = readOnly;
     setEnvironmentVariable(upperName, expandedValue);
+}
+
+void MacroTable::defineCommandLineMacroValue(const QString &name, const QString &value)
+{
+    defineCommandLineMacroValueImpl(name, value, MacroSource::CommandLine);
+}
+
+void MacroTable::defineImplicitCommandLineMacroValue(const QString &name, const QString &value)
+{
+    defineCommandLineMacroValueImpl(name, value, MacroSource::CommandLineImplicit);
+}
+
+void MacroTable::defineCommandLineMacroValueImpl(const QString &name, const QString &value,
+                                                 MacroSource source)
+{
+    MacroData* macroData = internalSetMacroValue(name, value, true);
+    if (!macroData)
+        return;
+    macroData->source = source;
+    macroData->isReadOnly = true;
 }
 
 bool MacroTable::isMacroNameValid(const QString& name) const
@@ -97,14 +123,25 @@ bool MacroTable::isMacroNameValid(const QString& name) const
  */
 void MacroTable::setMacroValue(const QString& name, const QString& value)
 {
+    setMacroValueImpl(name, value, MacroSource::MakeFile);
+}
+
+void MacroTable::setMacroValueImpl(const QString &name, const QString &value, MacroSource source)
+{
     MacroData* macroData = internalSetMacroValue(name, value);
     if (!macroData) {
         QString msg = QLatin1String("macro name %1 is invalid");
         throw Exception(msg.arg(name));
     }
 
-    if (macroData->isEnvironmentVariable)
+    macroData->source = source;
+    if (macroData->source == MacroSource::Environment)
         setEnvironmentVariable(name, expandMacros(macroData->value));
+}
+
+void MacroTable::predefineValue(const QString &name, const QString &value)
+{
+    setMacroValueImpl(name, value, MacroSource::Predefinition);
 }
 
 /**
@@ -150,7 +187,8 @@ private:
     const QString &str;
 };
 
-MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, const QString& value)
+MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString &name, const QString &value,
+                                                         bool ignoreReadOnly)
 {
     QString expandedName = expandMacros(name);
     if (!isMacroNameValid(expandedName))
@@ -162,7 +200,7 @@ MacroTable::MacroData* MacroTable::internalSetMacroValue(const QString& name, co
     replaceStringWithLazyValue(newValue, instantiatedName, MacroValueOp(this, expandedName));
 
     result = &m_macros[expandedName];
-    if (!result->isReadOnly)
+    if (ignoreReadOnly || !result->isReadOnly)
         result->value = newValue;
 
     return result;

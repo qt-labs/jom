@@ -30,8 +30,9 @@
 
 #include <cstdlib>
 
-#include <QThread>
 #include <QFile>
+#include <QSet>
+#include <QThread>
 
 namespace NMakeFile {
 
@@ -85,6 +86,7 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
     QString makeflags;
     if (!expandCommandFiles(arguments))
         return false;
+    QSet<QString> explicitlyDefinedMacros;
 
     const QStringList originalArguments = arguments;
     while (!arguments.isEmpty()) {
@@ -105,7 +107,16 @@ bool Options::readCommandLineArguments(QStringList arguments, QString& makefile,
                 fprintf(stderr, "Error: The macro name %s is invalid.", qPrintable(name));
                 exit(128);
             }
-            macroTable.defineEnvironmentMacroValue(name, trimLeft(arg.mid(idx+1)), true);
+            const QString value = trimLeft(arg.mid(idx+1));
+            if (!explicitlyDefinedMacros.contains(name)) {
+                explicitlyDefinedMacros.insert(name);
+                macroTable.defineCommandLineMacroValue(name, value);
+            }
+            const QString upperName = name.toUpper();
+            if (upperName != name && !explicitlyDefinedMacros.contains(upperName)) {
+                explicitlyDefinedMacros.remove(upperName);
+                macroTable.defineImplicitCommandLineMacroValue(upperName, value);
+            }
         } else {
             // handle target
             arg = arg.trimmed();
