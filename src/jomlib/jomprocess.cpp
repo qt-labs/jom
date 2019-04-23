@@ -280,16 +280,10 @@ void Process::setEnvironment(const ProcessEnvironment &environment)
     m_envBlock = createEnvBlock(environment);
 }
 
-static bool runsWindowsVistaOrGreater()
-{
-    return QSysInfo::windowsVersion() >= QSysInfo::WV_VISTA;
-}
-
 enum PipeType { InputPipe, OutputPipe };
 
 static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa, PipeType pt)
 {
-    static bool rejectRemoteClientsFlagSupported = runsWindowsVistaOrGreater();
     BOOL oldInheritHandle = sa->bInheritHandle;
 
     HANDLE hRead;
@@ -304,9 +298,8 @@ static bool setupPipe(Pipe &pipe, SECURITY_ATTRIBUTES *sa, PipeType pt)
 
         sa->bInheritHandle = (pt == InputPipe);
         const DWORD dwPipeBufferSize = 1024 * 1024;
-        DWORD dwPipeMode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT;
-        if (rejectRemoteClientsFlagSupported)
-            dwPipeMode |= PIPE_REJECT_REMOTE_CLIENTS;
+        const DWORD dwPipeMode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT
+                | PIPE_REJECT_REMOTE_CLIENTS;
         hRead = CreateNamedPipe(pipeName,
                                 PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
                                 dwPipeMode,
