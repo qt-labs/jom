@@ -31,6 +31,7 @@
 #include <QDebug>
 #include <QDir>
 
+#include <algorithm>
 #include <limits>
 
 namespace NMakeFile {
@@ -589,7 +590,7 @@ void Makefile::applyInferenceRules(DescriptionBlock* target)
 
     QVector<InferenceRule *> rules = target->m_inferenceRules;
     filterRulesByDependent(rules, target->targetName());
-    qStableSort(rules.begin(), rules.end(), infRulesPriorityGreaterThan);
+    std::stable_sort(rules.begin(), rules.end(), &infRulesPriorityGreaterThan);
 
     if (rules.isEmpty()) {
         //qDebug() << "XXX" << target->m_targetName << "no matching inference rule found.";
