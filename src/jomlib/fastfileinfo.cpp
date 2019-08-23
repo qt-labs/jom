@@ -26,6 +26,7 @@
 #include "fastfileinfo.h"
 
 #include <QtCore/QDebug>
+#include <QtCore/QDir>
 #include <QtCore/QHash>
 #include <windows.h>
 
@@ -60,7 +61,12 @@ FastFileInfo::FastFileInfo(const QString &fileName)
     if (z(m_attributes)->dwFileAttributes != INVALID_FILE_ATTRIBUTES)
         return;
 
-    if (!GetFileAttributesEx(reinterpret_cast<const TCHAR*>(fileName.utf16()),
+    static const QString longPathPrefix = QStringLiteral("\\\\?\\");
+    QString nativeFilePath = QDir::toNativeSeparators(QFileInfo(fileName).absoluteFilePath());
+    if (!nativeFilePath.startsWith(longPathPrefix))
+        nativeFilePath.prepend(longPathPrefix);
+
+    if (!GetFileAttributesEx(reinterpret_cast<const TCHAR*>(nativeFilePath.utf16()),
                              GetFileExInfoStandard, &m_attributes))
     {
         z(m_attributes)->dwFileAttributes = INVALID_FILE_ATTRIBUTES;
