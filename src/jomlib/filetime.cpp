@@ -29,9 +29,8 @@
 
 namespace NMakeFile {
 
-template<bool> struct CompileTimeAssert;
-template<> struct CompileTimeAssert<true> {};
-static CompileTimeAssert<sizeof(FileTime::InternalType) == sizeof(FILETIME)> internal_type_has_wrong_size;
+static_assert(sizeof(FileTime::InternalType) == sizeof(FILETIME),
+              "FileTime::InternalType has wrong size");
 
 FileTime::FileTime()
     : m_fileTime(0)

@@ -31,11 +31,8 @@
 
 namespace NMakeFile {
 
-template<bool> struct CompileTimeAssert;
-template<> struct CompileTimeAssert<true> {};
-static CompileTimeAssert<
-    sizeof(FastFileInfo::InternalType) == sizeof(WIN32_FILE_ATTRIBUTE_DATA)
-        > internal_type_has_wrong_size;
+static_assert(sizeof(FastFileInfo::InternalType) == sizeof(WIN32_FILE_ATTRIBUTE_DATA),
+              "FastFileInfo::InternalType has wrong size");
 
 inline WIN32_FILE_ATTRIBUTE_DATA* z(FastFileInfo::InternalType &internalData)
 {
