@@ -44,14 +44,10 @@
 
 using namespace NMakeFile;
 
-const int nVersionMajor = 1;
-const int nVersionMinor = 1;
-const int nVersionPatch = 4;
-
 static void showLogo()
 {
     fprintf(stderr, "\njom %d.%d.%d - empower your cores\n\n",
-        nVersionMajor, nVersionMinor, nVersionPatch);
+        JOM_VERSION_MAJOR, JOM_VERSION_MINOR, JOM_VERSION_PATCH);
     fflush(stderr);
 }
 
@@ -176,7 +172,7 @@ int main(int argc, char* argv[])
             showUsage();
             return 0;
         } else if (options->showVersionAndExit) {
-            printf("jom version %d.%d.%d\n", nVersionMajor, nVersionMinor, nVersionPatch);
+            printf("jom version %d.%d.%d\n", JOM_VERSION_MAJOR, JOM_VERSION_MINOR, JOM_VERSION_PATCH);
             return 0;
         }
 
