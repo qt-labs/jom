@@ -5,6 +5,8 @@ Changes since jom 1.1.3
 - Makefiles that do not contain targets are allowed.
 - Fixed handling of macro definitions on the command line (QTCREATORBUG-22176).
 - Enabled usage of paths longer than MAX_PATH (QTCREATORBUG-22848).
+- Added version information to the executable (QTCREATORBUG-23290).
+- Fixed directory separators in the MAKEDIR variable (QTCREATORBUG-23559).
 
 Changes since jom 1.1.2
 - Removed the /KEEPTEMPFILES option. This option only worked for top-level make
