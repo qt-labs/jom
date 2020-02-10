@@ -134,7 +134,8 @@ bool MakefileFactory::apply(const QStringList& commandLineArguments, Options **o
     readEnvironment(m_environment, macroTable, options->overrideEnvVarMacros);
     if (!options->ignorePredefinedRulesAndMacros) {
         macroTable->predefineValue("MAKE", encloseInDoubleQuotesIfNeeded(options->fullAppPath));
-        macroTable->predefineValue("MAKEDIR", encloseInDoubleQuotesIfNeeded(QDir::currentPath()));
+        macroTable->predefineValue("MAKEDIR", encloseInDoubleQuotesIfNeeded(
+                                       QDir::toNativeSeparators(QDir::currentPath())));
         macroTable->predefineValue("AS", "ml");       // Macro Assembler
         macroTable->predefineValue("ASFLAGS", QString());
         macroTable->predefineValue("BC", "bc");       // Basic Compiler
