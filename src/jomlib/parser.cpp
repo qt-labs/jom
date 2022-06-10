@@ -360,7 +360,10 @@ static QStringList expandWildcards(const QString &dirPath, const QStringList &ls
             str = QDir::fromNativeSeparators(str);
             int idx = str.lastIndexOf(QLatin1Char('/'));
             if (idx != -1) {
-                path += QLatin1Char('/') + str.left(idx);
+                if (QFileInfo(str).isRelative())
+                    path += QLatin1Char('/') + str.left(idx);
+                else
+                    path = str.left(idx);
                 str.remove(0, idx + 1);
             }
 
