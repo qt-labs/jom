@@ -114,6 +114,7 @@ void Command::evaluateModifiers()
 DescriptionBlock::DescriptionBlock(Makefile* mkfile)
 :   m_bFileExists(false),
     m_bVisitedByCycleCheck(false),
+    m_bNoCyclesRootedHere(false),
     m_canAddCommands(ACSUnknown),
     m_pMakefile(mkfile)
 {
