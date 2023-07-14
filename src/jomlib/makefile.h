@@ -103,6 +103,7 @@ public:
     FileTime m_timeStamp;
     bool m_bFileExists;
     bool m_bVisitedByCycleCheck;
+    bool m_bNoCyclesRootedHere;
     QVector<InferenceRule*> m_inferenceRules;
 
     enum AddCommandsState { ACSUnknown, ACSEnabled, ACSDisabled };
