@@ -726,7 +726,13 @@ QVector<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFileP
 
 void Parser::preselectInferenceRules(DescriptionBlock *target)
 {
-    if (target->m_commands.isEmpty()) {
+    if (!target->m_commands.isEmpty()) {
+        /* If we already have commands for this target, then we've already
+         * generated all the commands for the dependents already. Nothing
+         * more to do. */
+        return;
+    }
+    {
         QVector<InferenceRule *> rules = findRulesByTargetName(target->targetName());
         if (!rules.isEmpty())
             target->m_inferenceRules = rules;
