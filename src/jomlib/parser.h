@@ -64,6 +64,7 @@ private:
     void parseCommandLine(const QString& cmdLine, QList<Command>& commands, bool inferenceRule);
     void parseInlineFiles(Command& cmd, bool inferenceRule);
     void checkForCycles(DescriptionBlock* target);
+    void resetCycleChecker(DescriptionBlock* target);
     QVector<InferenceRule*> findRulesByTargetName(const QString& targetFilePath);
     void preselectInferenceRules(DescriptionBlock *target);
     void error(const QString& msg);

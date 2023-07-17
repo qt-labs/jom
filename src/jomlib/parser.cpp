@@ -149,6 +149,11 @@ void Parser::apply(Preprocessor* pp,
         checkForCycles(target);
         preselectInferenceRules(target);
     }
+    // reset the droppings left by the cycle checker
+    foreach (const QString& targetName, m_activeTargets) {
+        DescriptionBlock *target = m_makefile->target(targetName);
+        resetCycleChecker(target);
+    }
 }
 
 MacroTable* Parser::macroTable()
@@ -637,7 +642,23 @@ void Parser::parseDotDirective()
 
 void Parser::checkForCycles(DescriptionBlock* target)
 {
+#ifdef DEBUG_CYCLE_CHECKER
+    static int depth = 0;
+#endif
+
     if (!target)
+        return;
+
+#ifdef DEBUG_CYCLE_CHECKER
+    {
+        int i = depth;
+        while (i--)
+            putc(' ', stdout);
+    }
+    printf("%s\n", qPrintable(target->targetName()));
+#endif
+
+    if (target->m_bNoCyclesRootedHere)
         return;
 
     if (target->m_bVisitedByCycleCheck) {
@@ -645,12 +666,33 @@ void Parser::checkForCycles(DescriptionBlock* target)
         throw Exception(msg.arg(target->targetName()));
     }
 
+#ifdef DEBUG_CYCLE_CHECKER
+    depth++;
+#endif
     target->m_bVisitedByCycleCheck = true;
     for (int i = target->m_dependents.count(); --i >= 0;) {
         DescriptionBlock *const dep = m_makefile->target(target->m_dependents.at(i));
         checkForCycles(dep);
     }
     target->m_bVisitedByCycleCheck = false;
+#ifdef DEBUG_CYCLE_CHECKER
+    depth--;
+#endif
+
+    target->m_bNoCyclesRootedHere = true;
+}
+
+void Parser::resetCycleChecker(DescriptionBlock* target)
+{
+    if (!target || !target->m_bNoCyclesRootedHere)
+        return;
+
+    for (int i = target->m_dependents.count(); --i >= 0;) {
+        DescriptionBlock *const dep = m_makefile->target(target->m_dependents.at(i));
+        resetCycleChecker(dep);
+    }
+
+    target->m_bNoCyclesRootedHere = false;
 }
 
 QVector<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFilePath)
@@ -684,7 +726,13 @@ QVector<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFileP
 
 void Parser::preselectInferenceRules(DescriptionBlock *target)
 {
-    if (target->m_commands.isEmpty()) {
+    if (!target->m_commands.isEmpty()) {
+        /* If we already have commands for this target, then we've already
+         * generated all the commands for the dependents already. Nothing
+         * more to do. */
+        return;
+    }
+    {
         QVector<InferenceRule *> rules = findRulesByTargetName(target->targetName());
         if (!rules.isEmpty())
             target->m_inferenceRules = rules;
