@@ -96,7 +96,7 @@ static int yywrap()
 
 <STATE_DEFINED>{
     [:blank:]+     /* eat whitespace */
-    "(".+")" {
+    "("[^\)]+")" {
         BEGIN(INITIAL);
         QByteArray macroName(yytext);
         int idx = macroName.indexOf('(');

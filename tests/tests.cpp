@@ -190,6 +190,7 @@ void Tests::preprocessorExpressions_data()
     QTest::newRow("macro defined 2") << QByteArray("DeFiNeD(\"ThisIsDefined\")") << 1;
     QTest::newRow("macro defined 3") << QByteArray("DEFINED\t(ThisIsDefinedButEmpty)") << 1;
     QTest::newRow("macro defined 4") << QByteArray("defined (   ThisIsUnfortunatelyNotDefined    )") << 0;
+    QTest::newRow("macro defined 5") << QByteArray("defined(ThisIsDefined) && defined(ThisIsDefinedButEmpty)") << 1;
     QTest::newRow("shellcommand") << QByteArray("[ cmd /c exit 12 ]") << 12;
     QTest::newRow("ops +*") << QByteArray("2+3*5") << 17;
     QTest::newRow("ops (+)*") << QByteArray("(2+3)*5") << 25;
