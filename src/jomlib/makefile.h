@@ -104,6 +104,7 @@ public:
     bool m_bFileExists;
     bool m_bVisitedByCycleCheck;
     bool m_bNoCyclesRootedHere;
+    bool m_bVisitedByPreselectInferenceRules;
     QVector<InferenceRule*> m_inferenceRules;
 
     enum AddCommandsState { ACSUnknown, ACSEnabled, ACSDisabled };
