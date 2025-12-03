@@ -392,6 +392,16 @@ bool Preprocessor::isPreprocessingDirective(const QString& line, QString& direct
         if (result) {
             directive = m_rexPreprocessingDirective.cap(1).toUpper();
             value = m_rexPreprocessingDirective.cap(2).trimmed();
+
+            // Handle "!else if", "!else ifdef", "!else ifndef" as "!ELSEIF" etc.
+            if (directive == QLatin1String("ELSE")) {
+                static const QRegExp rex(QLatin1String("^(ifn?def|if)\\s+(.*)$"),
+                                         Qt::CaseInsensitive);
+                if (rex.exactMatch(value)) {
+                    directive.append(rex.cap(1).toUpper());
+                    value = rex.cap(2);
+                }
+            }
         }
     }
 

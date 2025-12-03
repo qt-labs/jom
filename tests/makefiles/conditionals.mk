@@ -93,5 +93,33 @@ boo \
 hoo
 !ENDIF
 
+# Test !else if syntax (alternative to !elseif with space)
+TEST11=false
+!if "A" == "B"
+TEST11=false
+!else if "A"=="A"
+TEST11=true
+!else
+TEST11=false
+!endif
+
+TEST12=false
+!ifdef NOT_DEFINED
+TEST12=false
+!else ifdef TEST1
+TEST12=true
+!else
+TEST12=false
+!endif
+
+TEST13=false
+!ifdef NOT_DEFINED
+TEST13=false
+!else ifndef NOT_DEFINED
+TEST13=true
+!else
+TEST13=false
+!endif
+
 all:
 

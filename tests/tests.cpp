@@ -333,6 +333,9 @@ void Tests::conditionals()
     QCOMPARE(macroTable->macroValue("TEST8"), QLatin1String("true"));
     QCOMPARE(macroTable->macroValue("TEST9"), QLatin1String("foo  bar  baz"));
     QCOMPARE(macroTable->macroValue("TEST10"), QLatin1String("foo  bar  boo  hoo"));
+    QCOMPARE(macroTable->macroValue("TEST11"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST12"), QLatin1String("true"));
+    QCOMPARE(macroTable->macroValue("TEST13"), QLatin1String("true"));
 }
 
 void Tests::dotDirectives()
