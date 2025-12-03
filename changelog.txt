@@ -2,6 +2,7 @@ This is the changelog for jom 1.1.5, the parallel make tool.
 
 Changes since jom 1.1.4
 - Fixed compound defined() preprocessor expressions (QTCREATORBUG-24134).
+- A leading hyphen in MAKEFLAGS is now ignored.
 
 Changes since jom 1.1.3
 - Fixed handling of the command line option /j.
