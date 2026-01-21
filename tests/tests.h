@@ -85,6 +85,7 @@ private slots:
     void nonexistentDependent();
     void noTargets();
     void outOfDateCheck();
+    void rulesBeingRun();
 
 private:
     bool openMakefile(const QString& fileName);

@@ -1366,4 +1366,15 @@ void Tests::outOfDateCheck()
     QVERIFY(output.isEmpty());
 }
 
+void Tests::rulesBeingRun()
+{
+    // Test for QTCREATORBUG-33978. Verifies that inference rules are applied to
+    // dependents even when the parent target has explicit commands.
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk", "blackbox/rulesBeingRun"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QByteArray output = m_jomProcess->readAllStandardOutput();
+    QVERIFY(output.contains("Building foo.obj from foo.cpp"));
+    QVERIFY(output.contains("All target executed"));
+}
+
 QTEST_MAIN(Tests)

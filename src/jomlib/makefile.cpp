@@ -115,6 +115,7 @@ DescriptionBlock::DescriptionBlock(Makefile* mkfile)
 :   m_bFileExists(false),
     m_bVisitedByCycleCheck(false),
     m_bNoCyclesRootedHere(false),
+    m_bInferenceRulesPreselected(false),
     m_canAddCommands(ACSUnknown),
     m_pMakefile(mkfile)
 {
