@@ -1,4 +1,6 @@
-This is the changelog for jom 1.1.6, the parallel make tool.
+This is the changelog for jom 1.1.7, the parallel make tool.
+
+Changes since jom 1.1.6
 
 Changes since jom 1.1.5
 - Fixed a regression that led to inference rules not being applied if the target
