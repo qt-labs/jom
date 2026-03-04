@@ -82,6 +82,8 @@ private slots:
     void suffixes();
     void macrosOnCommandLine_data();
     void macrosOnCommandLine();
+    void commandLineMacrosInEnvironment_data();
+    void commandLineMacrosInEnvironment();
     void nonexistentDependent();
     void noTargets();
     void outOfDateCheck();

@@ -86,11 +86,13 @@ void MacroTable::defineEnvironmentMacroValue(const QString& name, const QString&
 void MacroTable::defineCommandLineMacroValue(const QString &name, const QString &value)
 {
     defineCommandLineMacroValueImpl(name, value, MacroSource::CommandLine);
+    setEnvironmentVariable(name, expandMacros(value));
 }
 
 void MacroTable::defineImplicitCommandLineMacroValue(const QString &name, const QString &value)
 {
     defineCommandLineMacroValueImpl(name, value, MacroSource::CommandLineImplicit);
+    setEnvironmentVariable(name, expandMacros(value));
 }
 
 void MacroTable::defineCommandLineMacroValueImpl(const QString &name, const QString &value,

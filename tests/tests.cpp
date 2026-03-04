@@ -1285,6 +1285,51 @@ void Tests::macrosOnCommandLine()
     }
 }
 
+void Tests::commandLineMacrosInEnvironment_data()
+{
+    QTest::addColumn<QStringList>("environment");
+    QTest::addColumn<QStringList>("arguments");
+    QTest::addColumn<QByteArray>("expectedMacro");
+    QTest::addColumn<QByteArray>("expectedEnv");
+
+    QTest::newRow("no env, no cmdline")
+            << QStringList()
+            << QStringList()
+            << QByteArray("macro:") << QByteArray("envi:%JOM_TEST_VAR%");
+
+    QTest::newRow("no env, cmdline set")
+            << QStringList()
+            << (QStringList() << "JOM_TEST_VAR=hello")
+            << QByteArray("macro:hello") << QByteArray("envi:hello");
+
+    QTest::newRow("env set, no cmdline")
+            << (QStringList() << "JOM_TEST_VAR=fromenv")
+            << QStringList()
+            << QByteArray("macro:fromenv") << QByteArray("envi:fromenv");
+
+    QTest::newRow("env set, cmdline set")
+            << (QStringList() << "JOM_TEST_VAR=fromenv")
+            << (QStringList() << "JOM_TEST_VAR=hello")
+            << QByteArray("macro:hello") << QByteArray("envi:hello");
+}
+
+void Tests::commandLineMacrosInEnvironment()
+{
+    QFETCH(QStringList, environment);
+    QFETCH(QStringList, arguments);
+    QFETCH(QByteArray, expectedMacro);
+    QFETCH(QByteArray, expectedEnv);
+
+    m_jomProcess->setEnvironment(environment);
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk" << arguments,
+                   "blackbox/commandLineMacrosInEnvironment"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QList<QByteArray> output = splitOutput(m_jomProcess->readAllStandardOutput().trimmed());
+    QCOMPARE(output.count(), 2);
+    QCOMPARE(output.at(0), expectedMacro);
+    QCOMPARE(output.at(1), expectedEnv);
+}
+
 void Tests::nonexistentDependent()
 {
     QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk", "blackbox/nonexistentdependent"));
