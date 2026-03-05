@@ -9,7 +9,7 @@ SUBDIRS = sub_app sub_jomlib sub_tests
 OTHER_FILES = \
     changelog.txt \
     LICENSE.GPL \
-    README
+    README.md
 
 defineTest(minQtVersion) {
     maj = $$1
