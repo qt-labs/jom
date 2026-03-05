@@ -1,5 +1,6 @@
 TEMPLATE = app
 QT = core testlib
+CONFIG += testcase
 INCLUDEPATH += ../src/jomlib
 
 CONFIG(debug, debug|release) {

@@ -954,6 +954,16 @@ bool Tests::runJom(const QStringList &args, const QString &workingDirectory,
         QDir::setCurrent(workingDirectory);
     }
     m_jomProcess->setProcessChannelMode(channelMode);
+    // Strip the parent jom's jobserver environment variables so that child jom
+    // processes don't think they're sub-jom instances (e.g. when running via "jom check").
+    if (m_jomProcess->environment().isEmpty()) {
+        QStringList env = QProcess::systemEnvironment();
+        env.erase(std::remove_if(env.begin(), env.end(), [](const QString &s) {
+            return s.startsWith(QLatin1String("_JOMSRVKEY_="))
+                || s.startsWith(QLatin1String("_JOMJOBCOUNT_="));
+        }), env.end());
+        m_jomProcess->setEnvironment(env);
+    }
     m_jomProcess->start(jomBinary, args);
     bool success = true;
     if (!m_jomProcess->waitForStarted()) {
