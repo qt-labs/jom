@@ -402,7 +402,7 @@ void Tests::descriptionBlocks()
     QCOMPARE(target->m_dependents.at(1), QLatin1String("b"));
     QCOMPARE(target->m_dependents.at(2), QLatin1String("c"));
     QCOMPARE(target->m_commands.count(), 1);
-    
+
     Command cmd = target->m_commands.first();
     QCOMPARE(cmd.m_commandLine, QLatin1String("echo one"));
 
@@ -410,7 +410,7 @@ void Tests::descriptionBlocks()
     QVERIFY(target != 0);
     QCOMPARE(target->m_dependents.count(), 0);
     QCOMPARE(target->m_commands.count(), 1);
-    
+
     cmd = target->m_commands.first();
     QCOMPARE(cmd.m_commandLine, QLatin1String("echo two"));
 
@@ -418,7 +418,7 @@ void Tests::descriptionBlocks()
     QVERIFY(target != 0);
     QCOMPARE(target->m_dependents.count(), 1);
     QCOMPARE(target->m_commands.count(), 1);
-    
+
     cmd = target->m_commands.first();
     QCOMPARE(cmd.m_commandLine, QLatin1String("echo three; @echo end of three"));
 
@@ -618,7 +618,7 @@ void Tests::comments()
     QVERIFY(target);
     QCOMPARE(target->m_dependents.count(), 2);
     QCOMPARE(target->m_commands.count(), 2);
-    
+
     Command cmd1 = target->m_commands.at(0);
     Command cmd2 = target->m_commands.at(1);
     QCOMPARE(cmd1.m_commandLine, QLatin1String("echo I'm Winneone"));
