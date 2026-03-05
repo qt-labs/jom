@@ -69,6 +69,7 @@ private slots:
     // black-box tests
     void buildUnrelatedTargetsOnError();
     void caseInsensitiveDependents();
+    void caseInsensitiveInferenceRules();
     void environmentVariables_data();
     void environmentVariables();
     void environmentVariablesCaseInsensitivity();

@@ -1055,6 +1055,15 @@ void Tests::caseInsensitiveDependents()
     QCOMPARE(m_jomProcess->exitCode(), 0);
 }
 
+void Tests::caseInsensitiveInferenceRules()
+{
+    QVERIFY(runJom(QStringList() << "/nologo" << "/f" << "test.mk",
+                   "blackbox/caseInsensitiveInferenceRules"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QByteArray output = m_jomProcess->readAllStandardOutput().trimmed();
+    QCOMPARE(output, QByteArray("from=result.b to=result.c"));
+}
+
 void Tests::environmentVariables_data()
 {
     QTest::addColumn<QStringList>("environment");

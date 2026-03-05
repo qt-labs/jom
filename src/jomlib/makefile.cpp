@@ -560,7 +560,7 @@ void Makefile::calculateInferenceRulePriorities(const QStringList &suffixes)
     for (; it != m_inferenceRules.end(); ++it) {
         InferenceRule *rule = *it;
         for (int i=0; i < suffixes.count(); ++i) {
-            if (rule->m_fromExtension == suffixes.at(i)) {
+            if (rule->m_fromExtension.compare(suffixes.at(i), Qt::CaseInsensitive) == 0) {
                 rule->m_priority = i;
                 break;
             }

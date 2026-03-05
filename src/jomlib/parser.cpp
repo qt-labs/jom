@@ -702,7 +702,7 @@ QVector<InferenceRule*> Parser::findRulesByTargetName(const QString& targetFileP
     const QHash<QString, QVector<InferenceRule *> >::const_iterator itEnd = m_ruleIdxByToExtension.constEnd();
     for (QHash<QString, QVector<InferenceRule *> >::const_iterator it = m_ruleIdxByToExtension.constBegin(); it != itEnd; ++it) {
         const QString &toExtension = it.key();
-        if (!targetFilePath.endsWith(toExtension))
+        if (!targetFilePath.endsWith(toExtension, Qt::CaseInsensitive))
             continue;
 
         foreach (InferenceRule *rule, it.value()) {
