@@ -46,9 +46,9 @@ using namespace NMakeFile;
 
 static void showLogo()
 {
-    fprintf(stderr, "\njom %d.%d.%d - empower your cores\n\n",
+    fprintf(stdout, "\njom %d.%d.%d - empower your cores\n\n",
         JOM_VERSION_MAJOR, JOM_VERSION_MINOR, JOM_VERSION_PATCH);
-    fflush(stderr);
+    fflush(stdout);
 }
 
 static void showUsage()
