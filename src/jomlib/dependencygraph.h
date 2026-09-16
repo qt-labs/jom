@@ -65,7 +65,7 @@ private:
     Node* createNode(DescriptionBlock* target, Node* parent);
     void deleteNode(Node* node);
     void removeLeaf(Node* node);
-    void internalBuild(Node *node, QSet<Node *> &seen);
+    void internalBuild(Node *node, QSet<Node *> &seen, QSet<Node *> &path);
     void addEdge(Node* parent, Node* child);
     void internalDump(Node* node, QString& indent);
     void internalDotDump(Node* node, const QString& parent);

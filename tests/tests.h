@@ -89,6 +89,8 @@ private slots:
     void noTargets();
     void outOfDateCheck();
     void rulesBeingRun();
+    void chainedInferenceRules();
+    void chainedInferenceRulesOutOfDateCheck();
 
 private:
     bool openMakefile(const QString& fileName);

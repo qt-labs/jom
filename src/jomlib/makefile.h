@@ -198,6 +198,10 @@ public:
     void setMacroTable(MacroTable *mt) { m_macroTable = mt; }
     const MacroTable* macroTable() const { return m_macroTable; }
 
+    DescriptionBlock *inferredDependentTarget(const InferenceRule *rule,
+                                              const QString &targetName) const;
+    DescriptionBlock *inferredDependentTarget(DescriptionBlock *target);
+
     void dumpTarget(DescriptionBlock*, uchar level = 0) const;
     void dumpTargets() const;
     void dumpInferenceRules() const;
@@ -209,6 +213,7 @@ public:
 
 private:
     void filterRulesByDependent(QVector<InferenceRule*>& rules, const QString& targetName);
+    const InferenceRule *findMatchingInferenceRule(DescriptionBlock *target);
     QStringList findInferredDependents(InferenceRule* rule, const QStringList& dependents);
     void applyInferenceRules(DescriptionBlock* target);
     void applyInferenceRule(DescriptionBlock* target, const InferenceRule *rule, bool applyingBatchMode = false);

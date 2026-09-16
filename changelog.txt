@@ -1,6 +1,11 @@
 This is the changelog for jom 1.1.8, the parallel make tool.
 
 Changes since jom 1.1.7
+- Fixed chained inference rules. A rule is now also applied if the dependent it
+  infers is a target that is built by another inference rule
+  (QTCREATORBUG-34175).
+- Fixed building a target whose inferred source is itself a target of the
+  makefile, e.g. a generated .c file that the .c.obj rule then compiles.
 
 Changes since jom 1.1.6
 - Fixed a regression that was introduced in 1.1.4. Setting a variable

@@ -729,10 +729,23 @@ void Parser::preselectInferenceRules(DescriptionBlock *target)
     if (target->m_bInferenceRulesPreselected)
         return;
 
+    // Set this before recursing: inferred dependents may form a cycle.
+    target->m_bInferenceRulesPreselected = true;
+
     if (target->m_commands.isEmpty()) {
         QVector<InferenceRule *> rules = findRulesByTargetName(target->targetName());
-        if (!rules.isEmpty())
+        if (!rules.isEmpty()) {
             target->m_inferenceRules = rules;
+
+            // Inference rules can be chained: the dependent a rule infers may be a target
+            // that is built by another inference rule.
+            foreach (InferenceRule *rule, rules) {
+                DescriptionBlock *inferredDependent =
+                        m_makefile->inferredDependentTarget(rule, target->targetName());
+                if (inferredDependent)
+                    preselectInferenceRules(inferredDependent);
+            }
+        }
     }
 
     foreach (const QString &dependentName, target->m_dependents) {
@@ -742,15 +755,10 @@ void Parser::preselectInferenceRules(DescriptionBlock *target)
         } else {
             QString dependentFileName = dependentName;
             removeDoubleQuotes(dependentFileName);
-            QVector<InferenceRule *> rules = findRulesByTargetName(dependentFileName);
-            if (!rules.isEmpty()) {
-                dependent = createTarget(dependentFileName);
-                dependent->m_inferenceRules = rules;
-            }
+            if (!findRulesByTargetName(dependentFileName).isEmpty())
+                preselectInferenceRules(createTarget(dependentFileName));
         }
     }
-
-    target->m_bInferenceRulesPreselected = true;
 }
 
 void Parser::error(const QString& msg)

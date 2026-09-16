@@ -27,6 +27,7 @@
 #include "makefile.h"
 #include "options.h"
 #include "fastfileinfo.h"
+#include "exception.h"
 
 #include <QFile>
 #include <QDebug>
@@ -70,7 +71,8 @@ void DependencyGraph::build(DescriptionBlock* target)
     m_bDirtyLeaves = true;
     m_root = createNode(target, 0);
     QSet<Node *> seen;
-    internalBuild(m_root, seen);
+    QSet<Node *> path;
+    internalBuild(m_root, seen, path);
     //dump();
     //qDebug() << "\n\n-------------------------------------------------\n";
 
@@ -153,14 +155,24 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
         // The target is up-to-date but it still has unapplied inference rules.
         // That means there could be dependents we didn't take into account yet.
 
+        // Only the rule that's going to be applied contributes a target as dependent. A
+        // losing rule's target is never built and would keep this target out of date.
+        DescriptionBlock *const dependentTarget =
+                target->makefile()->inferredDependentTarget(target);
+
         QStringList savedDependents = target->m_dependents;
         QVector<InferenceRule*> savedRules = target->m_inferenceRules;
         target->m_inferenceRules.clear();
 
         bool inferredDependentAdded = false;
+        if (dependentTarget && !target->m_dependents.contains(dependentTarget->targetName())) {
+            inferredDependentAdded = true;
+            target->m_dependents.append(dependentTarget->targetName());
+        }
         foreach (InferenceRule *rule, savedRules) {
-            QString inferredDependent = rule->inferredDependent(target->targetName());
-            if (!target->m_dependents.contains(inferredDependent) && FastFileInfo(inferredDependent).exists()) {
+            const QString inferredDependent = rule->inferredDependent(target->targetName());
+            if (!target->m_dependents.contains(inferredDependent)
+                && FastFileInfo(inferredDependent).exists()) {
                 inferredDependentAdded = true;
                 target->m_dependents.append(inferredDependent);
             }
@@ -179,15 +191,25 @@ bool DependencyGraph::isTargetUpToDate(DescriptionBlock* target)
     return isUpToDate;
 }
 
-void DependencyGraph::internalBuild(Node *node, QSet<Node *> &seen)
+void DependencyGraph::internalBuild(Node *node, QSet<Node *> &seen, QSet<Node *> &path)
 {
     const int c = seen.count();
     seen << node;
     if (c == seen.count())
         return;
 
-    foreach (const QString& dependentName, node->target->m_dependents) {
-        Makefile* const makefile = node->target->makefile();
+    Makefile* const makefile = node->target->makefile();
+    QStringList dependents = node->target->m_dependents;
+
+    // Inference rules can be chained: the dependent a rule infers may be a target that is
+    // built by another inference rule. Such a target must enter the graph right away, even
+    // though its rule is applied later on.
+    if (DescriptionBlock *inferredDependent = makefile->inferredDependentTarget(node->target))
+        dependents.append(inferredDependent->targetName());
+
+    path.insert(node);
+
+    foreach (const QString& dependentName, dependents) {
         DescriptionBlock* dependent = makefile->target(dependentName);
         if (!dependent) {
             // We don't know dependent "foo" but it may have been defined as "C:\MySourceDir\foo"
@@ -205,13 +227,22 @@ void DependencyGraph::internalBuild(Node *node, QSet<Node *> &seen)
         }
 
         Node* child = m_nodeContainer.value(dependent);
-        if (child)
+        if (child) {
+            if (path.contains(child)) {
+                // The parser's cycle check doesn't see inferred dependents, so a cycle that
+                // runs through one ends up here. nmake bails out as well.
+                QString msg = QLatin1String("cycle in inferred targets detected: %1");
+                throw Exception(msg.arg(dependent->targetName()));
+            }
             addEdge(node, child);
-        else
+        } else {
             child = createNode(dependent, node);
+        }
 
-        internalBuild(child, seen);
+        internalBuild(child, seen, path);
     }
+
+    path.remove(node);
 
     if (node->children.isEmpty())
         m_leaves.append(node);

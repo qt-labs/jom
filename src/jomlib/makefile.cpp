@@ -495,30 +495,43 @@ void Makefile::dumpInferenceRules() const
     }
 }
 
+/**
+ * Returns the target that the given rule would infer as dependent of the target with the
+ * given name, or nullptr if the inferred dependent is not a target of this makefile.
+ */
+DescriptionBlock *Makefile::inferredDependentTarget(const InferenceRule *rule,
+                                                    const QString &targetName) const
+{
+    QString dependentName = rule->inferredDependent(targetName);
+    if (DescriptionBlock *result = target(dependentName))
+        return result;
+
+    // Inferred dependents without search path are relative to the current directory, which
+    // makefiles may spell out explicitly. Try the other notation, too.
+    if (dependentName.startsWith(QLatin1String(".\\"))
+        || dependentName.startsWith(QLatin1String("./")))
+        dependentName.remove(0, 2);
+    else
+        dependentName.prepend(QLatin1String(".\\"));
+    return target(dependentName);
+}
+
 void Makefile::filterRulesByDependent(QVector<InferenceRule*>& rules, const QString& targetName)
 {
-    QFileInfo fi(targetName);
-    QString targetFileName = fi.fileName();
-
     QVector<InferenceRule*>::iterator it = rules.begin();
     while (it != rules.end()) {
         const InferenceRule* rule = *it;
 
-        // Thanks to Parser::preselectInferenceRules the target name
-        // is guaranteed to end with rule->m_toExtension.
-        QString baseName = targetFileName;
-        baseName.chop(rule->m_toExtension.length());
-        QString dependentName = rule->m_fromSearchPath + QDir::separator() +
-                                baseName + rule->m_fromExtension;
-
-        DescriptionBlock* depTarget = m_targets.value(dependentName);
-        if ((depTarget && depTarget->m_bFileExists) || QFile::exists(dependentName)) {
+        // A rule is applicable if the dependent it infers exists as a file or is a target
+        // that we can build, possibly with another inference rule.
+        const QString dependentName = rule->inferredDependent(targetName);
+        if (inferredDependentTarget(rule, targetName) || QFile::exists(dependentName)) {
             ++it;
             continue;
         }
 
         it = rules.erase(it);
-    }    
+    }
 }
 
 void Makefile::applyInferenceRules(QList<DescriptionBlock*> targets)
@@ -585,10 +598,14 @@ void Makefile::invalidateTimeStamps()
     }
 }
 
-void Makefile::applyInferenceRules(DescriptionBlock* target)
+/**
+ * Returns the inference rule that would be applied to the given target, or nullptr if no
+ * rule matches.
+ */
+const InferenceRule *Makefile::findMatchingInferenceRule(DescriptionBlock *target)
 {
     if (target->m_inferenceRules.isEmpty())
-        return;
+        return 0;
 
     QVector<InferenceRule *> rules = target->m_inferenceRules;
     filterRulesByDependent(rules, target->targetName());
@@ -596,11 +613,43 @@ void Makefile::applyInferenceRules(DescriptionBlock* target)
 
     if (rules.isEmpty()) {
         //qDebug() << "XXX" << target->m_targetName << "no matching inference rule found.";
-        return;
+        return 0;
     }
 
     // take the last matching inference rule
-    const InferenceRule* matchingRule = rules.last();
+    return rules.last();
+}
+
+/**
+ * Returns the target that the rule matching the given target would infer as dependent, or
+ * nullptr if there's no such rule or the inferred dependent isn't a target of this makefile.
+ */
+DescriptionBlock *Makefile::inferredDependentTarget(DescriptionBlock *target)
+{
+    // Determining the matching rule hits the file system. Usually no rule infers a target at
+    // all, so check that first - it's just a couple of hash lookups.
+    bool targetInferrable = false;
+    foreach (const InferenceRule *rule, target->m_inferenceRules) {
+        if (inferredDependentTarget(rule, target->targetName())) {
+            targetInferrable = true;
+            break;
+        }
+    }
+    if (!targetInferrable)
+        return 0;
+
+    const InferenceRule *rule = findMatchingInferenceRule(target);
+    if (!rule)
+        return 0;
+    return inferredDependentTarget(rule, target->targetName());
+}
+
+void Makefile::applyInferenceRules(DescriptionBlock* target)
+{
+    const InferenceRule *matchingRule = findMatchingInferenceRule(target);
+    if (!matchingRule)
+        return;
+
     applyInferenceRule(target, matchingRule);
     target->m_inferenceRules.clear();
 }
@@ -617,6 +666,11 @@ void Makefile::applyInferenceRule(DescriptionBlock* target, const InferenceRule*
     //qDebug() << "----> applyInferenceRule for" << target->targetName();
 
     QString inferredDependent = rule->inferredDependent(target->targetName());
+    if (DescriptionBlock *dependentTarget = inferredDependentTarget(rule, target->targetName())) {
+        // Prefer the name the makefile declared: that's what $< expands to and what the
+        // out-of-date check looks up.
+        inferredDependent = dependentTarget->targetName();
+    }
     if (!target->m_dependents.contains(inferredDependent))
         target->m_dependents.append(inferredDependent);
     target->m_commands = rule->m_commands;
@@ -645,6 +699,8 @@ void Makefile::applyInferenceRule(QList<DescriptionBlock*> &batch, const Inferen
     foreach (DescriptionBlock *target, batch) {
         target->m_inferenceRules.clear();
         QString inferredDependent = rule->inferredDependent(target->targetName());
+        if (DescriptionBlock *dependentTarget = inferredDependentTarget(rule, target->targetName()))
+            inferredDependent = dependentTarget->targetName();
         if (!executingTarget->m_dependents.contains(inferredDependent))
             executingTarget->m_dependents.append(inferredDependent);
 
