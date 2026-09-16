@@ -526,6 +526,21 @@ void Tests::inferenceRules()
     QCOMPARE(target->m_commands.first().m_commandLine, expectedCommandLine);
 }
 
+void Tests::syncPoints()
+{
+    QVERIFY( openMakefile(QLatin1String("syncpoints.mk")) );
+    QScopedPointer<Makefile> mkfile(m_makefileFactory->makefile());
+    QVERIFY(mkfile);
+
+    for (int i = 0; i < 5; ++i) {
+        DescriptionBlock* target = mkfile->target(QLatin1String("t") + QString::number(i));
+        QVERIFY(target != 0);
+        QCOMPARE(target->m_dependents,
+                 QStringList() << QLatin1String("m") + QString::number(i)
+                                  + QLatin1String(".txt"));
+    }
+}
+
 void Tests::cycleInTargets()
 {
     MacroTable *macroTable = new MacroTable;

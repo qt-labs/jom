@@ -132,7 +132,7 @@ void Parser::apply(Preprocessor* pp,
     {
         DescriptionBlock *target = m_makefile->target(it.key());
         if (!target)
-            break;
+            continue;
         target->m_dependents += it.value();
         target->m_dependents.removeDuplicates();
     }

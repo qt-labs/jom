@@ -56,6 +56,7 @@ private slots:
     void descriptionBlocks();
     void inferenceRules_data();
     void inferenceRules();
+    void syncPoints();
     void cycleInTargets();
     void dependentsWithSpace();
     void multipleTargets();
