@@ -1441,6 +1441,20 @@ void Tests::rulesBeingRun()
     QVERIFY(output.contains("All target executed"));
 }
 
+void Tests::currentDirInTargetNames()
+{
+    // ".\foo" and "foo" are the same target, as target name, as dependent and on the
+    // command line.
+    QVERIFY(runJom(QStringList() << "/nologo" << "/j1" << "/f" << "test.mk" << ".\\all",
+                   "blackbox/currentDirTargetNames"));
+    QCOMPARE(m_jomProcess->exitCode(), 0);
+    QStringList output = readJomStdOutput();
+    QCOMPARE(output.count(), 3);
+    QCOMPARE(output.at(0), QLatin1String("BUILT .\\a.d"));
+    QCOMPARE(output.at(1), QLatin1String("BUILT b.d"));
+    QCOMPARE(output.at(2), QLatin1String("ALL"));
+}
+
 void Tests::chainedInferenceRules()
 {
     // Test for QTCREATORBUG-34175. Verifies that an inference rule is applied when the

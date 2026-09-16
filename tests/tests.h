@@ -89,6 +89,7 @@ private slots:
     void noTargets();
     void outOfDateCheck();
     void rulesBeingRun();
+    void currentDirInTargetNames();
     void chainedInferenceRules();
     void chainedInferenceRulesOutOfDateCheck();
 

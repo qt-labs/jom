@@ -6,6 +6,8 @@ Changes since jom 1.1.7
   (QTCREATORBUG-34175).
 - Fixed building a target whose inferred source is itself a target of the
   makefile, e.g. a generated .c file that the .c.obj rule then compiles.
+- Target names that spell out the current directory, like ".\foo", now denote
+  the same target as "foo", matching nmake.
 
 Changes since jom 1.1.6
 - Fixed a regression that was introduced in 1.1.4. Setting a variable

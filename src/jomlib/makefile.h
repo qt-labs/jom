@@ -148,7 +148,10 @@ public:
 
     void append(DescriptionBlock* target)
     {
-        m_targets[target->targetName().toLower()] = target;
+        const QString key = target->targetName().toLower();
+        if (key.startsWith(QLatin1String(".\\")))
+            m_hasDotSlashTargets = true;
+        m_targets[key] = target;
         if (!m_firstTarget) m_firstTarget = target;
     }
 
@@ -159,18 +162,11 @@ public:
 
     DescriptionBlock* target(const QString& name) const
     {
-        DescriptionBlock* result = 0;
         const QString lowerName = name.toLower();
-        result = m_targets.value(lowerName, 0);
+        DescriptionBlock* result = m_targets.value(lowerName, 0);
         if (result)
             return result;
-
-        QString systemName = lowerName;
-        result = m_targets.value(systemName.replace(QLatin1Char('/'), QLatin1Char('\\')), 0);
-        if (result)
-            return result;
-
-        return result;
+        return targetByAlternateName(lowerName);
     }
 
     const QHash<QString, DescriptionBlock*>& targets() const
@@ -212,6 +208,7 @@ public:
     void addPreciousTarget(const QString& targetName);
 
 private:
+    DescriptionBlock *targetByAlternateName(const QString &lowerName) const;
     void filterRulesByDependent(QVector<InferenceRule*>& rules, const QString& targetName);
     const InferenceRule *findMatchingInferenceRule(DescriptionBlock *target);
     QStringList findInferredDependents(InferenceRule* rule, const QStringList& dependents);
@@ -231,6 +228,7 @@ private:
     QSet<const InferenceRule*> m_batchModeRules;
     QMultiHash<const InferenceRule*, DescriptionBlock*> m_batchModeTargets;
     bool m_parallelExecutionDisabled;
+    bool m_hasDotSlashTargets;
 };
 
 } // namespace NMakeFile

@@ -410,7 +410,8 @@ Makefile::Makefile(const QString &fileName)
     m_firstTarget(0),
     m_macroTable(0),
     m_options(0),
-    m_parallelExecutionDisabled(false)
+    m_parallelExecutionDisabled(false),
+    m_hasDotSlashTargets(false)
 {
 }
 
@@ -429,9 +430,33 @@ void Makefile::clear()
         delete it.value();
 
     m_firstTarget = 0;
+    m_hasDotSlashTargets = false;
     m_targets.clear();
     m_preciousTargets.clear();
     m_inferenceRules.clear();
+}
+
+/**
+ * Looks up a target by the spellings that denote the same name as the given one: with
+ * native directory separators and with or without the ".\" for the current directory.
+ */
+DescriptionBlock *Makefile::targetByAlternateName(const QString &lowerName) const
+{
+    QString systemName = lowerName;
+    systemName.replace(QLatin1Char('/'), QLatin1Char('\\'));
+    if (DescriptionBlock *result = m_targets.value(systemName, 0))
+        return result;
+
+    // Like nmake, treat ".\foo" and "foo" as the same target. This runs for every dependent
+    // that isn't a target, so test the characters directly instead of using startsWith.
+    if (systemName.length() > 2 && systemName.at(0) == QLatin1Char('.')
+        && systemName.at(1) == QLatin1Char('\\'))
+        return m_targets.value(systemName.mid(2), 0);
+
+    // Prepending is only worth the string allocation if the makefile declares such a target.
+    if (m_hasDotSlashTargets)
+        return m_targets.value(QLatin1String(".\\") + systemName, 0);
+    return 0;
 }
 
 const QString &Makefile::dirPath() const
@@ -502,18 +527,7 @@ void Makefile::dumpInferenceRules() const
 DescriptionBlock *Makefile::inferredDependentTarget(const InferenceRule *rule,
                                                     const QString &targetName) const
 {
-    QString dependentName = rule->inferredDependent(targetName);
-    if (DescriptionBlock *result = target(dependentName))
-        return result;
-
-    // Inferred dependents without search path are relative to the current directory, which
-    // makefiles may spell out explicitly. Try the other notation, too.
-    if (dependentName.startsWith(QLatin1String(".\\"))
-        || dependentName.startsWith(QLatin1String("./")))
-        dependentName.remove(0, 2);
-    else
-        dependentName.prepend(QLatin1String(".\\"));
-    return target(dependentName);
+    return target(rule->inferredDependent(targetName));
 }
 
 void Makefile::filterRulesByDependent(QVector<InferenceRule*>& rules, const QString& targetName)
@@ -525,7 +539,7 @@ void Makefile::filterRulesByDependent(QVector<InferenceRule*>& rules, const QStr
         // A rule is applicable if the dependent it infers exists as a file or is a target
         // that we can build, possibly with another inference rule.
         const QString dependentName = rule->inferredDependent(targetName);
-        if (inferredDependentTarget(rule, targetName) || QFile::exists(dependentName)) {
+        if (target(dependentName) || QFile::exists(dependentName)) {
             ++it;
             continue;
         }
